@@ -1,0 +1,55 @@
+{
+	"name": "powerapps-wre",
+	"displayName": "powerapps-web-resource-explorer",
+	"description": "Allows users to explore powerapps web resources straight from vscode",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.61.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:solutionexplorer.authCreate",
+		"onCommand:solutionexplorer.authSelect",
+		"onCommand:solutionexplorer.solutionSelect"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "solutionexplorer.authCreate",
+				"title": "Powerapps: Create Authentication"
+			},
+			{
+				"command": "solutionexplorer.authSelect",
+				"title": "Powerapps: Select Authentication"
+			},
+			{
+				"command": "solutionexplorer.solutionSelect",
+				"title": "Powerapps: Select Solution"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.61.0",
+		"@types/glob": "^7.1.4",
+		"@types/mocha": "^9.0.0",
+		"@types/node": "14.x",
+		"@typescript-eslint/eslint-plugin": "^4.31.1",
+		"@typescript-eslint/parser": "^4.31.1",
+		"eslint": "^7.32.0",
+		"glob": "^7.1.7",
+		"mocha": "^9.1.1",
+		"typescript": "^4.4.3",
+		"@vscode/test-electron": "^1.6.2"
+	}
+}
