@@ -2,17 +2,21 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import { env } from 'process';
+import { homedir } from 'os';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
 
 	let authCreateCommand = vscode.commands.registerCommand('solutionexplorer.authCreate', async () => {
 		const result = await vscode.window.showInputBox({
 			value: 'https://org.crm.dynamics.com/',
 			placeHolder: 'CRM Url',
 		});
-		cp.exec(`pac auth create --url ${result}`, (err, stdout, stderr) => {
+
+		cp.exec(`pac auth create --url ${result}`, {shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
 			vscode.window.showInformationMessage(stdout);
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
@@ -51,4 +55,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
