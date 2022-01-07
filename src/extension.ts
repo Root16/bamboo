@@ -4,11 +4,19 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import { env } from 'process';
 import { homedir } from 'os';
+import { NodeDependenciesProvider } from './ui/nodedependenciesprovider';
+import { WebResoucesProvider } from './ui/webresourceprovider';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
+
+	const webResourcesProvider = new WebResoucesProvider("solution1", []);
+	vscode.window.registerTreeDataProvider('webResources', webResourcesProvider);
+	vscode.commands.registerCommand('webResources.refreshEntry', () =>
+		webResourcesProvider.refresh()
+	);
 
 	let authCreateCommand = vscode.commands.registerCommand('solutionexplorer.authCreate', async () => {
 		const result = await vscode.window.showInputBox({
@@ -16,14 +24,12 @@ export function activate(context: vscode.ExtensionContext) {
 			placeHolder: 'CRM Url',
 		});
 
-		cp.exec(`pac auth create --url ${result}`, {shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+		cp.exec(`pac auth create --url ${result}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
 			vscode.window.showInformationMessage(stdout);
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
 			}
 		});
-
-
 	});
 
 	let solutionSelectCommand = vscode.commands.registerCommand('solutionexplorer.solutionSelect', async () => {

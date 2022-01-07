@@ -15,10 +15,28 @@
 	"activationEvents": [
 		"onCommand:solutionexplorer.authCreate",
 		"onCommand:solutionexplorer.authSelect",
-		"onCommand:solutionexplorer.solutionSelect"
+		"onCommand:solutionexplorer.solutionSelect",
+		"onView:webResources"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"menus": {
+			"view/title": [
+				{
+					"command": "webResources.refreshEntry",
+					"when": "view == webResources",
+					"group": "navigation"
+				}
+			]
+		},
+		"views": {
+			"explorer": [
+				{
+					"id": "webResources",
+					"name": "Web Resources"
+				}
+			]
+		},
 		"commands": [
 			{
 				"command": "solutionexplorer.authCreate",
@@ -31,6 +49,14 @@
 			{
 				"command": "solutionexplorer.solutionSelect",
 				"title": "Powerapps: Select Solution"
+			},
+			{
+				"command": "webResources.refreshEntry",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
 			}
 		]
 	},
