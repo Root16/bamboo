@@ -3,6 +3,9 @@
 	"displayName": "powerapps-web-resource-explorer",
 	"description": "Allows users to explore powerapps web resources straight from vscode",
 	"version": "0.0.1",
+	"extensionDependencies": [
+		"microsoft-IsvExpTools.powerplatform-vscode"
+	],
 	"engines": {
 		"vscode": "^1.61.0"
 	},
