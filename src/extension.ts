@@ -4,12 +4,16 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import { env } from 'process';
 import { homedir } from 'os';
-import { NodeDependenciesProvider } from './ui/nodedependenciesprovider';
 import { WebResoucesProvider } from './ui/webresourceprovider';
+
+let currentSolutionStatusBar: vscode.StatusBarItem;
+let availableSolutions: string[];
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	initStatusBar(context);
+
 	env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
 
 	const webResourcesProvider = new WebResoucesProvider("solution1", []);
@@ -58,6 +62,24 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(authCreateCommand);
 	context.subscriptions.push(solutionSelectCommand);
+}
+
+function initStatusBar(context: vscode.ExtensionContext) {
+	const statusBarCommand = 'statusbar.showCurrentSolution';
+	vscode.commands.registerCommand(statusBarCommand, () => {
+		vscode.window.showInformationMessage(`Currently selected :`);
+	});
+
+	currentSolutionStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	currentSolutionStatusBar.command = statusBarCommand;
+	context.subscriptions.push(currentSolutionStatusBar);
+
+	updateStatusBarItem();
+}
+
+function updateStatusBarItem(): void {
+	currentSolutionStatusBar.text = `$(megaphone) idk line(s) selected`;
+	currentSolutionStatusBar.show();
 }
 
 // this method is called when your extension is deactivated
