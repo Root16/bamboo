@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	let solutionPushCommand = vscode.commands.registerCommand('solutionexplorer.solutionPush', async () => {
-		if(currentSolution === undefined) {
+		if (currentSolution === undefined) {
 			currentSolution = "test";
 		}
 		var solutionName = currentSolution;
@@ -45,20 +45,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 		var solutionDirectory = globalExtensionFolder + `\\${solutionName}`;
 
-		cp.exec(`pac solution pack --folder ${solutionDirectory}\\ --zipfile ${solutionDirectory}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
-			if (err) {
-				vscode.window.showErrorMessage('error: ' + err);
-				return;
-			}
+		vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: "Extracting Zip Data",
+			cancellable: false
+		}, async (progress) => {
+			progress.report({ increment: 20, message: "Starting to push	 solution" });
 
-			// There are a lot of options for this command that we should prob look more into
-			// https://docs.microsoft.com/en-us/powerapps/developer/data-platform/cli/reference/solution-command
-			cp.exec(`pac solution import --path ${solutionDirectory}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
-				if (err) {
-					vscode.window.showErrorMessage('error: ' + err);
-				}
-			});
+			let response = await pushSolution(solutionDirectory, "", progress);
+
+			if (response.failure) {
+				vscode.window.showErrorMessage(response.text);
+			}
+			else {
+				progress.report({ increment: 100, message: "Finished uploading solution!" });
+			}
 		});
+
 	});
 
 	let authCreateCommand = vscode.commands.registerCommand('solutionexplorer.authCreate', async () => {
@@ -146,6 +149,28 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(solutionSelectCommand);
 	context.subscriptions.push(authSelectCommand);
 	context.subscriptions.push(solutionPushCommand);
+}
+
+function pushSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
+
+	var myPromise = new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
+		cp.exec(`pac solution pack --folder ${defaultSolutionsFolder}\\ --zipfile ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+			if (err) {
+				return resolve({ failure: true, text: stdout });
+			}
+			progress.report({ increment: 60, message: "Starting to import solution." });
+
+			// There are a lot of options for this command that we should prob look more into
+			// https://docs.microsoft.com/en-us/powerapps/developer/data-platform/cli/reference/solution-command
+			cp.exec(`pac solution import --path ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+				if (err) {
+					return resolve({ failure: true, text: stdout });
+				}
+			}).on("close", () => { resolve({ failure: false, text: "" }) });
+		});
+	});
+
+	return myPromise;
 }
 
 function unzipSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
