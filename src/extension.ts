@@ -223,10 +223,20 @@ function unzipSolution(defaultSolutionsFolder: string, name: string, progress: v
 				//open up in random repo 
 				var openPath = vscode.Uri.parse("file:" + tempWorkspace.replace("C:\\", ""), true);
 
-				vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders ?
-					vscode.workspace.workspaceFolders.length : 0,
-					null,
-					{ uri: openPath });
+				if (vscode.workspace.workspaceFolders) {
+					//assume there's only ONE workspace already in view - replace it
+					var idk = vscode.workspace.workspaceFolders.length;
+					vscode.workspace.updateWorkspaceFolders(0,
+						1,
+						{ uri: openPath });
+				} else {
+					//add the first one
+					vscode.workspace.updateWorkspaceFolders(0,
+						null,
+						{ uri: openPath });
+				}
+
+
 			}).on("close", () => { resolve({ failure: false, text: stdout }); });
 		});
 	});
