@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 		webResourcesProvider.refresh()
 	);
 
-	let defaultSolutionsFolder = homedir() + "/source/CRMSolutions";
+	let defaultSolutionsFolder = homedir() + "\\source\\CRMSolutions";
 
 
 	let authCreateCommand = vscode.commands.registerCommand('solutionexplorer.authCreate', async () => {
@@ -66,23 +66,26 @@ export function activate(context: vscode.ExtensionContext) {
 
 			vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
-				title: "I am long running!",
+				title: "Extracting Zip Data",
 				cancellable: false
 			}, async (progress) => {
-				progress.report({ increment: 50, message: "I am long running! - almost there..." });
+				progress.report({ increment: 20, message: "Starting to checkout solution" });
 
-				await unzipSolution(defaultSolutionsFolder, name);
+				let response = await unzipSolution(defaultSolutionsFolder, name, progress);
 
-				progress.report({ increment: 100, message: "I am long running! - almost there..." });
+				if (response.failure) {
+					vscode.window.showErrorMessage(response.text);
+				}
+				else {
+					progress.report({ increment: 100, message: "Finished!" });
+				}
 			});
-
-
 		});
 	});
 
 	// not finished
 	let authSelectCommand = vscode.commands.registerCommand('solutionexplorer.authSelect', async () => {
-		cp.exec(`pac auth list`, async (err, stdout, _stderr) => {
+		cp.exec(`pac auth list`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, _stderr) => {
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
 			}
@@ -97,33 +100,29 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(solutionSelectCommand);
 }
 
-function unzipSolution(defaultSolutionsFolder: string, name: string): Promise<string> {
-	var myPromise = new Promise<string>((resolve, reject) => {
-		cp.exec(`pac solution export --path ${defaultSolutionsFolder}/${name}.zip --name ${name}`, async (err, stdout, stderr) => {
+function unzipSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{failure: boolean, text: string}> {
+	var myPromise = new Promise<{failure: boolean, text: string}>((resolve, reject) => {
+		cp.exec(`pac solution export --path ${defaultSolutionsFolder}\\${name}.zip --name ${name}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 			if (err) {
-				vscode.window.showErrorMessage(stderr);
-				return;
+				return resolve({failure: true, text: stdout});
 			}
-			vscode.window.showInformationMessage(stdout);
+			progress.report({ increment: 60, message: "Starting to unpack solution." });
 
 			cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 				if (err) {
-					vscode.window.showErrorMessage(stderr);
-					return;
+					return resolve({failure: true, text: stdout});
 				}
-				vscode.window.showInformationMessage(stdout);
+
 				var openPath = vscode.Uri.parse("file:" + defaultSolutionsFolder.replace("C:\\", ""), true);
 				vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders ?
 					vscode.workspace.workspaceFolders.length : 0,
 					null,
 					{ uri: openPath });
-			}).on("close", () => { resolve("test"); });
+			}).on("close", () => { resolve({failure: false, text: stdout}); });
 		});
 	});
 
 	return myPromise;
-
-
 }
 
 function initStatusBar(context: vscode.ExtensionContext) {
