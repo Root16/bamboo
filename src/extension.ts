@@ -11,7 +11,7 @@ import { WebResoucesProvider } from './ui/webresourceprovider';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
+	//env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
 
 	const webResourcesProvider = new WebResoucesProvider("solution1", []);
 	vscode.window.registerTreeDataProvider('webResources', webResourcesProvider);
@@ -21,6 +21,26 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let defaultSolutionsFolder = homedir() + "/source/CRMSolutions";
 
+	let solutionPushCommand = vscode.commands.registerCommand('solutionexplorer.solutionPush', async () => {
+		// how do I know which directory to push?? 
+		// maybe we need the config file
+		var solutionDirectory = "PLACEHOLDER";
+		var solutionName = "PLACEHOLDER";
+
+		cp.exec(`pac solution pack --zipfile ${solutionDirectory}/${solutionName}.zip --folder ${solutionDirectory}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+			if (err) {
+				vscode.window.showErrorMessage('error: ' + err);
+			}
+
+			// There are a lot of options for this command that we should prob look more into
+			// https://docs.microsoft.com/en-us/powerapps/developer/data-platform/cli/reference/solution-command
+			cp.exec(`pac solution import --path ${solutionDirectory}/${solutionName}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+				if (err) {
+					vscode.window.showErrorMessage('error: ' + err);
+				}
+			});
+		});
+	});
 
 	let authCreateCommand = vscode.commands.registerCommand('solutionexplorer.authCreate', async () => {
 		const result = await vscode.window.showInputBox({
