@@ -16,7 +16,8 @@
 		"onCommand:solutionexplorer.authCreate",
 		"onCommand:solutionexplorer.authSelect",
 		"onCommand:solutionexplorer.solutionSelect",
-		"onView:webResources"
+		"onView:webResources",
+		"onStartupFinished"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
