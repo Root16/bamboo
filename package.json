@@ -18,31 +18,6 @@
 	"main": "./out/extension.js",
 	"contributes": {
 		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "web-resources",
-					"title": "Web-Resources",
-					"icon": "./src/media/caution-moose.svg"
-				}
-			]
-		},
-		"menus": {
-			"view/title": [
-				{
-					"command": "webResources.refreshEntry",
-					"when": "view == webResources",
-					"group": "navigation"
-				}
-			]
-		},
-		"views": {
-			"web-resources": [
-				{
-					"id": "webResources",
-					"name": "Web Resources",
-					"contextualTitle": "Your web resources"
-				}
-			]
 		},
 		"commands": [
 			{
@@ -60,14 +35,6 @@
 			{
 				"command": "solutionexplorer.solutionPush",
 				"title": "Powerapps: Push Solution"
-			},
-			{
-				"command": "webResources.refreshEntry",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
 			}
 		]
 	},

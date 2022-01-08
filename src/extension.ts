@@ -3,10 +3,8 @@
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as fs from 'fs';
-import { env, stdout } from 'process';
+import { env } from 'process';
 import { homedir } from 'os';
-import { WebResoucesProvider } from './ui/webresourceprovider';
-import { unzip } from 'zlib';
 
 let currentSolutionStatusBar: vscode.StatusBarItem;
 let currentAuthStatusBar: vscode.StatusBarItem;
@@ -21,29 +19,39 @@ const userSolutionWorkspaceDir = homedir() + "\\source\\repos";
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-	//make the sandbox recource folder if it doesnt exist	
+	//make the sandbox resource folder if it doesn't exist	
 	if (!fs.existsSync(globalExtensionFolder)) {
 		fs.mkdirSync(globalExtensionFolder);
 	}
 
 	if (fs.existsSync(globalSavedConfigFile)) {
-		let rawdata = fs.readFileSync(globalSavedConfigFile);
-		let config = JSON.parse(rawdata.toString());
+		let config = JSON.parse(fs.readFileSync(globalSavedConfigFile).toString());
 
 		currentAuth = config["currentAuth"] ? config["currentAuth"] : "";
 		currentSolution = config["currentSolution"] ? config["currentSolution"] : "";
+
+		if (currentSolution && !vscode.workspace.workspaceFolders) {
+			var userSolutionWorkspace = `${userSolutionWorkspaceDir}\\${currentSolution}`;
+
+			let from = globalExtensionFolder + `\\${currentSolution}\\WebResources`;
+
+			let to = userSolutionWorkspace;
+
+			//I have no idea how to copy a directory in node - so i somply shant
+			cp.exec(`cp -r ${from} ${to}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+
+			var openPath = vscode.Uri.parse("file:" + userSolutionWorkspace.replace("C:\\", ""), true);
+
+			vscode.workspace.updateWorkspaceFolders(0,
+				null,
+				{ uri: openPath });
+		}
 	}
 
 	//allow pac to be on the path
 	env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
 
 	initStatusBar(context);
-
-	const webResourcesProvider = new WebResoucesProvider("solution1", []);
-	vscode.window.registerTreeDataProvider('webResources', webResourcesProvider);
-	vscode.commands.registerCommand('webResources.refreshEntry', () =>
-		webResourcesProvider.refresh()
-	);
 
 	let solutionPushCommand = vscode.commands.registerCommand('solutionexplorer.solutionPush', async () => {
 		//TODO: implement global state - so that the extension remember's what the currently selected solution is
@@ -153,7 +161,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			cp.exec(`pac auth select --name ${currentAuth}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 				if (err) {
-					throw "idk";
+					vscode.window.showErrorMessage('error: ' + err);
 				}
 				vscode.window.showInformationMessage(`Currently Selected Auth: ${currentAuth}`);
 				updateAuthStatusBarItem();
@@ -168,8 +176,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 function pushSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
-
-	var myPromise = new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
+	return new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
 		cp.exec(`pac solution pack --folder ${defaultSolutionsFolder}\\ --zipfile ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
 			if (err) {
 				return resolve({ failure: true, text: stdout });
@@ -185,12 +192,10 @@ function pushSolution(defaultSolutionsFolder: string, name: string, progress: vs
 			}).on("close", () => { resolve({ failure: false, text: "" }) });
 		});
 	});
-
-	return myPromise;
 }
 
 function unzipSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
-	var myPromise = new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
+	return new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
 		//delete any previous zip that was there
 		// cp.exec(`rm -f ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
 		cp.exec(`rm ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
@@ -207,25 +212,23 @@ function unzipSolution(defaultSolutionsFolder: string, name: string, progress: v
 					return resolve({ failure: true, text: stdout });
 				}
 
-				var tempWorkspace = homedir() + `\\source\\repos\\${name}`;
+				var userSolutionWorkspace = `${userSolutionWorkspaceDir}\\${name}`;
 
-				if (!fs.existsSync(tempWorkspace)) {
-					fs.mkdirSync(tempWorkspace);
+				if (!fs.existsSync(userSolutionWorkspace)) {
+					fs.mkdirSync(userSolutionWorkspace);
 				}
 
 				let from = globalExtensionFolder + `\\${name}\\WebResources`;
 
-				let to = tempWorkspace;
+				let to = userSolutionWorkspace;
 
 				//I have no idea how to copy a directory in node - so i somply shant
 				cp.exec(`cp -r ${from} ${to}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
 
-				//open up in random repo 
-				var openPath = vscode.Uri.parse("file:" + tempWorkspace.replace("C:\\", ""), true);
+				var openPath = vscode.Uri.parse("file:" + userSolutionWorkspace.replace("C:\\", ""), true);
 
 				if (vscode.workspace.workspaceFolders) {
 					//assume there's only ONE workspace already in view - replace it
-					var idk = vscode.workspace.workspaceFolders.length;
 					vscode.workspace.updateWorkspaceFolders(0,
 						1,
 						{ uri: openPath });
@@ -240,8 +243,6 @@ function unzipSolution(defaultSolutionsFolder: string, name: string, progress: v
 			}).on("close", () => { resolve({ failure: false, text: stdout }); });
 		});
 	});
-
-	return myPromise;
 }
 
 function initStatusBar(context: vscode.ExtensionContext) {
@@ -263,10 +264,8 @@ function initStatusBar(context: vscode.ExtensionContext) {
 	currentAuthStatusBar.command = currentAuthStatusBarCmd;
 	context.subscriptions.push(currentAuthStatusBar);
 
-
 	updateSolutionStatusBarItem();
 	updateAuthStatusBarItem();
-
 }
 
 function updateSolutionStatusBarItem(): void {
@@ -296,10 +295,6 @@ function updateSettingFile() {
 		"currentAuth": "${currentAuth}",
 		"currentSolution": "${currentSolution}"
 	}`);
-}
-
-function getUserSolutionWorkspace(): string {
-	return userSolutionWorkspaceDir + `\\${currentSolution}`
 }
 
 // this method is called when your extension is deactivated
