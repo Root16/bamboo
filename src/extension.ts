@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import * as fs from 'fs';
 import { env } from 'process';
 import { homedir } from 'os';
 import { WebResoucesProvider } from './ui/webresourceprovider';
@@ -22,6 +23,9 @@ export function activate(context: vscode.ExtensionContext) {
 		webResourcesProvider.refresh()
 	);
 
+	let defaultSolutionsFolder = homedir() + "/source/CRMSolutions";
+
+
 	let authCreateCommand = vscode.commands.registerCommand('solutionexplorer.authCreate', async () => {
 		const result = await vscode.window.showInputBox({
 			value: 'https://org.crm.dynamics.com/',
@@ -37,13 +41,45 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	let solutionSelectCommand = vscode.commands.registerCommand('solutionexplorer.solutionSelect', async () => {
-		cp.exec(`pac solution list`, async (err, stdout, stderr) => {
+		await cp.exec(`pac solution list`, async (err, stdout, stderr) => {
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
 			}
 			let regexp = /\[\d*\]\s*(\w*)\s*(.+?(?=\s{2,}))/g;
 			let solutions = [...stdout.matchAll(regexp)].map(array => `${array[2]} (${array[1]})`);
+
 			const result = await vscode.window.showQuickPick(solutions);
+			let regexp2 = /\(([^)]+)\)/;
+			let matches = regexp2.exec(result!);
+			let name = matches![1];
+
+
+			if (!fs.existsSync(defaultSolutionsFolder)) {
+				fs.mkdirSync(defaultSolutionsFolder);
+			}
+
+			await cp.exec(`pac solution export --path ${defaultSolutionsFolder}/${name}.zip --name ${name}`, async (err, stdout, stderr) => {
+				if (err) {
+					vscode.window.showErrorMessage(stderr);
+					return;
+				}
+				vscode.window.showInformationMessage(stdout);
+				
+				await cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+					if (err) {
+						vscode.window.showErrorMessage(stderr);
+						return;
+					}
+					vscode.window.showInformationMessage(stdout);
+					var openPath = vscode.Uri.parse("file:" + defaultSolutionsFolder.replace("C:\\", ""), true);
+					vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders ?
+						vscode.workspace.workspaceFolders.length : 0,
+						null,
+						{ uri: openPath });
+				});
+
+			});
+
 		});
 	});
 
