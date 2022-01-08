@@ -29,3 +29,9 @@ Powerapps-WRE is a VSCode extension enabling Microsoft Dynamics 365 developers t
 
 Initial pre-release under the [MIT LICENSE](/LICENSE).
 
+#### Screenshots
+
+![](/images/commands.png)
+![](/images/solution.png)
+
+
