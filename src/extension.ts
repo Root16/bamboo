@@ -55,8 +55,6 @@ export function activate(context: vscode.ExtensionContext) {
 			availableSolutions = solutions;
 			updateStatusBarItem();
 
-			return;
-
 			let regexp2 = /\(([^)]+)\)/;
 			let matches = regexp2.exec(result!);
 			let name = matches![1];
