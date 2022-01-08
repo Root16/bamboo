@@ -12,12 +12,19 @@ let currentSolutionStatusBar: vscode.StatusBarItem;
 let availableSolutions: string[];
 let currentSolution: string;
 
+let globalExtensionFolder = homedir() + "\\AppData\\Roaming\\Code\\User\\globalStorage\\" + "root16.vscode-web-resource-explorer";
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	initStatusBar(context);
+	//make the sandbox recource folder if it doesnt exist	
+	if (!fs.existsSync(globalExtensionFolder)) {
+		fs.mkdirSync(globalExtensionFolder);
+	}
 
 	env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
+
+	initStatusBar(context);
 
 	const webResourcesProvider = new WebResoucesProvider("solution1", []);
 	vscode.window.registerTreeDataProvider('webResources', webResourcesProvider);
@@ -25,27 +32,36 @@ export function activate(context: vscode.ExtensionContext) {
 		webResourcesProvider.refresh()
 	);
 
-	let defaultSolutionsFolder = homedir() + "\\source\\CRMSolutions";
-
 	let solutionPushCommand = vscode.commands.registerCommand('solutionexplorer.solutionPush', async () => {
-		// how do I know which directory to push?? 
-		// maybe we need the config file
-		var solutionDirectory = "PLACEHOLDER";
-		var solutionName = "PLACEHOLDER";
+		if (currentSolution === undefined) {
+			currentSolution = "test";
+		}
+		var solutionName = currentSolution;
 
-		cp.exec(`pac solution pack --zipfile ${solutionDirectory}/${solutionName}.zip --folder ${solutionDirectory}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
-			if (err) {
-				vscode.window.showErrorMessage('error: ' + err);
+		let from = homedir() + `\\source\\repos\\${solutionName}\\WebResources`;
+		let to = globalExtensionFolder + `\\${solutionName}`;
+
+		cp.exec(`cp -r ${from} ${to}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+
+		var solutionDirectory = globalExtensionFolder + `\\${solutionName}`;
+
+		vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: "Exporting Web Resources",
+			cancellable: false
+		}, async (progress) => {
+			progress.report({ increment: 20, message: "Starting to push	 solution" });
+
+			let response = await pushSolution(solutionDirectory, "", progress);
+
+			if (response.failure) {
+				vscode.window.showErrorMessage(response.text);
 			}
-
-			// There are a lot of options for this command that we should prob look more into
-			// https://docs.microsoft.com/en-us/powerapps/developer/data-platform/cli/reference/solution-command
-			cp.exec(`pac solution import --path ${solutionDirectory}/${solutionName}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
-				if (err) {
-					vscode.window.showErrorMessage('error: ' + err);
-				}
-			});
+			else {
+				progress.report({ increment: 100, message: "Finished uploading solution!" });
+			}
 		});
+
 	});
 
 	let authCreateCommand = vscode.commands.registerCommand('solutionexplorer.authCreate', async () => {
@@ -74,14 +90,15 @@ export function activate(context: vscode.ExtensionContext) {
 			let solutions = [...stdout.matchAll(regexp)].map(array => `${array[2]} (${array[1]})`);
 			const result = await vscode.window.showQuickPick(solutions);
 
-			currentSolution = result!;
 			availableSolutions = solutions;
 			updateStatusBarItem();
 
 			let regexp2 = /\(([^)]+)\)/;
 			let matches = regexp2.exec(result!);
 			let name = matches![1];
+			currentSolution = name;
 
+			let defaultSolutionsFolder = globalExtensionFolder + `\\${name}`;
 
 			if (!fs.existsSync(defaultSolutionsFolder)) {
 				fs.mkdirSync(defaultSolutionsFolder);
@@ -131,22 +148,63 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(authCreateCommand);
 	context.subscriptions.push(solutionSelectCommand);
 	context.subscriptions.push(authSelectCommand);
+	context.subscriptions.push(solutionPushCommand);
+}
+
+function pushSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
+
+	var myPromise = new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
+		cp.exec(`pac solution pack --folder ${defaultSolutionsFolder}\\ --zipfile ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+			if (err) {
+				return resolve({ failure: true, text: stdout });
+			}
+			progress.report({ increment: 60, message: "Starting to import solution." });
+
+			// There are a lot of options for this command that we should prob look more into
+			// https://docs.microsoft.com/en-us/powerapps/developer/data-platform/cli/reference/solution-command
+			cp.exec(`pac solution import --publish-changes --path ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+				if (err) {
+					return resolve({ failure: true, text: stdout });
+				}
+			}).on("close", () => { resolve({ failure: false, text: "" }) });
+		});
+	});
+
+	return myPromise;
 }
 
 function unzipSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
 	var myPromise = new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
-		cp.exec(`pac solution export --path ${defaultSolutionsFolder}\\${name}.zip --name ${name}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+		//delete any previous zip that was there
+		// cp.exec(`rm -f ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+		cp.exec(`rm ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+
+		cp.exec(`pac solution export --path ${defaultSolutionsFolder}.zip --name ${name}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 			if (err) {
 				return resolve({ failure: true, text: stdout });
 			}
 			progress.report({ increment: 60, message: "Starting to unpack solution." });
 
-			cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+			cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 				if (err) {
 					return resolve({ failure: true, text: stdout });
 				}
 
-				var openPath = vscode.Uri.parse("file:" + defaultSolutionsFolder.replace("C:\\", ""), true);
+				var tempWorkspace = homedir() + `\\source\\repos\\${name}`;
+
+				if (!fs.existsSync(tempWorkspace)) {
+					fs.mkdirSync(tempWorkspace);
+				}
+
+				let from = globalExtensionFolder + `\\${name}\\WebResources`;
+
+				let to = tempWorkspace;
+
+				//I have no idea how to copy a directory in node - so i somply shant
+				cp.exec(`cp -r ${from} ${to}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+
+				//open up in random repo 
+				var openPath = vscode.Uri.parse("file:" + tempWorkspace.replace("C:\\", ""), true);
 				vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders ?
 					vscode.workspace.workspaceFolders.length : 0,
 					null,
