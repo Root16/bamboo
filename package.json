@@ -3,6 +3,9 @@
 	"displayName": "powerapps-web-resource-explorer",
 	"description": "Allows users to explore powerapps web resources straight from vscode",
 	"version": "0.0.1",
+	"extensionDependencies": [
+		"microsoft-IsvExpTools.powerplatform-vscode"
+	],
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -12,10 +15,38 @@
 	"activationEvents": [
 		"onCommand:solutionexplorer.authCreate",
 		"onCommand:solutionexplorer.authSelect",
-		"onCommand:solutionexplorer.solutionSelect"
+		"onCommand:solutionexplorer.solutionSelect",
+		"onView:webResources"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "web-resources",
+					"title": "Web-Resources",
+					"icon": "./src/media/caution-moose.svg"
+				}
+			]
+		},
+		"menus": {
+			"view/title": [
+				{
+					"command": "webResources.refreshEntry",
+					"when": "view == webResources",
+					"group": "navigation"
+				}
+			]
+		},
+		"views": {
+			"web-resources": [
+				{
+					"id": "webResources",
+					"name": "Web Resources",
+					"contextualTitle": "Your web resources"
+				}
+			]
+		},
 		"commands": [
 			{
 				"command": "solutionexplorer.authCreate",
@@ -28,6 +59,14 @@
 			{
 				"command": "solutionexplorer.solutionSelect",
 				"title": "Powerapps: Select Solution"
+			},
+			{
+				"command": "webResources.refreshEntry",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
 			}
 		]
 	},
