@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as fs from 'fs';
-import { env } from 'process';
+import { env, stdout } from 'process';
 import { homedir } from 'os';
 import { WebResoucesProvider } from './ui/webresourceprovider';
 import { unzip } from 'zlib';
@@ -34,7 +34,10 @@ export function activate(context: vscode.ExtensionContext) {
 			placeHolder: 'CRM Url',
 		});
 
-		cp.exec(`pac auth create --url ${result}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, _stderr) => {
+		var regex = /https:\/\/(.*).crm.dynamics.com/g;
+		let shortName = result?.matchAll(regex)?.next().value[1];
+
+		cp.exec(`pac auth create --name ${shortName} --url ${result}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, _stderr) => {
 			vscode.window.showInformationMessage(stdout);
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
@@ -83,7 +86,6 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
-	// not finished
 	let authSelectCommand = vscode.commands.registerCommand('solutionexplorer.authSelect', async () => {
 		cp.exec(`pac auth list`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, _stderr) => {
 			if (err) {
@@ -93,24 +95,35 @@ export function activate(context: vscode.ExtensionContext) {
 			let auths = [...stdout.matchAll(regexp)].map(array => `${array[1]} (${array[2]})`);
 			const result = await vscode.window.showQuickPick(auths);
 
+			var regex = /https:\/\/(.*).crm.dynamics.com/g;
+			let shortName = result?.matchAll(regex)?.next().value[1];
+
+			cp.exec(`pac auth select --name ${shortName}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+				if (err) {
+					throw "idk";
+					// return resolve({ failure: true, text: stdout });
+				}
+				vscode.window.showInformationMessage(`Currently Selected Auth: ${shortName}`);
+			});
 		});
 	});
 
 	context.subscriptions.push(authCreateCommand);
 	context.subscriptions.push(solutionSelectCommand);
+	context.subscriptions.push(authSelectCommand);
 }
 
-function unzipSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{failure: boolean, text: string}> {
-	var myPromise = new Promise<{failure: boolean, text: string}>((resolve, reject) => {
+function unzipSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
+	var myPromise = new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
 		cp.exec(`pac solution export --path ${defaultSolutionsFolder}\\${name}.zip --name ${name}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 			if (err) {
-				return resolve({failure: true, text: stdout});
+				return resolve({ failure: true, text: stdout });
 			}
 			progress.report({ increment: 60, message: "Starting to unpack solution." });
 
 			cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 				if (err) {
-					return resolve({failure: true, text: stdout});
+					return resolve({ failure: true, text: stdout });
 				}
 
 				var openPath = vscode.Uri.parse("file:" + defaultSolutionsFolder.replace("C:\\", ""), true);
@@ -118,7 +131,7 @@ function unzipSolution(defaultSolutionsFolder: string, name: string, progress: v
 					vscode.workspace.workspaceFolders.length : 0,
 					null,
 					{ uri: openPath });
-			}).on("close", () => { resolve({failure: false, text: stdout}); });
+			}).on("close", () => { resolve({ failure: false, text: stdout }); });
 		});
 	});
 
