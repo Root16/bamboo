@@ -10,20 +10,31 @@ import { unzip } from 'zlib';
 
 let currentSolutionStatusBar: vscode.StatusBarItem;
 let currentAuthStatusBar: vscode.StatusBarItem;
-let availableSolutions: string[];
 let currentSolution: string;
 let currentAuth: string;
 
-let globalExtensionFolder = homedir() + "\\AppData\\Roaming\\Code\\User\\globalStorage\\" + "root16.vscode-web-resource-explorer";
+const globalExtensionFolder = homedir() + "\\AppData\\Roaming\\Code\\User\\globalStorage\\" + "root16.vscode-web-resource-explorer";
 
+const globalSavedConfigFile = globalExtensionFolder + "\\settings.json";
+
+const userSolutionWorkspaceDir = homedir() + "\\source\\repos";
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 	//make the sandbox recource folder if it doesnt exist	
 	if (!fs.existsSync(globalExtensionFolder)) {
 		fs.mkdirSync(globalExtensionFolder);
 	}
 
+	if (fs.existsSync(globalSavedConfigFile)) {
+		let rawdata = fs.readFileSync(globalSavedConfigFile);
+		let config = JSON.parse(rawdata.toString());
+
+		currentAuth = config["currentAuth"] ? config["currentAuth"] : "";
+		currentSolution = config["currentSolution"] ? config["currentSolution"] : "";
+	}
+
+	//allow pac to be on the path
 	env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
 
 	initStatusBar(context);
@@ -63,6 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			else {
 				progress.report({ increment: 100, message: "Finished uploading solution!" });
+				vscode.window.showInformationMessage("Finished uploading solution!");
 			}
 		});
 
@@ -96,14 +108,11 @@ export function activate(context: vscode.ExtensionContext) {
 			let solutions = [...stdout.matchAll(regexp)].map(array => `${array[2]} (${array[1]})`);
 			const result = await vscode.window.showQuickPick(solutions);
 
-			availableSolutions = solutions;
-
 			let regexp2 = /\(([^)]+)\)/;
 			let matches = regexp2.exec(result!);
 			let name = matches![1];
-			currentSolution = name;
 
-			updateSolutionStatusBarItem();
+			updateSetting("currentSolution", name);
 
 			let defaultSolutionsFolder = globalExtensionFolder + `\\${name}`;
 
@@ -124,7 +133,8 @@ export function activate(context: vscode.ExtensionContext) {
 					vscode.window.showErrorMessage(response.text);
 				}
 				else {
-					progress.report({ increment: 100, message: "Finished!" });
+					progress.report({ increment: 100, message: "Finished unpacking the solution!" });
+					vscode.window.showInformationMessage("Finished unpacking solution!");
 				}
 			});
 		});
@@ -135,20 +145,15 @@ export function activate(context: vscode.ExtensionContext) {
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
 			}
-			// let regexp = /(https:\/\/\w+.crm.dynamics.com\/)\s*:\s(\S+)/g;
 			var regex = /https:\/\/(.*).crm.dynamics.com/g;
 			let auths = [...stdout.matchAll(regex)].map(array => array[1]);
-			// let auths = [...stdout.matchAll(regex)].map(array => `${array[1]} (${array[2]})`);
 			const result = await vscode.window.showQuickPick(auths);
 
-			// var regex = /https:\/\/(.*).crm.dynamics.com/g;
-			// let shortName = result?.matchAll(regex)?.next().value[1];
-			currentAuth = result!;
+			updateSetting("currentAuth", result!);
 
 			cp.exec(`pac auth select --name ${currentAuth}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 				if (err) {
 					throw "idk";
-					// return resolve({ failure: true, text: stdout });
 				}
 				vscode.window.showInformationMessage(`Currently Selected Auth: ${currentAuth}`);
 				updateAuthStatusBarItem();
@@ -194,6 +199,7 @@ function unzipSolution(defaultSolutionsFolder: string, name: string, progress: v
 			if (err) {
 				return resolve({ failure: true, text: stdout });
 			}
+
 			progress.report({ increment: 60, message: "Starting to unpack solution." });
 
 			cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
@@ -216,6 +222,7 @@ function unzipSolution(defaultSolutionsFolder: string, name: string, progress: v
 
 				//open up in random repo 
 				var openPath = vscode.Uri.parse("file:" + tempWorkspace.replace("C:\\", ""), true);
+
 				vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders ?
 					vscode.workspace.workspaceFolders.length : 0,
 					null,
@@ -253,13 +260,36 @@ function initStatusBar(context: vscode.ExtensionContext) {
 }
 
 function updateSolutionStatusBarItem(): void {
-	currentSolutionStatusBar.text = currentSolution === null || currentSolution === undefined ? "No Solution Selected" : `Current Solution: ${currentSolution}`;
+	currentSolutionStatusBar.text = currentSolution ? `Current Solution: ${currentSolution}` : "No Solution Selected";
 	currentSolutionStatusBar.show();
 }
 
 function updateAuthStatusBarItem(): void {
-	currentAuthStatusBar.text = currentAuth === null || currentAuth === undefined ? "No Auth Selected" : `Current Auth: ${currentAuth}`;
+	currentAuthStatusBar.text = currentAuth ? `Current Auth: ${currentAuth}` : "No Auth Selected";
 	currentAuthStatusBar.show();
+}
+
+function updateSetting(setting: string, value: string) {
+	if (setting === "currentAuth") {
+		currentAuth = value;
+		updateAuthStatusBarItem();
+	} else if (setting === "currentSolution") {
+		currentSolution = value;
+		updateSolutionStatusBarItem();
+	}
+	updateSettingFile();
+
+}
+
+function updateSettingFile() {
+	fs.writeFileSync(globalSavedConfigFile, `{
+		"currentAuth": "${currentAuth}",
+		"currentSolution": "${currentSolution}"
+	}`);
+}
+
+function getUserSolutionWorkspace(): string {
+	return userSolutionWorkspaceDir + `\\${currentSolution}`
 }
 
 // this method is called when your extension is deactivated
