@@ -1,15 +1,23 @@
 # Powerapps-WRE README
 
-Powerapps-WRE is a VSCode extension enabling Dynamics 365 developes to manage their web resources.
+Powerapps-WRE is a VSCode extension enabling Microsoft Dynamics 365 developers to manage their web resources directly within VSCode.
 
 ## Features
 
-- Export, edit, then import your web resources directly from vscode. 
-- Simple and secure authentication to Dynamics 
+- Export, edit, then import your Microsoft Dynamics 365 web resources directly from VSCode. 
+- Simple and secure authentication to Microsoft Dynamics 365.
+- Easy to use commands via the command palette.
+
+| Command      | Description |
+| ----------- | ----------- |
+| Powerapps: Create Authentication | Login to a Microsoft Dynamics 365 organization and save the profile.       |
+| Powerapps: Select Authentication | Select which profile to be active.        |
+| Powerapps: Select Solution | Select which solution to export (from D365) and unpack into the default workspace.        |
+| Powerapps: Push Solution | Pack, import (to D365), then publish the current solution to the currently selected organization.        |
 
 ## Requirements
 
-- This extension comes with a dependency on the [Power Platform Extension](https://marketplace.visualstudio.com/items?itemName=microsoft-IsvExpTools.powerplatform-vscode) and will prompt the user to install the dependency upon login.
+- This extension has a dependency on the [Power Platform Extension](https://marketplace.visualstudio.com/items?itemName=microsoft-IsvExpTools.powerplatform-vscode) and will prompt the user to install the extension upon login.
 
 ## Known Issues
 
@@ -19,5 +27,5 @@ Powerapps-WRE is a VSCode extension enabling Dynamics 365 developes to manage th
 
 ### 0.1.0
 
-Initial release under the [MIT LICENSE](/LICENSE) and alpha testing.
+Initial pre-release under the [MIT LICENSE](/LICENSE).
 
