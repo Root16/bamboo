@@ -6,9 +6,11 @@ import * as fs from 'fs';
 import { env } from 'process';
 import { homedir } from 'os';
 import { WebResoucesProvider } from './ui/webresourceprovider';
+import { unzip } from 'zlib';
 
 let currentSolutionStatusBar: vscode.StatusBarItem;
 let availableSolutions: string[];
+let currentSolution: string;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -32,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
 			placeHolder: 'CRM Url',
 		});
 
-		cp.exec(`pac auth create --url ${result}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+		cp.exec(`pac auth create --url ${result}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, _stderr) => {
 			vscode.window.showInformationMessage(stdout);
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
@@ -41,14 +43,18 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	let solutionSelectCommand = vscode.commands.registerCommand('solutionexplorer.solutionSelect', async () => {
-		await cp.exec(`pac solution list`, async (err, stdout, stderr) => {
+		cp.exec(`pac solution list`, async (err, stdout, _stderr) => {
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
 			}
 			let regexp = /\[\d*\]\s*(\w*)\s*(.+?(?=\s{2,}))/g;
 			let solutions = [...stdout.matchAll(regexp)].map(array => `${array[2]} (${array[1]})`);
-
 			const result = await vscode.window.showQuickPick(solutions);
+
+			let currentSolution = result;
+			let availableSolutions = solutions;
+			updateStatusBarItem();
+
 			let regexp2 = /\(([^)]+)\)/;
 			let matches = regexp2.exec(result!);
 			let name = matches![1];
@@ -58,34 +64,25 @@ export function activate(context: vscode.ExtensionContext) {
 				fs.mkdirSync(defaultSolutionsFolder);
 			}
 
-			await cp.exec(`pac solution export --path ${defaultSolutionsFolder}/${name}.zip --name ${name}`, async (err, stdout, stderr) => {
-				if (err) {
-					vscode.window.showErrorMessage(stderr);
-					return;
-				}
-				vscode.window.showInformationMessage(stdout);
-				
-				await cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
-					if (err) {
-						vscode.window.showErrorMessage(stderr);
-						return;
-					}
-					vscode.window.showInformationMessage(stdout);
-					var openPath = vscode.Uri.parse("file:" + defaultSolutionsFolder.replace("C:\\", ""), true);
-					vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders ?
-						vscode.workspace.workspaceFolders.length : 0,
-						null,
-						{ uri: openPath });
-				});
+			vscode.window.withProgress({
+				location: vscode.ProgressLocation.Notification,
+				title: "I am long running!",
+				cancellable: false
+			}, async (progress) => {
+				progress.report({ increment: 50, message: "I am long running! - almost there..." });
 
+				await unzipSolution(defaultSolutionsFolder, name);
+
+				progress.report({ increment: 100, message: "I am long running! - almost there..." });
 			});
+
 
 		});
 	});
 
 	// not finished
 	let authSelectCommand = vscode.commands.registerCommand('solutionexplorer.authSelect', async () => {
-		cp.exec(`pac auth list`, async (err, stdout, stderr) => {
+		cp.exec(`pac auth list`, async (err, stdout, _stderr) => {
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
 			}
@@ -98,6 +95,35 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(authCreateCommand);
 	context.subscriptions.push(solutionSelectCommand);
+}
+
+function unzipSolution(defaultSolutionsFolder: string, name: string): Promise<string> {
+	var myPromise = new Promise<string>((resolve, reject) => {
+		cp.exec(`pac solution export --path ${defaultSolutionsFolder}/${name}.zip --name ${name}`, async (err, stdout, stderr) => {
+			if (err) {
+				vscode.window.showErrorMessage(stderr);
+				return;
+			}
+			vscode.window.showInformationMessage(stdout);
+
+			cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+				if (err) {
+					vscode.window.showErrorMessage(stderr);
+					return;
+				}
+				vscode.window.showInformationMessage(stdout);
+				var openPath = vscode.Uri.parse("file:" + defaultSolutionsFolder.replace("C:\\", ""), true);
+				vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders ?
+					vscode.workspace.workspaceFolders.length : 0,
+					null,
+					{ uri: openPath });
+			}).on("close", () => { resolve("test"); });
+		});
+	});
+
+	return myPromise;
+
+
 }
 
 function initStatusBar(context: vscode.ExtensionContext) {
@@ -114,7 +140,7 @@ function initStatusBar(context: vscode.ExtensionContext) {
 }
 
 function updateStatusBarItem(): void {
-	currentSolutionStatusBar.text = `$(megaphone) idk line(s) selected`;
+	currentSolutionStatusBar.text = currentSolution !== null ? 'No Solution Selected' : currentSolution;
 	currentSolutionStatusBar.show();
 }
 
