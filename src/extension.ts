@@ -12,20 +12,25 @@ let currentSolutionStatusBar: vscode.StatusBarItem;
 let availableSolutions: string[];
 let currentSolution: string;
 
+let globalExtensionFolder = homedir() + "\\AppData\\Roaming\\Code\\User\\globalStorage\\" + "root16.vscode-web-resource-explorer";
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	initStatusBar(context);
+	//make the sandbox recource folder if it doesnt exist	
+	if (!fs.existsSync(globalExtensionFolder)) {
+		fs.mkdirSync(globalExtensionFolder);
+	}
 
 	env.path = env.path + `;${homedir()}\\AppData\\Roaming\\Code\\User\\globalStorage\\microsoft-isvexptools.powerplatform-vscode\\pac\\tools;`
+
+	initStatusBar(context);
 
 	const webResourcesProvider = new WebResoucesProvider("solution1", []);
 	vscode.window.registerTreeDataProvider('webResources', webResourcesProvider);
 	vscode.commands.registerCommand('webResources.refreshEntry', () =>
 		webResourcesProvider.refresh()
 	);
-
-	let defaultSolutionsFolder = homedir() + "\\source\\CRMSolutions";
 
 	let solutionPushCommand = vscode.commands.registerCommand('solutionexplorer.solutionPush', async () => {
 		// how do I know which directory to push?? 
@@ -82,6 +87,8 @@ export function activate(context: vscode.ExtensionContext) {
 			let matches = regexp2.exec(result!);
 			let name = matches![1];
 
+
+			let defaultSolutionsFolder = globalExtensionFolder + `\\${name}`;
 
 			if (!fs.existsSync(defaultSolutionsFolder)) {
 				fs.mkdirSync(defaultSolutionsFolder);
@@ -141,12 +148,26 @@ function unzipSolution(defaultSolutionsFolder: string, name: string, progress: v
 			}
 			progress.report({ increment: 60, message: "Starting to unpack solution." });
 
-			cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+			cp.exec(`pac solution unpack --clobber --allowDelete --allowWrite --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 				if (err) {
 					return resolve({ failure: true, text: stdout });
 				}
 
-				var openPath = vscode.Uri.parse("file:" + defaultSolutionsFolder.replace("C:\\", ""), true);
+				var tempWorkspace = homedir() + `\\source\\repos\\${name}`;
+
+				if (!fs.existsSync(tempWorkspace)) {
+					fs.mkdirSync(tempWorkspace);
+				}
+
+				let from = globalExtensionFolder + `\\${name}\\WebResources`;
+
+				let to = tempWorkspace;
+
+				//I have no idea how to copy a directory in node - so i somply shant
+				cp.exec(`cp -r ${from} ${to}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+
+				//open up in random repo 
+				var openPath = vscode.Uri.parse("file:" + tempWorkspace.replace("C:\\", ""), true);
 				vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders ?
 					vscode.workspace.workspaceFolders.length : 0,
 					null,
