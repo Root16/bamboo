@@ -9,8 +9,10 @@ import { WebResoucesProvider } from './ui/webresourceprovider';
 import { unzip } from 'zlib';
 
 let currentSolutionStatusBar: vscode.StatusBarItem;
+let currentAuthStatusBar: vscode.StatusBarItem;
 let availableSolutions: string[];
 let currentSolution: string;
+let currentAuth: string;
 
 let globalExtensionFolder = homedir() + "\\AppData\\Roaming\\Code\\User\\globalStorage\\" + "root16.vscode-web-resource-explorer";
 
@@ -33,9 +35,11 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	let solutionPushCommand = vscode.commands.registerCommand('solutionexplorer.solutionPush', async () => {
+		//TODO: implement global state - so that the extension remember's what the currently selected solution is
 		if (currentSolution === undefined) {
 			currentSolution = "test";
 		}
+
 		var solutionName = currentSolution;
 
 		let from = homedir() + `\\source\\repos\\${solutionName}\\WebResources`;
@@ -47,7 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
-			title: "Exporting Web Resources",
+			title: "Importing and Publishing Web Resources",
 			cancellable: false
 		}, async (progress) => {
 			progress.report({ increment: 20, message: "Starting to push	 solution" });
@@ -73,6 +77,8 @@ export function activate(context: vscode.ExtensionContext) {
 		var regex = /https:\/\/(.*).crm.dynamics.com/g;
 		let shortName = result?.matchAll(regex)?.next().value[1];
 
+		currentAuth = shortName;
+
 		cp.exec(`pac auth create --name ${shortName} --url ${result}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, _stderr) => {
 			vscode.window.showInformationMessage(stdout);
 			if (err) {
@@ -91,12 +97,13 @@ export function activate(context: vscode.ExtensionContext) {
 			const result = await vscode.window.showQuickPick(solutions);
 
 			availableSolutions = solutions;
-			updateStatusBarItem();
 
 			let regexp2 = /\(([^)]+)\)/;
 			let matches = regexp2.exec(result!);
 			let name = matches![1];
 			currentSolution = name;
+
+			updateSolutionStatusBarItem();
 
 			let defaultSolutionsFolder = globalExtensionFolder + `\\${name}`;
 
@@ -128,19 +135,23 @@ export function activate(context: vscode.ExtensionContext) {
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
 			}
-			let regexp = /(https:\/\/\w+.crm.dynamics.com\/)\s*:\s(\S+)/g;
-			let auths = [...stdout.matchAll(regexp)].map(array => `${array[1]} (${array[2]})`);
+			// let regexp = /(https:\/\/\w+.crm.dynamics.com\/)\s*:\s(\S+)/g;
+			var regex = /https:\/\/(.*).crm.dynamics.com/g;
+			let auths = [...stdout.matchAll(regex)].map(array => array[1]);
+			// let auths = [...stdout.matchAll(regex)].map(array => `${array[1]} (${array[2]})`);
 			const result = await vscode.window.showQuickPick(auths);
 
-			var regex = /https:\/\/(.*).crm.dynamics.com/g;
-			let shortName = result?.matchAll(regex)?.next().value[1];
+			// var regex = /https:\/\/(.*).crm.dynamics.com/g;
+			// let shortName = result?.matchAll(regex)?.next().value[1];
+			currentAuth = result!;
 
-			cp.exec(`pac auth select --name ${shortName}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+			cp.exec(`pac auth select --name ${currentAuth}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 				if (err) {
 					throw "idk";
 					// return resolve({ failure: true, text: stdout });
 				}
-				vscode.window.showInformationMessage(`Currently Selected Auth: ${shortName}`);
+				vscode.window.showInformationMessage(`Currently Selected Auth: ${currentAuth}`);
+				updateAuthStatusBarItem();
 			});
 		});
 	});
@@ -226,12 +237,29 @@ function initStatusBar(context: vscode.ExtensionContext) {
 	currentSolutionStatusBar.command = statusBarCommand;
 	context.subscriptions.push(currentSolutionStatusBar);
 
-	updateStatusBarItem();
+	const currentAuthStatusBarCmd = 'statusbar.showCurrentAuth';
+	vscode.commands.registerCommand(currentAuthStatusBarCmd, () => {
+		vscode.window.showInformationMessage(`Currently selected :`);
+	});
+
+	currentAuthStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	currentAuthStatusBar.command = currentAuthStatusBarCmd;
+	context.subscriptions.push(currentAuthStatusBar);
+
+
+	updateSolutionStatusBarItem();
+	updateAuthStatusBarItem();
+
 }
 
-function updateStatusBarItem(): void {
-	currentSolutionStatusBar.text = currentSolution === null || currentSolution === undefined ? "No Solution Selected" : currentSolution;
+function updateSolutionStatusBarItem(): void {
+	currentSolutionStatusBar.text = currentSolution === null || currentSolution === undefined ? "No Solution Selected" : `Current Solution: ${currentSolution}`;
 	currentSolutionStatusBar.show();
+}
+
+function updateAuthStatusBarItem(): void {
+	currentAuthStatusBar.text = currentAuth === null || currentAuth === undefined ? "No Auth Selected" : `Current Auth: ${currentAuth}`;
+	currentAuthStatusBar.show();
 }
 
 // this method is called when your extension is deactivated
