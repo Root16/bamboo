@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
-			title: "Extracting Zip Data",
+			title: "Exporting Web Resources",
 			cancellable: false
 		}, async (progress) => {
 			progress.report({ increment: 20, message: "Starting to push	 solution" });
@@ -162,7 +162,7 @@ function pushSolution(defaultSolutionsFolder: string, name: string, progress: vs
 
 			// There are a lot of options for this command that we should prob look more into
 			// https://docs.microsoft.com/en-us/powerapps/developer/data-platform/cli/reference/solution-command
-			cp.exec(`pac solution import --path ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+			cp.exec(`pac solution import --publish-changes --path ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
 				if (err) {
 					return resolve({ failure: true, text: stdout });
 				}
@@ -175,6 +175,10 @@ function pushSolution(defaultSolutionsFolder: string, name: string, progress: vs
 
 function unzipSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
 	var myPromise = new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
+		//delete any previous zip that was there
+		// cp.exec(`rm -f ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+		cp.exec(`rm ${defaultSolutionsFolder}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+
 		cp.exec(`pac solution export --path ${defaultSolutionsFolder}.zip --name ${name}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 			if (err) {
 				return resolve({ failure: true, text: stdout });
