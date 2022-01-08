@@ -33,19 +33,27 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	let solutionPushCommand = vscode.commands.registerCommand('solutionexplorer.solutionPush', async () => {
-		// how do I know which directory to push?? 
-		// maybe we need the config file
-		var solutionDirectory = "PLACEHOLDER";
-		var solutionName = "PLACEHOLDER";
+		if(currentSolution === undefined) {
+			currentSolution = "test";
+		}
+		var solutionName = currentSolution;
 
-		cp.exec(`pac solution pack --zipfile ${solutionDirectory}/${solutionName}.zip --folder ${solutionDirectory}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+		let from = homedir() + `\\source\\repos\\${solutionName}\\WebResources`;
+		let to = globalExtensionFolder + `\\${solutionName}`;
+
+		cp.exec(`cp -r ${from} ${to}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' });
+
+		var solutionDirectory = globalExtensionFolder + `\\${solutionName}`;
+
+		cp.exec(`pac solution pack --folder ${solutionDirectory}\\ --zipfile ${solutionDirectory}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
 			if (err) {
 				vscode.window.showErrorMessage('error: ' + err);
+				return;
 			}
 
 			// There are a lot of options for this command that we should prob look more into
 			// https://docs.microsoft.com/en-us/powerapps/developer/data-platform/cli/reference/solution-command
-			cp.exec(`pac solution import --path ${solutionDirectory}/${solutionName}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
+			cp.exec(`pac solution import --path ${solutionDirectory}.zip`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, (err, stdout, stderr) => {
 				if (err) {
 					vscode.window.showErrorMessage('error: ' + err);
 				}
@@ -79,14 +87,13 @@ export function activate(context: vscode.ExtensionContext) {
 			let solutions = [...stdout.matchAll(regexp)].map(array => `${array[2]} (${array[1]})`);
 			const result = await vscode.window.showQuickPick(solutions);
 
-			currentSolution = result!;
 			availableSolutions = solutions;
 			updateStatusBarItem();
 
 			let regexp2 = /\(([^)]+)\)/;
 			let matches = regexp2.exec(result!);
 			let name = matches![1];
-
+			currentSolution = name;
 
 			let defaultSolutionsFolder = globalExtensionFolder + `\\${name}`;
 
@@ -138,17 +145,18 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(authCreateCommand);
 	context.subscriptions.push(solutionSelectCommand);
 	context.subscriptions.push(authSelectCommand);
+	context.subscriptions.push(solutionPushCommand);
 }
 
 function unzipSolution(defaultSolutionsFolder: string, name: string, progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>): Promise<{ failure: boolean, text: string }> {
 	var myPromise = new Promise<{ failure: boolean, text: string }>((resolve, reject) => {
-		cp.exec(`pac solution export --path ${defaultSolutionsFolder}\\${name}.zip --name ${name}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+		cp.exec(`pac solution export --path ${defaultSolutionsFolder}.zip --name ${name}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 			if (err) {
 				return resolve({ failure: true, text: stdout });
 			}
 			progress.report({ increment: 60, message: "Starting to unpack solution." });
 
-			cp.exec(`pac solution unpack --clobber --allowDelete --allowWrite --zipfile ${defaultSolutionsFolder}/${name}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
+			cp.exec(`pac solution unpack --zipfile ${defaultSolutionsFolder}.zip --folder ${defaultSolutionsFolder}`, { shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' }, async (err, stdout, stderr) => {
 				if (err) {
 					return resolve({ failure: true, text: stdout });
 				}

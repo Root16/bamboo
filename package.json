@@ -62,6 +62,10 @@
 				"title": "Powerapps: Select Solution"
 			},
 			{
+				"command": "solutionexplorer.solutionPush",
+				"title": "Powerapps: Push Solution"
+			},
+			{
 				"command": "webResources.refreshEntry",
 				"title": "Refresh",
 				"icon": {
