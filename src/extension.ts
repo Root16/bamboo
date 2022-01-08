@@ -51,9 +51,11 @@ export function activate(context: vscode.ExtensionContext) {
 			let solutions = [...stdout.matchAll(regexp)].map(array => `${array[2]} (${array[1]})`);
 			const result = await vscode.window.showQuickPick(solutions);
 
-			let currentSolution = result;
-			let availableSolutions = solutions;
+			currentSolution = result!;
+			availableSolutions = solutions;
 			updateStatusBarItem();
+
+			return;
 
 			let regexp2 = /\(([^)]+)\)/;
 			let matches = regexp2.exec(result!);
@@ -140,7 +142,7 @@ function initStatusBar(context: vscode.ExtensionContext) {
 }
 
 function updateStatusBarItem(): void {
-	currentSolutionStatusBar.text = currentSolution !== null ? 'No Solution Selected' : currentSolution;
+	currentSolutionStatusBar.text = currentSolution === null || currentSolution === undefined ? "No Solution Selected" : currentSolution;
 	currentSolutionStatusBar.show();
 }
 
