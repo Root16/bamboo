@@ -5,20 +5,35 @@ import * as cp from 'child_process';
 import * as fs from 'fs';
 import { env } from 'process';
 import { homedir } from 'os';
+import * as child from 'child_process';
 
 let currentSolutionStatusBar: vscode.StatusBarItem;
 let currentAuthStatusBar: vscode.StatusBarItem;
 let currentSolution: string;
 let currentAuth: string;
 
+
 const globalExtensionFolder = homedir() + "\\AppData\\Roaming\\Code\\User\\globalStorage\\" + "root16.vscode-web-resource-explorer";
 
 const globalSavedConfigFile = globalExtensionFolder + "\\settings.json";
 
 const userSolutionWorkspaceDir = homedir() + "\\source\\repos";
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+interface WebResourceUploadResult {
+    data: string;
+}
+
+export class WebResourceUploader {
+    uploadFile() {            
+        // const res = child.execFileSync('C:\\Users\\JohnYenter-Briars\\hackathon\\dev\\vscode-web-resource-explorer\\web-resource-uploader\\WebResource.Uploader\\bin\\Release\\ne6.0\\WebResource.Uploader.exe', ['arg0', 'arg1']);
+        const res = child.execFileSync('C:\\Users\\JohnYenter-Briars\\hackathon\\dev\\vscode-web-resource-explorer\\web-resource-uploader\\Webresource.Uploader\\Webresource.Uploader\\bin\\Release\\net6.0\\WebResource.Uploader.exe', ['arg0', 'arg1']);
+        let result: WebResourceUploadResult = {data: res.toString()};
+		console.log(result.data);
+    }
+}
+
 export async function activate(context: vscode.ExtensionContext) {
+
+	new WebResourceUploader().uploadFile();
 	//make the sandbox resource folder if it doesn't exist	
 	if (!fs.existsSync(globalExtensionFolder)) {
 		fs.mkdirSync(globalExtensionFolder);
