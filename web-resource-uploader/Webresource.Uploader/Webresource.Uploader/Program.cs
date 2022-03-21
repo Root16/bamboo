@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Webresource.Uploader.Interface;
+using CommandLine;
 
 namespace Webresource.Uploader
 {
@@ -19,19 +20,26 @@ namespace Webresource.Uploader
     {
         static void Main(string[] args)
         {
-            var serviceCollection = new ServiceCollection()
-                .AddLogging()
-                .AddSingleton<IUploader, Uploader>();
+            Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed<CommandLineOptions>(options =>
+            {
+                var serviceCollection = new ServiceCollection()
+                    .AddLogging()
+                    .AddSingleton<IUploader, Uploader>();
 
-            ConfigureServices(serviceCollection);
+                ConfigureServices(serviceCollection);
 
-            var serviceProvider = serviceCollection.BuildServiceProvider();
+                serviceCollection.AddSingleton(options);
 
-            var logger = serviceProvider.GetService<ILoggerFactory>()
-                .CreateLogger<Program>();
-            logger.LogDebug("Starting application");
+                var serviceProvider = serviceCollection.BuildServiceProvider();
 
-            serviceProvider.GetService<IUploader>().UploadFile();
+                var logger = serviceProvider.GetService<ILoggerFactory>()
+                    .CreateLogger<Program>();
+
+                logger.LogDebug("Starting application");
+
+                serviceProvider.GetService<IUploader>().UploadFile();
+
+            });
         }
 
         private static void ConfigureServices(IServiceCollection serviceCollection)
@@ -40,7 +48,7 @@ namespace Webresource.Uploader
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetParent(System.AppContext.BaseDirectory).FullName)
-                .AddJsonFile("appsettings.Development.json", false)
+                .AddJsonFile("appsettings.json", false)
                 .Build();
 
             serviceCollection.AddSingleton<IConfiguration>(configuration);
