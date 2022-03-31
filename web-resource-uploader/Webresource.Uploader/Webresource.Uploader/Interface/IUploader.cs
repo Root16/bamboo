@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Webresource.Uploader.Interface
 {
-    interface IUploader
+    public interface IUploader
     {
         void UploadFile();
     }

@@ -15,16 +15,21 @@ namespace Webresource.Uploader
     class Uploader : IUploader
     {
         private string connectionString;
-        public Uploader(IConfiguration configuration)
+        private bool shouldUpload;
+        private string targetSolution;
+        private string targetFilePath;
+        public Uploader(IConfiguration configuration, CommandLineOptions options)
         {
             connectionString = configuration["ConnectionString"];
+            shouldUpload = options.UploadFile;
+            targetSolution = options.Solution;
+            targetFilePath = options.WebResourceFilePath;
         }
         public void UploadFile()
         {
-            var myGuy = new Webresource(@"C:\Users\JohnYenter-Briars\source\repos\vscodeextention-test\WebResources\cref1_opportunity.js");
-            var sonnString = "AuthType=OAuth;Url=https://root16dev.crm.dynamics.com;Username=jyenterbriars@root16.com;ClientId={51f81489-12ee-4a9e-aaae-a2591f45987d};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=./oauth-cache.txt;";
+            var myGuy = new Webresource(@$"{targetFilePath}");
 
-            var service = new ServiceClient(sonnString);
+            var service = new ServiceClient(connectionString);
 
             myGuy.Create(service);
 

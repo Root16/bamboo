@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Webresource.Uploader": {
+      "commandName": "Project",
+      "commandLineArgs": "-f C:\\\\test-u true -s test"
+    }
+  }
+}
