@@ -17,5 +17,7 @@ namespace Webresource.Uploader
 
         [Option(shortName: 's', longName: "solution", Required = false, HelpText = "Solution to add the file to")]
         public string Solution { get; set; }
+        [Option(shortName: 'c', longName: "connectionString", Required = true, HelpText = "Connection string to the given Power Apps environment")]
+        public string ConnectionString { get; set; }
     }
 }
