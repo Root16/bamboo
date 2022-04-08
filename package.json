@@ -1,11 +1,10 @@
 {
 	"name": "powerapps-wre",
-	"displayName": "powerapps-web-resource-explorer",
-	"description": "Allows users to explore powerapps web resources straight from vscode",
+	"displayName": "powerapps-web-resource-uploader",
+	"publisher": "root16",
+	"repository": {"url": "https://github.com/Root16/vscode-web-resource-explorer"},
+	"description": "Allows users to upload and explore powerapps web resources straight from vscode",
 	"version": "0.0.1",
-	"extensionDependencies": [
-		"microsoft-IsvExpTools.powerplatform-vscode"
-	],
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -20,22 +19,6 @@
 		"viewsContainers": {
 		},
 		"commands": [
-			{
-				"command": "solutionexplorer.authCreate",
-				"title": "Powerapps: Create Authentication"
-			},
-			{
-				"command": "solutionexplorer.authSelect",
-				"title": "Powerapps: Select Authentication"
-			},
-			{
-				"command": "solutionexplorer.solutionSelect",
-				"title": "Powerapps: Select Solution"
-			},
-			{
-				"command": "solutionexplorer.solutionPush",
-				"title": "Powerapps: Push Solution"
-			}
 		]
 	},
 	"scripts": {

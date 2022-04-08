@@ -14,22 +14,16 @@ namespace Webresource.Uploader
 {
     class Uploader : IUploader
     {
-        private string connectionString;
-        private bool shouldUpload;
-        private string targetSolution;
-        private string targetFilePath;
+        private CommandLineOptions _commandLineOptions;
         public Uploader(IConfiguration configuration, CommandLineOptions options)
         {
-            connectionString = configuration["ConnectionString"];
-            shouldUpload = options.UploadFile;
-            targetSolution = options.Solution;
-            targetFilePath = options.WebResourceFilePath;
+            _commandLineOptions = options;
         }
         public void UploadFile()
         {
-            var myGuy = new Webresource(@$"{targetFilePath}");
+            var myGuy = new Webresource(@$"{_commandLineOptions.WebResourceFilePath}");
 
-            var service = new ServiceClient(connectionString);
+            var service = new ServiceClient(_commandLineOptions.ConnectionString);
 
             myGuy.Create(service);
 
