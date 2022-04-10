@@ -2,7 +2,9 @@
 	"name": "powerapps-wre",
 	"displayName": "powerapps-web-resource-uploader",
 	"publisher": "root16",
-	"repository": {"url": "https://github.com/Root16/vscode-web-resource-explorer"},
+	"repository": {
+		"url": "https://github.com/Root16/vscode-web-resource-explorer"
+	},
 	"description": "Allows users to upload and explore powerapps web resources straight from vscode",
 	"version": "0.0.1",
 	"engines": {
@@ -11,15 +13,27 @@
 	"categories": [
 		"Other"
 	],
-	"activationEvents": [
-		"onStartupFinished"
-	],
 	"main": "./out/extension.js",
+	"activationEvents": [
+		"onStartupFinished",
+		"onCommand:extension.doThing"
+	],
 	"contributes": {
-		"viewsContainers": {
-		},
 		"commands": [
-		]
+			{
+				"command": "webber.uploadFile",
+				"title": "Upload file to Power Apps",
+				"category": "Webber"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"command": "webber.uploadFile",
+					"group": "navigation"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
