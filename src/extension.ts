@@ -7,6 +7,8 @@ const globalSavedConfigFile = "whatever the context for the global storage folde
 
 const uploaderExePath = "/Webresource.Uploader/Webresource.Uploader/bin/Release/net6.0/Webresource.Uploader.exe";
 
+const currentlySelectedSolution = "vscodeextentiontest";
+
 interface WebResourceUploadResult {
 	data: string;
 }
@@ -19,8 +21,12 @@ export class WebResourceUploader {
 		this._exePath = exePath;
 	}
 
-	uploadFile(path: string) {
-		const res = child.execFileSync(this._exePath, ['-f', path, '-u', '-c']);
+	uploadFile(path: string, publish: boolean = false) {
+		const args = ['-f', path, '-u', '-c', '-s', currentlySelectedSolution];
+		if (publish) {
+			args.push('-p');
+		}
+		const res = child.execFileSync(this._exePath, args);
 		let result: WebResourceUploadResult = { data: res.toString() };
 		terminal = terminal || vscode.window.createTerminal('webber', 'C:\\Windows\\System32\\cmd.exe');
 		terminal.show();
@@ -32,6 +38,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	let uploader = new WebResourceUploader(context.extensionPath + uploaderExePath);
 	vscode.commands.registerCommand('webber.uploadFile', (resource: vscode.Uri) => {
 		uploader.uploadFile(resource.path);
+	});
+	vscode.commands.registerCommand('webber.uploadAndPublishFile', (resource: vscode.Uri) => {
+		uploader.uploadFile(resource.path, true);
 	});
 }
 

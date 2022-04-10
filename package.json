@@ -24,12 +24,21 @@
 				"command": "webber.uploadFile",
 				"title": "Upload file to Power Apps",
 				"category": "Webber"
+			},
+			{
+				"command": "webber.uploadAndPublishFile",
+				"title": "Upload and publish file to Power Apps",
+				"category": "Webber"
 			}
 		],
 		"menus": {
 			"explorer/context": [
 				{
 					"command": "webber.uploadFile",
+					"group": "navigation"
+				},
+				{
+					"command": "webber.uploadAndPublishFile",
 					"group": "navigation"
 				}
 			]
