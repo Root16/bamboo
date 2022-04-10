@@ -27,9 +27,14 @@ namespace Webresource.Uploader
 
             myGuy.Create(service);
 
-            AddToSolution(new List<Webresource> { myGuy }, "vscodeextentiontest", service);
+            AddToSolution(new List<Webresource> { myGuy }, _commandLineOptions.Solution, service);
 
             Console.WriteLine("Web resource successfully uploaded!");
+
+            if (_commandLineOptions.PublishFile)
+            {
+                Console.WriteLine("Need to publich file");
+            }
         }
         public static void AddToSolution(List<Webresource> resources, string solutionUniqueName, IOrganizationService service)
         {

@@ -1,46 +1,47 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as cp from 'child_process';
-import * as fs from 'fs';
-import { env } from 'process';
-import { homedir } from 'os';
 import * as child from 'child_process';
 
-let currentSolutionStatusBar: vscode.StatusBarItem;
-let currentAuthStatusBar: vscode.StatusBarItem;
-let currentSolution: string;
-let currentAuth: string;
+const globalSavedConfigFile = "whatever the context for the global storage folder thing is" + "\\settings.json";
 
+const uploaderExePath = "/Webresource.Uploader/Webresource.Uploader/bin/Release/net6.0/Webresource.Uploader.exe";
 
-const globalExtensionFolder = homedir() + "\\AppData\\Roaming\\Code\\User\\globalStorage\\" + "root16.vscode-web-resource-explorer";
-
-const globalSavedConfigFile = globalExtensionFolder + "\\settings.json";
+const currentlySelectedSolution = "vscodeextentiontest";
 
 interface WebResourceUploadResult {
-    data: string;
+	data: string;
 }
+let terminal: vscode.Terminal | undefined;
 
 export class WebResourceUploader {
-    uploadFile() {            
-        const res = child.execFileSync('C:\\Users\\JohnYenter-Briars\\hackathon\\dev\\vscode-web-resource-explorer\\web-resource-uploader\\WebResource.Uploader\\bin\\Release\\ne6.0\\WebResource.Uploader.exe', ['arg0', 'arg1']);
-        const res1 = child.execFileSync('pwd');
-		// var idk = res1.toString();
-        // const res = child.execFileSync('.\\web-resource-uploader\\Webresource.Uploader\\Webresource.Uploader\\bin\\Release\\net6.0\\WebResource.Uploader.exe', ['arg0', 'arg1']);
-        let result: WebResourceUploadResult = {data: res.toString()};
-		console.log(result.data);
-    }
+	_exePath: string;
+
+	constructor(exePath: string) {
+		this._exePath = exePath;
+	}
+
+	uploadFile(path: string, publish: boolean = false) {
+		const args = ['-f', path, '-u', '-c', '-s', currentlySelectedSolution];
+		if (publish) {
+			args.push('-p');
+		}
+		const res = child.execFileSync(this._exePath, args);
+		let result: WebResourceUploadResult = { data: res.toString() };
+		terminal = terminal || vscode.window.createTerminal('webber', 'C:\\Windows\\System32\\cmd.exe');
+		terminal.show();
+		terminal.sendText(`${result.data}`);
+	}
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-
-	//confirming that this really does work. do with it what you will
-	let idk = context.extensionPath;
-	let value = idk + "/Webresource.Uploader/Webresource.Uploader/bin/Release/net6.0/";
-	console.log(idk);
-	const res2 = child.execFileSync('dir', [idk]).toString();
-	const res1 = child.execFileSync('dir', [value]).toString();
-	console.log(res1);
+	let uploader = new WebResourceUploader(context.extensionPath + uploaderExePath);
+	vscode.commands.registerCommand('webber.uploadFile', (resource: vscode.Uri) => {
+		uploader.uploadFile(resource.path);
+	});
+	vscode.commands.registerCommand('webber.uploadAndPublishFile', (resource: vscode.Uri) => {
+		uploader.uploadFile(resource.path, true);
+	});
 }
 
 // this method is called when your extension is deactivated

@@ -14,8 +14,10 @@ namespace Webresource.Uploader
 
         [Option(shortName: 'u', longName: "uploadfile", Required = false, HelpText = "Upload the file to the org", Default = true)]
         public bool UploadFile { get; set; }
+        [Option(shortName: 'p', longName: "publishFile", Required = false, HelpText = "Publish the file after uploading", Default = false)]
+        public bool PublishFile { get; set; }
 
-        [Option(shortName: 's', longName: "solution", Required = false, HelpText = "Solution to add the file to")]
+        [Option(shortName: 's', longName: "solution", Required = true, HelpText = "Solution to add the file to")]
         public string Solution { get; set; }
         [Option(shortName: 'c', longName: "connectionString", Required = true, HelpText = "Connection string to the given Power Apps environment")]
         public string ConnectionString { get; set; }
