@@ -18,10 +18,9 @@ namespace Webresource.Uploader
         private readonly ServiceClient ServiceClient;
         public Uploader(IConfiguration configuration, CommandLineOptions options)
         {
-            Console.WriteLine("test: " + configuration["ConnectionString"]);
             CommandLineOptions = options;
-            ServiceClient = string.IsNullOrEmpty(CommandLineOptions.ConnectionString) ? 
-                                new ServiceClient(configuration["ConnectionString"]) : 
+            ServiceClient = string.IsNullOrEmpty(CommandLineOptions.ConnectionString) ?
+                                new ServiceClient(configuration["ConnectionString"]) :
                                 new ServiceClient(options.ConnectionString);
             Console.WriteLine("Authenticated to Power Platform!");
         }
@@ -31,11 +30,16 @@ namespace Webresource.Uploader
 
             var listOfWebResources = new List<Webresource> { myGuy };
 
-            myGuy.Create(ServiceClient);
+            if (CommandLineOptions.UpdateIfExists)
+            {
+                myGuy.CreateOrUpdate(ServiceClient);
+            }
+            else
+            {
+                myGuy.Create(ServiceClient);
+            }
 
             AddToSolution(listOfWebResources, CommandLineOptions.Solution, ServiceClient);
-
-            Console.WriteLine("Web resource successfully uploaded!");
 
             if (CommandLineOptions.PublishFile)
             {
@@ -91,6 +95,7 @@ namespace Webresource.Uploader
             {
                 service.Execute(bulkRequest);
             }
+            Console.WriteLine("Web resource successfully added to solution!");
         }
     }
 }
