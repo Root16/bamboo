@@ -2,7 +2,7 @@
   "profiles": {
     "Webresource.Uploader": {
       "commandName": "Project",
-      "commandLineArgs": "-f /c:/Users/JohnYenter-Briars/hackathon/dev/test.js -s vscodeextentiontest -p"
+      "commandLineArgs": "--filePath c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\test.js --solution vscodeextentiontest --publish --updateIfExists"
     }
   }
 }

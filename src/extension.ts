@@ -22,9 +22,9 @@ export class WebResourceUploader {
 	}
 
 	uploadFile(path: string, publish: boolean = false) {
-		const args = ['--file', path, '--solution', currentlySelectedSolution,];
+		const args = ['--filePath', path, '--solution', currentlySelectedSolution, '--updateIfExists'];
 		if (publish) {
-			args.push('--publishFile');
+			args.push('--publish');
 		}
 		const res = child.execFileSync(this._exePath, args);
 		let result: WebResourceUploadResult = { data: res.toString() };

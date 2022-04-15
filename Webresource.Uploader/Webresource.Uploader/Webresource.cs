@@ -23,12 +23,19 @@ namespace Webresource.Uploader
             "webresourceid", "description", "content");
         private Entity record;
         public string StringContent { get; private set; }
+        public string Name
+        {
+            get => record?.GetAttributeValue<string>("name");
+            set
+            {
+                record["name"] = value;
+                State = WebresourceState.Saved;
+            }
+        }
 
         public Guid Id => record?.Id ?? Guid.Empty;
-
         private string filePath;
         public WebresourceState State;
-
         public Webresource(string filePath)
         {
             var fi = new FileInfo(filePath);
@@ -135,77 +142,44 @@ namespace Webresource.Uploader
 
             throw new Exception($@"File extension '{extension}' cannot be mapped to a webresource type!");
         }
-        public void Update(IOrganizationService service, bool overwrite = false)
+        public void CreateOrUpdate(IOrganizationService service)
         {
-            //var name = Name;
-            //if (HasExtensionlessMappingFile && settings.SyncMatchingJsFilesAsExtensionless)
-            //{
-            //    File.WriteAllText(ExtensionlessMappingFilePath, StringContent);
-            //    name = NameWithoutExtension;
-            //}
+            var remoteRecord = RetrieveWebresource(Name, service);
+            if (remoteRecord == null)
+            {
+                Create(service);
+                return;
+            }
+            else
+            {
+                record.Id = remoteRecord.Id;
+                service.Update(record);
+            }
 
-            //if (Id == Guid.Empty)
-            //{
-            //    var remoteRecord = RetrieveWebresource(name, service);
-            //    if (remoteRecord == null)
-            //    {
-            //        Create(service);
-            //        State = WebresourceState.None;
-            //        return;
-            //    }
-
-            //    record.Id = remoteRecord.Id;
-
-            //    if (remoteRecord.Contains("displayname") && string.IsNullOrEmpty(DisplayName))
-            //    {
-            //        DisplayName = remoteRecord.GetAttributeValue<string>("displayname");
-            //    }
-
-            //    if (remoteRecord.Contains("description") && string.IsNullOrEmpty(Description))
-            //    {
-            //        Description = remoteRecord.GetAttributeValue<string>("description");
-            //    }
-
-            //    if (remoteRecord.Contains("dependencyxml") && string.IsNullOrEmpty(DependencyXml))
-            //    {
-            //        DependencyXml = remoteRecord.GetAttributeValue<string>("dependencyxml");
-            //    }
-
-            //    if (remoteRecord.Contains("languagecode") && LanguageCode == 0)
-            //    {
-            //        LanguageCode = remoteRecord.GetAttributeValue<int>("languagecode");
-            //    }
-            //}
-
-            // Concurrency Behavior has a bug for webresources
-            // Cannot implemen that
-            //var request = new UpdateRequest
-            //{
-            //    Target = record,
-            //    ConcurrencyBehavior =
-            //        overwrite ? ConcurrencyBehavior.AlwaysOverwrite : ConcurrencyBehavior.IfRowVersionMatches
-            //};
-
-            //service.Execute(request);
-
-            //if (!settings.ForceResourceUpdate)
-            //{
-            //    if (overwrite == false)
-            //    {
-            //        var existingRecord = service.Retrieve("webresource", record.Id, new ColumnSet(false));
-            //        if (!string.IsNullOrEmpty(existingRecord.RowVersion) && !string.IsNullOrEmpty(record.RowVersion) && long.Parse(existingRecord.RowVersion) > long.Parse(record.RowVersion))
-            //        {
-            //            throw new MoreRecentRecordExistsException();
-            //        }
-            //    }
-            //}
-
-            service.Update(record);
-
-            //GetLatestVersion(true);
-
-            //Synced = true;
             State = WebresourceState.None;
+        }
+        public static Entity RetrieveWebresource(string name, IOrganizationService service)
+        {
+            try
+            {
+                var qba = new QueryByAttribute("webresource");
+                qba.Attributes.Add("name");
+                qba.Values.Add(name);
+                qba.ColumnSet = Webresource.Columns;
+
+                EntityCollection collection = service.RetrieveMultiple(qba);
+
+                if (collection.Entities.Count > 1)
+                {
+                    throw new Exception($"there are more than one web resource with name '{name}'");
+                }
+
+                return collection.Entities.FirstOrDefault();
+            }
+            catch (Exception error)
+            {
+                throw new Exception($"An error occured while retrieving a webresource with name {name}: {error.Message}");
+            }
         }
 
 
