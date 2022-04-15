@@ -48,6 +48,7 @@ namespace Webresource.Uploader
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetParent(System.AppContext.BaseDirectory).FullName)
+                .AddJsonFile("appsettings.Development.json", false)
                 .AddJsonFile("appsettings.json", false)
                 .Build();
 

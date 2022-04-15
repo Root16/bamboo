@@ -22,25 +22,25 @@ export class WebResourceUploader {
 	}
 
 	uploadFile(path: string, publish: boolean = false) {
-		const args = ['-f', path, '-u', '-c', '-s', currentlySelectedSolution];
+		const args = ['--file', path, '--solution', currentlySelectedSolution,];
 		if (publish) {
-			args.push('-p');
+			args.push('--publishFile');
 		}
 		const res = child.execFileSync(this._exePath, args);
 		let result: WebResourceUploadResult = { data: res.toString() };
 		terminal = terminal || vscode.window.createTerminal('webber', 'C:\\Windows\\System32\\cmd.exe');
 		terminal.show();
-		terminal.sendText(`${result.data}`);
+		terminal.sendText(`${result.data}`); //this isnt quite what we want - we want to either run the command IN the shell - or take the output and make it a message bubble
 	}
 }
 
 export async function activate(context: vscode.ExtensionContext) {
 	let uploader = new WebResourceUploader(context.extensionPath + uploaderExePath);
 	vscode.commands.registerCommand('webber.uploadFile', (resource: vscode.Uri) => {
-		uploader.uploadFile(resource.path);
+		uploader.uploadFile(resource.fsPath);
 	});
 	vscode.commands.registerCommand('webber.uploadAndPublishFile', (resource: vscode.Uri) => {
-		uploader.uploadFile(resource.path, true);
+		uploader.uploadFile(resource.fsPath, true);
 	});
 }
 
