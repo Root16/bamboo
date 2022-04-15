@@ -50,6 +50,8 @@ namespace Webresource.Uploader
                 resourceName = fi.Name;
             }
 
+            resourceName = $"test_/{resourceName}";
+
             record = new Entity("webresource")
             {
                 ["name"] = resourceName,
@@ -69,14 +71,14 @@ namespace Webresource.Uploader
             State = WebresourceState.None;
             this.filePath = filePath;
 
-            if (string.IsNullOrEmpty(this.filePath) && !string.IsNullOrEmpty("figure it out"))
-            {
-                string expectedFilePath = Path.Combine("i'm sad", resourceName.Replace("/", "\\") ?? "");
-                if (File.Exists(expectedFilePath))
-                {
-                    this.filePath = expectedFilePath;
-                }
-            }
+            //if (string.IsNullOrEmpty(this.filePath) && !string.IsNullOrEmpty("figure it out"))
+            //{
+            //    string expectedFilePath = Path.Combine("i'm sad", resourceName.Replace("/", "\\") ?? "");
+            //    if (File.Exists(expectedFilePath))
+            //    {
+            //        this.filePath = expectedFilePath;
+            //    }
+            //}
 
         }
         public void Create(IOrganizationService service)

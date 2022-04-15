@@ -14,28 +14,52 @@ namespace Webresource.Uploader
 {
     class Uploader : IUploader
     {
-        private CommandLineOptions _commandLineOptions;
+        private readonly CommandLineOptions CommandLineOptions;
+        private readonly ServiceClient ServiceClient;
         public Uploader(IConfiguration configuration, CommandLineOptions options)
         {
-            _commandLineOptions = options;
+            Console.WriteLine("test: " + configuration["ConnectionString"]);
+            CommandLineOptions = options;
+            ServiceClient = string.IsNullOrEmpty(CommandLineOptions.ConnectionString) ? 
+                                new ServiceClient(configuration["ConnectionString"]) : 
+                                new ServiceClient(options.ConnectionString);
+            Console.WriteLine("Authenticated to Power Platform!");
         }
         public void UploadFile()
         {
-            var myGuy = new Webresource(@$"{_commandLineOptions.WebResourceFilePath}");
+            var myGuy = new Webresource(@$"{CommandLineOptions.WebResourceFilePath}");
 
-            var service = new ServiceClient(_commandLineOptions.ConnectionString);
+            var listOfWebResources = new List<Webresource> { myGuy };
 
-            myGuy.Create(service);
+            myGuy.Create(ServiceClient);
 
-            AddToSolution(new List<Webresource> { myGuy }, _commandLineOptions.Solution, service);
+            AddToSolution(listOfWebResources, CommandLineOptions.Solution, ServiceClient);
 
             Console.WriteLine("Web resource successfully uploaded!");
 
-            if (_commandLineOptions.PublishFile)
+            if (CommandLineOptions.PublishFile)
             {
-                Console.WriteLine("Need to publich file");
+                Publish(listOfWebResources, ServiceClient);
             }
         }
+        public static void Publish(List<Webresource> webresources, IOrganizationService service)
+        {
+            string idsXml = string.Empty;
+
+            foreach (Webresource webresource in webresources)
+            {
+                idsXml += $"<webresource>{webresource.Id:B}</webresource>";
+            }
+
+            var pxReq1 = new PublishXmlRequest
+            {
+                ParameterXml = $"<importexportxml><webresources>{idsXml}</webresources></importexportxml>"
+            };
+
+            service.Execute(pxReq1);
+            Console.WriteLine("Successfully published!");
+        }
+
         public static void AddToSolution(List<Webresource> resources, string solutionUniqueName, IOrganizationService service)
         {
             var bulkRequest = new ExecuteMultipleRequest

@@ -2,7 +2,7 @@
   "profiles": {
     "Webresource.Uploader": {
       "commandName": "Project",
-      "commandLineArgs": "-f C:\\\\test-u true -s test"
+      "commandLineArgs": "-f /c:/Users/JohnYenter-Briars/hackathon/dev/test.js -s vscodeextentiontest -p"
     }
   }
 }
