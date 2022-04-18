@@ -1,5 +1,6 @@
 ﻿using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -16,16 +17,27 @@ namespace Webresource.Uploader
     {
         private readonly CommandLineOptions CommandLineOptions;
         private readonly ServiceClient ServiceClient;
-        public Uploader(IConfiguration configuration, CommandLineOptions options)
+        private readonly ILogger Logger;
+        public Uploader(IConfiguration configuration, 
+                        ILogger<Uploader> logger, 
+                        ILoggerFactory loggerFactory,
+                        CommandLineOptions options)
         {
             CommandLineOptions = options;
             ServiceClient = string.IsNullOrEmpty(CommandLineOptions.ConnectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
                                 new ServiceClient(options.ConnectionString);
-            Console.WriteLine("Authenticated to Power Platform!");
+            Logger = logger;
+            Logger.LogInformation("Authenticated to Power Platform!");
         }
         public void UploadFile()
         {
+            if(CommandLineOptions.DryRun)
+            {
+                Logger.LogInformation("Dry run selected! Exiting now");
+                return;
+            }
+
             var myGuy = new Webresource(@$"{CommandLineOptions.WebResourceFilePath}");
 
             var listOfWebResources = new List<Webresource> { myGuy };
@@ -46,7 +58,7 @@ namespace Webresource.Uploader
                 Publish(listOfWebResources, ServiceClient);
             }
         }
-        public static void Publish(List<Webresource> webresources, IOrganizationService service)
+        public void Publish(List<Webresource> webresources, IOrganizationService service)
         {
             string idsXml = string.Empty;
 
@@ -61,10 +73,10 @@ namespace Webresource.Uploader
             };
 
             service.Execute(pxReq1);
-            Console.WriteLine("Successfully published!");
+            Logger.LogInformation("Successfully published!");
         }
 
-        public static void AddToSolution(List<Webresource> resources, string solutionUniqueName, IOrganizationService service)
+        public void AddToSolution(List<Webresource> resources, string solutionUniqueName, IOrganizationService service)
         {
             var bulkRequest = new ExecuteMultipleRequest
             {
@@ -95,7 +107,7 @@ namespace Webresource.Uploader
             {
                 service.Execute(bulkRequest);
             }
-            Console.WriteLine("Web resource successfully added to solution!");
+            Logger.LogInformation("Web resource successfully added to solution!");
         }
     }
 }

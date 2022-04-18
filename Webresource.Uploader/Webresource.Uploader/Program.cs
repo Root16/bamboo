@@ -20,11 +20,9 @@ namespace Webresource.Uploader
     {
         static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed<CommandLineOptions>(options =>
+            Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed(options =>
             {
-                var serviceCollection = new ServiceCollection()
-                    .AddLogging()
-                    .AddSingleton<IUploader, Uploader>();
+                var serviceCollection = new ServiceCollection();
 
                 ConfigureServices(serviceCollection);
 
@@ -32,13 +30,7 @@ namespace Webresource.Uploader
 
                 var serviceProvider = serviceCollection.BuildServiceProvider();
 
-                var logger = serviceProvider.GetService<ILoggerFactory>()
-                    .CreateLogger<Program>();
-
-                logger.LogDebug("Starting application");
-
                 serviceProvider.GetService<IUploader>().UploadFile();
-
             });
         }
 
@@ -53,6 +45,8 @@ namespace Webresource.Uploader
                 .Build();
 
             serviceCollection.AddSingleton<IConfiguration>(configuration);
+            serviceCollection.AddSingleton<IUploader, Uploader>();
+            serviceCollection.AddLogging(configure => configure.AddConsole());
         }
     }
 }

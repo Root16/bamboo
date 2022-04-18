@@ -19,5 +19,7 @@ namespace Webresource.Uploader
         public string Solution { get; set; }
         [Option(shortName: 'c', longName: "connectionString", Required = false, HelpText = "Connection string to the given Power Apps environment. DEV ONLY: It not supplied the program will try to get the connection string from appsettings.Development.json") ]
         public string ConnectionString { get; set; }
+        [Option(shortName: 'd', longName: "dryRun", Required = false, HelpText = "Execute as a dry run") ]
+        public bool DryRun { get; set; }
     }
 }
