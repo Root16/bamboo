@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Webresource.Uploader": {
+    "Webresource.Syncer": {
       "commandName": "Project",
       "commandLineArgs": "--filePath c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\test.js --solution vscodeextentiontest --publish --updateIfExists"
     }

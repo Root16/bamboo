@@ -1,6 +1,6 @@
 {
 	"name": "powerapps-wre",
-	"displayName": "powerapps-web-resource-uploader",
+	"displayName": "powerapps-web-resource-syncer",
 	"publisher": "root16",
 	"repository": {
 		"url": "https://github.com/Root16/vscode-web-resource-explorer"

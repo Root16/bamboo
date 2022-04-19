@@ -9,9 +9,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Webresource.Uploader.Interface;
+using Webresource.Syncer.Interface;
+using Webresource.Syncer.Models;
 
-namespace Webresource.Uploader
+namespace Webresource.Syncer.Upload
 {
     class Uploader : IUploader
     {
@@ -20,7 +21,6 @@ namespace Webresource.Uploader
         private readonly ILogger Logger;
         public Uploader(IConfiguration configuration, 
                         ILogger<Uploader> logger, 
-                        ILoggerFactory loggerFactory,
                         CommandLineOptions options)
         {
             CommandLineOptions = options;
@@ -38,9 +38,9 @@ namespace Webresource.Uploader
                 return;
             }
 
-            var myGuy = new Webresource(@$"{CommandLineOptions.WebResourceFilePath}");
+            var myGuy = new Models.Webresource(@$"{CommandLineOptions.WebResourceFilePath}");
 
-            var listOfWebResources = new List<Webresource> { myGuy };
+            var listOfWebResources = new List<Models.Webresource> { myGuy };
 
             if (CommandLineOptions.UpdateIfExists)
             {
@@ -58,11 +58,11 @@ namespace Webresource.Uploader
                 Publish(listOfWebResources, ServiceClient);
             }
         }
-        public void Publish(List<Webresource> webresources, IOrganizationService service)
+        public void Publish(List<Models.Webresource> webresources, IOrganizationService service)
         {
             string idsXml = string.Empty;
 
-            foreach (Webresource webresource in webresources)
+            foreach (Models.Webresource webresource in webresources)
             {
                 idsXml += $"<webresource>{webresource.Id:B}</webresource>";
             }
@@ -76,7 +76,7 @@ namespace Webresource.Uploader
             Logger.LogInformation("Successfully published!");
         }
 
-        public void AddToSolution(List<Webresource> resources, string solutionUniqueName, IOrganizationService service)
+        public void AddToSolution(List<Models.Webresource> resources, string solutionUniqueName, IOrganizationService service)
         {
             var bulkRequest = new ExecuteMultipleRequest
             {

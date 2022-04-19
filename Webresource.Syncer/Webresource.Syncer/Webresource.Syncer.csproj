@@ -29,4 +29,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="List\" />
+  </ItemGroup>
+
 </Project>

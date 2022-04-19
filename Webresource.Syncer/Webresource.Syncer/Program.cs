@@ -1,20 +1,12 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Crm.Sdk.Messages;
-using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Query;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using Webresource.Uploader.Interface;
+using Webresource.Syncer.Interface;
 using CommandLine;
+using Webresource.Syncer.Upload;
 
-namespace Webresource.Uploader
+namespace Webresource.Syncer
 {
     class Program
     {
@@ -46,7 +38,9 @@ namespace Webresource.Uploader
 
             serviceCollection.AddSingleton<IConfiguration>(configuration);
             serviceCollection.AddSingleton<IUploader, Uploader>();
-            serviceCollection.AddLogging(configure => configure.AddConsole());
+            serviceCollection.AddLogging(configure => configure.AddConsole(options =>
+            {
+            }));
         }
     }
 }

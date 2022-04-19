@@ -11,9 +11,9 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using Webresource.Uploader.Enum;
+using Webresource.Syncer.Enum;
 
-namespace Webresource.Uploader
+namespace Webresource.Syncer.Helper
 {
     class Map
     {
