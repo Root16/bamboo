@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Webresource.Uploader.Interface
+namespace Webresource.Syncer.Interface
 {
     public interface IUploader
     {

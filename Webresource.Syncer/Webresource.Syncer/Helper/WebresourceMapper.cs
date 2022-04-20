@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Webresource.Uploader.Enum;
+using Webresource.Syncer.Enum;
 
-namespace Webresource.Uploader
+namespace Webresource.Syncer.Helper
 {
     class WebresourceMapper
     {

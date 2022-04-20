@@ -1,46 +1,56 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as child from 'child_process';
+import util = require('util');
+const execFile = util.promisify(require('child_process').execFile);
 
 const globalSavedConfigFile = "whatever the context for the global storage folder thing is" + "\\settings.json";
 
-const uploaderExePath = "/Webresource.Uploader/Webresource.Uploader/bin/Release/net6.0/Webresource.Uploader.exe";
+const syncerExePath = "/Webresource.Syncer/Webresource.Syncer/bin/Release/net6.0/Webresource.Syncer.exe";
 
 const currentlySelectedSolution = "vscodeextentiontest";
 
-interface WebResourceUploadResult {
-	data: string;
-}
-let terminal: vscode.Terminal | undefined;
-
-export class WebResourceUploader {
+export class WebresourceSyncer {
 	_exePath: string;
 
 	constructor(exePath: string) {
 		this._exePath = exePath;
 	}
 
-	uploadFile(path: string, publish: boolean = false) {
+	async uploadFile(path: string, publish: boolean = false) {
 		const args = ['--filePath', path, '--solution', currentlySelectedSolution, '--updateIfExists'];
+
 		if (publish) {
 			args.push('--publish');
 		}
-		const res = child.execFileSync(this._exePath, args);
-		let result: WebResourceUploadResult = { data: res.toString() };
-		terminal = terminal || vscode.window.createTerminal('webber', 'C:\\Windows\\System32\\cmd.exe');
-		terminal.show();
-		terminal.sendText(`${result.data}`); //this isnt quite what we want - we want to either run the command IN the shell - or take the output and make it a message bubble
+
+		const procResult = await execFile(this._exePath, args, {
+			shell: true,
+			windowsHide: true,
+		});
+
+		//split on the uploader logging scope - in the future we can use the exact scope to trace back what stage failed to just rerun that stage
+		let stageStrings: string[] = procResult.stdout.toString()
+									.split("info: Webresource.Syncer.Upload.Uploader[0]\r\n")
+									.map((s: string) => s.trim())
+									.filter((s: string) => s !== "");
+		for(let resultMessage of stageStrings) {
+			await vscode.window.showInformationMessage(
+				resultMessage,
+			);
+		}
 	}
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-	let uploader = new WebResourceUploader(context.extensionPath + uploaderExePath);
-	vscode.commands.registerCommand('webber.uploadFile', (resource: vscode.Uri) => {
-		uploader.uploadFile(resource.fsPath);
+	let syncer = new WebresourceSyncer(context.extensionPath + syncerExePath);
+
+	vscode.commands.registerCommand('webber.uploadFile', async (resource: vscode.Uri) => {
+		await syncer.uploadFile(resource.fsPath);
 	});
-	vscode.commands.registerCommand('webber.uploadAndPublishFile', (resource: vscode.Uri) => {
-		uploader.uploadFile(resource.fsPath, true);
+
+	vscode.commands.registerCommand('webber.uploadAndPublishFile', async (resource: vscode.Uri) => {
+		await syncer.uploadFile(resource.fsPath, true);
 	});
 }
 
