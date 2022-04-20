@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import util = require('util');
+import { WebResourcesProvider } from './treeview/nodedepencenciesprovider';
 const execFile = util.promisify(require('child_process').execFile);
 
 const globalSavedConfigFile = "whatever the context for the global storage folder thing is" + "\\settings.json";
@@ -31,10 +32,10 @@ export class WebresourceSyncer {
 
 		//split on the uploader logging scope - in the future we can use the exact scope to trace back what stage failed to just rerun that stage
 		let stageStrings: string[] = procResult.stdout.toString()
-									.split("info: Webresource.Syncer.Upload.Uploader[0]\r\n")
-									.map((s: string) => s.trim())
-									.filter((s: string) => s !== "");
-		for(let resultMessage of stageStrings) {
+			.split("info: Webresource.Syncer.Upload.Uploader[0]\r\n")
+			.map((s: string) => s.trim())
+			.filter((s: string) => s !== "");
+		for (let resultMessage of stageStrings) {
 			await vscode.window.showInformationMessage(
 				resultMessage,
 			);
@@ -43,6 +44,16 @@ export class WebresourceSyncer {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
+
+	vscode.window.registerTreeDataProvider(
+		'nodeDependencies',
+		new WebResourcesProvider([
+			"test",
+			"test",
+			"test",
+		])
+	);
+
 	let syncer = new WebresourceSyncer(context.extensionPath + syncerExePath);
 
 	vscode.commands.registerCommand('webber.uploadFile', async (resource: vscode.Uri) => {

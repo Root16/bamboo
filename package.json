@@ -19,6 +19,14 @@
 		"onCommand:extension.doThing"
 	],
 	"contributes": {
+		"views": {
+			"explorer": [
+				{
+					"id": "nodeDependencies",
+					"name": "Node Dependencies"
+				}
+			]
+		},
 		"commands": [
 			{
 				"command": "webber.uploadFile",
