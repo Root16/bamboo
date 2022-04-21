@@ -4,65 +4,101 @@ using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Webresource.Syncer.Interface;
-using Webresource.Syncer.Models;
+using WebResource.Syncer.Interface;
+using WebResource.Syncer.Models;
 
-namespace Webresource.Syncer.Upload
+namespace WebResource.Syncer.Upload
 {
     class Uploader : IUploader
     {
         private readonly CommandLineOptions CommandLineOptions;
         private readonly ServiceClient ServiceClient;
-        private readonly ILogger Logger;
-        public Uploader(IConfiguration configuration, 
-                        ILogger<Uploader> logger, 
+        private readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy(),
+            },
+        };
+
+        public Uploader(IConfiguration configuration,
                         CommandLineOptions options)
         {
             CommandLineOptions = options;
             ServiceClient = string.IsNullOrEmpty(CommandLineOptions.ConnectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
                                 new ServiceClient(options.ConnectionString);
-            Logger = logger;
-            Logger.LogInformation("Authenticated to Power Platform!");
         }
-        public void UploadFile()
+        public async Task UploadFileAsync()
         {
-            if(CommandLineOptions.DryRun)
+            var responseObject = new WebResoureceSyncerResponse();
+            if (CommandLineOptions.DryRun)
             {
-                Logger.LogInformation("Dry run selected! Exiting now");
-                return;
-            }
-
-            var myGuy = new Models.Webresource(@$"{CommandLineOptions.WebResourceFilePath}");
-
-            var listOfWebResources = new List<Models.Webresource> { myGuy };
-
-            if (CommandLineOptions.UpdateIfExists)
-            {
-                myGuy.CreateOrUpdate(ServiceClient);
+                responseObject.DryRun = true;
             }
             else
             {
-                myGuy.Create(ServiceClient);
+                var wr = new Models.WebResource(@$"{CommandLineOptions.WebResourceFilePath}");
+
+                var listOfWebResources = new List<Models.WebResource> { wr };
+
+                if (CommandLineOptions.UpdateIfExists)
+                {
+                    await wr.CreateOrUpdate(ServiceClient);
+                    responseObject.ActionList.Add(new WebResouceUploadAction
+                    {
+                        WebResourceName = wr.Name,
+                        ActionName = ActionName.Update,
+                        Successful = true,
+                    });
+                }
+                else
+                {
+                    await wr.Create(ServiceClient);
+                    responseObject.ActionList.Add(new WebResouceUploadAction
+                    {
+                        WebResourceName = wr.Name,
+                        ActionName = ActionName.Create,
+                        Successful = true,
+                    });
+                }
+
+                await AddToSolution(listOfWebResources, CommandLineOptions.Solution, ServiceClient);
+                responseObject.ActionList.Add(new WebResouceUploadAction
+                {
+                    WebResourceName = wr.Name,
+                    ActionName = ActionName.AddedToSolution,
+                    Successful = true,
+                });
+
+                if (CommandLineOptions.PublishFile)
+                {
+                    await Publish(listOfWebResources, ServiceClient);
+                    responseObject.ActionList.Add(new WebResouceUploadAction
+                    {
+                        WebResourceName = wr.Name,
+                        ActionName = ActionName.Publish,
+                        Successful = true,
+                    });
+                }
             }
 
-            AddToSolution(listOfWebResources, CommandLineOptions.Solution, ServiceClient);
+            var s = JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
 
-            if (CommandLineOptions.PublishFile)
-            {
-                Publish(listOfWebResources, ServiceClient);
-            }
+            //var s2 = JsonConvert.SerializeObject(imsad, JsonSerializerSettings);
+
+            System.Console.WriteLine(s);
         }
-        public void Publish(List<Models.Webresource> webresources, IOrganizationService service)
+        private static async Task Publish(List<Models.WebResource> webresources, ServiceClient service)
         {
             string idsXml = string.Empty;
 
-            foreach (Models.Webresource webresource in webresources)
+            foreach (Models.WebResource webresource in webresources)
             {
                 idsXml += $"<webresource>{webresource.Id:B}</webresource>";
             }
@@ -72,11 +108,10 @@ namespace Webresource.Syncer.Upload
                 ParameterXml = $"<importexportxml><webresources>{idsXml}</webresources></importexportxml>"
             };
 
-            service.Execute(pxReq1);
-            Logger.LogInformation("Successfully published!");
+            await service.ExecuteAsync(pxReq1);
         }
 
-        public void AddToSolution(List<Models.Webresource> resources, string solutionUniqueName, IOrganizationService service)
+        private static async Task AddToSolution(List<Models.WebResource> resources, string solutionUniqueName, ServiceClient service)
         {
             var bulkRequest = new ExecuteMultipleRequest
             {
@@ -94,20 +129,19 @@ namespace Webresource.Syncer.Upload
                 {
                     AddRequiredComponents = false,
                     ComponentId = resource.Id,
-                    ComponentType = 61, // Webresource
+                    ComponentType = 61, // WebResource
                     SolutionUniqueName = solutionUniqueName
                 });
             }
 
             if (bulkRequest.Requests.Count == 1)
             {
-                service.Execute(bulkRequest.Requests.First());
+                await service.ExecuteAsync(bulkRequest.Requests.First());
             }
             else
             {
-                service.Execute(bulkRequest);
+                await service.ExecuteAsync(bulkRequest);
             }
-            Logger.LogInformation("Web resource successfully added to solution!");
         }
     }
 }

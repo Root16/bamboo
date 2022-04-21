@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Webresource.Syncer.Enum
+namespace WebResource.Syncer.Enum
 {
-    public enum WebresourceType
+    public enum WebResourceType
     {
         WebPage = 1,
         Css = 2,

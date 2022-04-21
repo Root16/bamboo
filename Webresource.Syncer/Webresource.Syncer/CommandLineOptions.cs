@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Webresource.Syncer
+namespace WebResource.Syncer
 {
     public class CommandLineOptions
     {

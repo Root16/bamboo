@@ -2,43 +2,21 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using Webresource.Syncer.Interface;
+using WebResource.Syncer.Interface;
 using CommandLine;
-using Webresource.Syncer.Upload;
+using WebResource.Syncer.Upload;
+using Microsoft.Extensions.Logging.Console;
+using WebResource.Syncer;
 
-namespace Webresource.Syncer
+await Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsedAsync(async options =>
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed(options =>
-            {
-                var serviceCollection = new ServiceCollection();
+    IConfiguration config = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", false)
+        .AddJsonFile("appsettings.Development.json", false)
+        .Build();
 
-                ConfigureServices(serviceCollection);
+    IUploader uploader = new Uploader(config, options);
 
-                serviceCollection.AddSingleton(options);
+    await uploader.UploadFileAsync();
 
-                var serviceProvider = serviceCollection.BuildServiceProvider();
-
-                serviceProvider.GetService<IUploader>().UploadFile();
-            });
-        }
-
-        private static void ConfigureServices(IServiceCollection serviceCollection)
-        {
-            serviceCollection.AddLogging();
-
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetParent(System.AppContext.BaseDirectory).FullName)
-                .AddJsonFile("appsettings.Development.json", false)
-                .AddJsonFile("appsettings.json", false)
-                .Build();
-
-            serviceCollection.AddSingleton<IConfiguration>(configuration);
-            serviceCollection.AddSingleton<IUploader, Uploader>();
-            serviceCollection.AddLogging(configure => configure.AddConsole());
-        }
-    }
-}
+});
