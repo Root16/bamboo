@@ -1,8 +1,8 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import util = require('util');
-import { WebResourcesProvider } from './treeview/nodedepencenciesprovider';
+import { WebResourcesProvider } from './treeview/webresourcesprovider';
+import { WebResource } from './treeview/webresource';
+import { Console } from 'console';
 const execFile = util.promisify(require('child_process').execFile);
 
 const globalSavedConfigFile = "whatever the context for the global storage folder thing is" + "\\settings.json";
@@ -63,7 +63,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('webber.uploadAndPublishFile', async (resource: vscode.Uri) => {
 		await syncer.uploadFile(resource.fsPath, true);
 	});
+
+	vscode.commands.registerCommand('test.view.showError', async (item: WebResource ) => {
+		console.log(item);
+	});
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() { }

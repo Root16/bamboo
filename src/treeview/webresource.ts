@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 
-export class Dependency extends vscode.TreeItem {
+export class WebResource extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         private inSync: boolean,
@@ -12,6 +12,11 @@ export class Dependency extends vscode.TreeItem {
         this.tooltip = `${this.label}`;
         this.description = `In sync: ${this.inSync}`;
     }
+
+    command = {
+        "title": "Show error",
+        "command": "test.view.showError",
+    };
 
     iconPath = {
         light: path.join(__filename, '..', '..', 'resources', 'light', 'dependency.svg'),

@@ -38,9 +38,7 @@ namespace Webresource.Syncer
 
             serviceCollection.AddSingleton<IConfiguration>(configuration);
             serviceCollection.AddSingleton<IUploader, Uploader>();
-            serviceCollection.AddLogging(configure => configure.AddConsole(options =>
-            {
-            }));
+            serviceCollection.AddLogging(configure => configure.AddConsole());
         }
     }
 }
