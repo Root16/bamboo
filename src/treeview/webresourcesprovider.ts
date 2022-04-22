@@ -4,7 +4,8 @@ import * as path from 'path';
 import { WebResource as WebResource } from './webresource';
 
 export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource> {
-    constructor(private webresourceNames: string[]) { }
+    id: number = 0;
+    constructor(private webResources: WebResource[]) { }
 
     getTreeItem(element: WebResource): vscode.TreeItem {
         return element;
@@ -18,9 +19,10 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
         } else {
             //I think we're at the root of the tree? Just return the list
 
-            return Promise.resolve(this.webresourceNames.map(n => new WebResource(n, true,
-                vscode.TreeItemCollapsibleState.Collapsed
-            )));
+            // return Promise.resolve(this.webresourceNames.map(n => new WebResource(n, `${this.id++}`, true,
+            //     vscode.TreeItemCollapsibleState.Collapsed
+            // )));
+            return Promise.resolve(this.webResources);
         }
     }
 }

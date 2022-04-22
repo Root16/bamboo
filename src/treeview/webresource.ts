@@ -4,12 +4,13 @@ import * as path from 'path';
 
 export class WebResource extends vscode.TreeItem {
     constructor(
-        public readonly label: string,
-        private inSync: boolean,
-        public readonly collapsibleState: vscode.TreeItemCollapsibleState
+        public readonly name: string,
+        public readonly id: string,
+        public inSync: boolean,
+        public collapsibleState: vscode.TreeItemCollapsibleState
     ) {
-        super(label, collapsibleState);
-        this.tooltip = `${this.label}`;
+        super(name, collapsibleState);
+        this.tooltip = `${this.name}`;
         this.description = `In sync: ${this.inSync}`;
     }
 

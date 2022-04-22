@@ -32,6 +32,26 @@ namespace WebResource.Syncer.Models
         public Guid Id => record?.Id ?? Guid.Empty;
         private string filePath;
         public WebResourceState State;
+        public WebResource(Entity record)
+        {
+            this.record = record;
+            StringContent = GetPlainText();
+
+            //if (string.IsNullOrEmpty(filePath) && !string.IsNullOrEmpty(settings.LastFolderUsed))
+            //{
+            //    string expectedFilePath = Path.Combine(settings.LastFolderUsed, record.GetAttributeValue<string>("name")?.Replace("/", "\\") ?? "");
+            //    if (File.Exists(expectedFilePath))
+            //    {
+            //        filePath = expectedFilePath;
+            //    }
+            //}
+
+            //Synced = true;
+            State = WebResourceState.None;
+            //loadedOn = DateTime.Now;
+            //Plugin = parent;
+        }
+
         public WebResource(string filePath)
         {
             var fi = new FileInfo(filePath);
@@ -154,7 +174,7 @@ namespace WebResource.Syncer.Models
 
             State = WebResourceState.None;
         }
-        public static async Task<Entity> RetreiveWebResource(string name, ServiceClient service)
+        public async Task<Entity> RetreiveWebResource(string name, ServiceClient service)
         {
             try
             {

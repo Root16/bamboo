@@ -9,18 +9,12 @@ using System.Threading.Tasks;
 
 namespace WebResource.Syncer.Models
 {
-    //[JsonConverter(typeof(StringEnumConverter))] 
     internal enum ActionName
     {
-        //[EnumMember(Value = "create")] 
         Create,
-        //[EnumMember(Value = "update")] 
         Update,
-        //[EnumMember(Value = "addedToSolution")] 
         AddedToSolution,
-        //[EnumMember(Value = "publish")] 
         Publish,
-        //[EnumMember(Value = "listWebResourcesInSolution")] 
         ListWebResourcesInSolution,
     }
     class Action
@@ -35,9 +29,9 @@ namespace WebResource.Syncer.Models
     {
         public string WebResourceName { get; set; }
     }
-    internal class ListWebResourcesInSolution : Action
+    internal class ListWebResourcesInSolutionAction : Action
     {
-        public List<string> WebResources { get; set; }
+        public List<WebResource> WebResources { get; set; }
     }
 
     internal class WebResoureceSyncerResponse

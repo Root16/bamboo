@@ -1,4 +1,5 @@
-﻿using Microsoft.Crm.Sdk.Messages;
+﻿using System;
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
@@ -12,13 +13,13 @@ using System.Threading.Tasks;
 using WebResource.Syncer.Interface;
 using WebResource.Syncer.Models;
 
-namespace WebResource.Syncer.Upload
+namespace WebResource.Syncer.SyncLogic
 {
     class Uploader : IUploader
     {
         private readonly CommandLineOptions CommandLineOptions;
         private readonly ServiceClient ServiceClient;
-        private readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
+        private readonly JsonSerializerSettings JsonSerializerSettings = new()
         {
             ContractResolver = new DefaultContractResolver
             {
@@ -90,9 +91,7 @@ namespace WebResource.Syncer.Upload
 
             var s = JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
 
-            //var s2 = JsonConvert.SerializeObject(imsad, JsonSerializerSettings);
-
-            System.Console.WriteLine(s);
+            Console.WriteLine(s);
         }
         private static async Task Publish(List<Models.WebResource> webresources, ServiceClient service)
         {

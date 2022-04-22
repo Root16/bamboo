@@ -22,8 +22,8 @@
 		"views": {
 			"explorer": [
 				{
-					"id": "nodeDependencies",
-					"name": "Node Dependencies"
+					"id": "webresourcetree",
+					"name": "WebResouces in Current Solution"
 				}
 			]
 		},
