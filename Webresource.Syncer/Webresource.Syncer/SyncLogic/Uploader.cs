@@ -95,19 +95,19 @@ namespace WebResource.Syncer.SyncLogic
         }
         private static async Task Publish(List<Models.WebResource> webresources, ServiceClient service)
         {
-            string idsXml = string.Empty;
+            string idsAsXML = string.Empty;
 
             foreach (Models.WebResource webresource in webresources)
             {
-                idsXml += $"<webresource>{webresource.Id:B}</webresource>";
+                idsAsXML += $"<webresource>{webresource.Id:B}</webresource>";
             }
 
-            var pxReq1 = new PublishXmlRequest
+            var publishRequest = new PublishXmlRequest
             {
-                ParameterXml = $"<importexportxml><webresources>{idsXml}</webresources></importexportxml>"
+                ParameterXml = $"<importexportxml><webresources>{idsAsXML}</webresources></importexportxml>"
             };
 
-            await service.ExecuteAsync(pxReq1);
+            await service.ExecuteAsync(publishRequest);
         }
 
         private static async Task AddToSolution(List<Models.WebResource> resources, string solutionUniqueName, ServiceClient service)
