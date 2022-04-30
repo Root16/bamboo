@@ -11,13 +11,13 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using Webresource.Syncer.Enum;
+using WebResource.Syncer.Enum;
 
-namespace Webresource.Syncer.Helper
+namespace WebResource.Syncer.Helper
 {
     class Map
     {
-        public Map(string extension, WebresourceType type, int crmValue, string label)
+        public Map(string extension, WebResourceType type, int crmValue, string label)
         {
             Extension = extension;
             Type = type;
@@ -26,7 +26,7 @@ namespace Webresource.Syncer.Helper
         }
 
         public string Extension { get; }
-        public WebresourceType Type { get; }
+        public WebResourceType Type { get; }
         public int CrmValue { get; }
         public string Label { get; }
     }

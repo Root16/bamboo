@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Webresource.Syncer.Interface
+namespace WebResource.Syncer.Interface
 {
     public interface IUploader
     {
-        void UploadFile();
+        Task UploadFileAsync();
     }
 }

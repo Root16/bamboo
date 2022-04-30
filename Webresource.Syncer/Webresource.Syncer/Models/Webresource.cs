@@ -1,15 +1,17 @@
-﻿using Microsoft.Xrm.Sdk;
+﻿using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Webresource.Syncer.Enum;
-using Webresource.Syncer.Helper;
+using System.Threading.Tasks;
+using WebResource.Syncer.Enum;
+using WebResource.Syncer.Helper;
 
-namespace Webresource.Syncer.Models
+namespace WebResource.Syncer.Models
 {
-    public class Webresource
+    public class WebResource
     {
         public static readonly ColumnSet Columns = new ColumnSet(
             "languagecode", "createdon", "name", "dependencyxml", "modifiedby",
@@ -23,14 +25,34 @@ namespace Webresource.Syncer.Models
             set
             {
                 record["name"] = value;
-                State = WebresourceState.Saved;
+                State = WebResourceState.Saved;
             }
         }
 
         public Guid Id => record?.Id ?? Guid.Empty;
         private string filePath;
-        public WebresourceState State;
-        public Webresource(string filePath)
+        public WebResourceState State;
+        public WebResource(Entity record)
+        {
+            this.record = record;
+            StringContent = GetPlainText();
+
+            //if (string.IsNullOrEmpty(filePath) && !string.IsNullOrEmpty(settings.LastFolderUsed))
+            //{
+            //    string expectedFilePath = Path.Combine(settings.LastFolderUsed, record.GetAttributeValue<string>("name")?.Replace("/", "\\") ?? "");
+            //    if (File.Exists(expectedFilePath))
+            //    {
+            //        filePath = expectedFilePath;
+            //    }
+            //}
+
+            //Synced = true;
+            State = WebResourceState.None;
+            //loadedOn = DateTime.Now;
+            //Plugin = parent;
+        }
+
+        public WebResource(string filePath)
         {
             var fi = new FileInfo(filePath);
 
@@ -63,13 +85,13 @@ namespace Webresource.Syncer.Models
 
             StringContent = GetPlainText();
 
-            var map = WebresourceMapper.Instance.Items.FirstOrDefault(i => i.Extension.ToLower() == Path.GetExtension(filePath).ToLower().Remove(0, 1));
+            var map = WebResourceMapper.Instance.Items.FirstOrDefault(i => i.Extension.ToLower() == Path.GetExtension(filePath).ToLower().Remove(0, 1));
             if (map != null)
             {
                 record.FormattedValues["webresourcetype"] = map.Label;
             }
 
-            State = WebresourceState.None;
+            State = WebResourceState.None;
             this.filePath = filePath;
 
             //if (string.IsNullOrEmpty(this.filePath) && !string.IsNullOrEmpty("figure it out"))
@@ -82,86 +104,86 @@ namespace Webresource.Syncer.Models
             //}
 
         }
-        public void Create(IOrganizationService service)
+        public async Task Create(ServiceClient service)
         {
-            record.Id = service.Create(record);
+            record.Id = await service.CreateAsync(record);
 
-            State = WebresourceState.None;
+            State = WebResourceState.None;
         }
 
-        public static WebresourceType GetTypeFromExtension(string extension)
+        public static WebResourceType GetTypeFromExtension(string extension)
         {
             switch (extension.ToLower())
             {
                 case "html":
                 case "htm":
-                    return WebresourceType.WebPage;
+                    return WebResourceType.WebPage;
 
                 case "css":
-                    return WebresourceType.Css;
+                    return WebResourceType.Css;
 
                 case "js":
-                    return WebresourceType.Script;
+                    return WebResourceType.Script;
 
                 case "json":
                 case "xml":
-                    return WebresourceType.Data;
+                    return WebResourceType.Data;
 
                 case "png":
-                    return WebresourceType.Png;
+                    return WebResourceType.Png;
 
                 case "jpg":
                 case "jpeg":
-                    return WebresourceType.Jpg;
+                    return WebResourceType.Jpg;
 
                 case "gif":
-                    return WebresourceType.Gif;
+                    return WebResourceType.Gif;
 
                 case "xap":
-                    return WebresourceType.Silverlight;
+                    return WebResourceType.Silverlight;
 
                 case "xsl":
                 case "xslt":
-                    return WebresourceType.Xsl;
+                    return WebResourceType.Xsl;
 
                 case "ico":
-                    return WebresourceType.Ico;
+                    return WebResourceType.Ico;
 
                 case "svg":
-                    return WebresourceType.Vector;
+                    return WebResourceType.Vector;
 
                 case "resx":
-                    return WebresourceType.Resx;
+                    return WebResourceType.Resx;
             }
 
             throw new Exception($@"File extension '{extension}' cannot be mapped to a webresource type!");
         }
-        public void CreateOrUpdate(IOrganizationService service)
+        public async Task CreateOrUpdate(ServiceClient service)
         {
-            var remoteRecord = RetrieveWebresource(Name, service);
+            var remoteRecord = await RetreiveWebResource(Name, service);
             if (remoteRecord == null)
             {
-                Create(service);
+                await Create(service);
                 return;
             }
             else
             {
                 record.Id = remoteRecord.Id;
-                service.Update(record);
+                await service.UpdateAsync(record);
             }
 
-            State = WebresourceState.None;
+            State = WebResourceState.None;
         }
-        public static Entity RetrieveWebresource(string name, IOrganizationService service)
+        public async Task<Entity> RetreiveWebResource(string name, ServiceClient service)
         {
             try
             {
                 var qba = new QueryByAttribute("webresource");
                 qba.Attributes.Add("name");
                 qba.Values.Add(name);
-                qba.ColumnSet = Webresource.Columns;
+                qba.ColumnSet = WebResource.Columns;
 
-                EntityCollection collection = service.RetrieveMultiple(qba);
+                EntityCollection collection = await service.RetrieveMultipleAsync(qba);
 
                 if (collection.Entities.Count > 1)
                 {

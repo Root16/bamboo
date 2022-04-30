@@ -19,6 +19,14 @@
 		"onCommand:extension.doThing"
 	],
 	"contributes": {
+		"views": {
+			"explorer": [
+				{
+					"id": "webresourcetree",
+					"name": "WebResouces in Current Solution"
+				}
+			]
+		},
 		"commands": [
 			{
 				"command": "webber.uploadFile",
