@@ -9,7 +9,7 @@ const syncerExePath = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0
 export async function activate(context: vscode.ExtensionContext) {
 	let syncer = new WebResourceSyncer(context.extensionPath + syncerExePath);
 
-	const solutionName = WebResourceSyncerConfiguration.getCurrentSolution();
+	const solutionName = WebResourceSyncerConfiguration.getSolution();
 	let resources = await syncer.retreiveWebResourcesInSolution(solutionName);
 
 	let updated = resources.map(r => new WebResource(r.name, r.id, true,
@@ -22,12 +22,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	);
 
 	vscode.commands.registerCommand('webber.uploadFile', async (resource: vscode.Uri) => {
-		const solutionName = WebResourceSyncerConfiguration.getCurrentSolution();
+		const solutionName = WebResourceSyncerConfiguration.getSolution();
 		await syncer.uploadFile(solutionName, resource.fsPath);
 	});
 
 	vscode.commands.registerCommand('webber.uploadAndPublishFile', async (resource: vscode.Uri) => {
-		const solutionName = WebResourceSyncerConfiguration.getCurrentSolution();
+		const solutionName = WebResourceSyncerConfiguration.getSolution();
 		await syncer.uploadFile(solutionName, resource.fsPath, true);
 	});
 

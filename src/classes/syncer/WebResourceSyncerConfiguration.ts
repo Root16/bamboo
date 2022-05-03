@@ -4,7 +4,7 @@ export abstract class WebResourceSyncerConfiguration {
 		return "";
 	}
 
-	public static getCurrentSolution(): string {
+	public static getSolution(): string {
 		return "";
 	}
 
