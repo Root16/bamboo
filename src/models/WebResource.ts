@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
-
 export class WebResource extends vscode.TreeItem {
     constructor(
         public readonly name: string,

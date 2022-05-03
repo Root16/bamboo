@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
-import { WebResource as WebResource } from './webresource';
+import { WebResource as WebResource } from '../../models/WebResource';
 
 export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource> {
     id: number = 0;

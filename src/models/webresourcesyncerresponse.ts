@@ -1,5 +1,3 @@
-import { WebResource } from "../treeview/webresource";
-
 // yea I know these are supposed to be camel case but the backend current won't both serialize an enum as a string AND camelcase it at the same time
 export interface Action {
     actionName: string;
