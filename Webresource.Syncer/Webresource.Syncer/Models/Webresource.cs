@@ -31,6 +31,7 @@ namespace WebResource.Syncer.Models
 
         public Guid Id => record?.Id ?? Guid.Empty;
         private string filePath;
+        private string _fileName;
         public WebResourceState State;
         public WebResource(Entity record)
         {
@@ -73,12 +74,10 @@ namespace WebResource.Syncer.Models
                 resourceName = fi.Name;
             }
 
-            resourceName = $"test_/{resourceName}";
+            _fileName = resourceName;
 
             record = new Entity("webresource")
             {
-                ["name"] = resourceName,
-                ["displayname"] = resourceName,
                 ["webresourcetype"] = new OptionSetValue((int)GetTypeFromExtension(fi.Extension.Remove(0, 1))),
                 ["content"] = Convert.ToBase64String(File.ReadAllBytes(filePath))
             };
@@ -104,8 +103,19 @@ namespace WebResource.Syncer.Models
             //}
 
         }
-        public async Task Create(ServiceClient service)
+
+        public async Task Create(ServiceClient service, string solutionUniqueName, string webResourceName = null)
         {
+            if (string.IsNullOrEmpty(solutionUniqueName)) throw new ArgumentNullException(nameof(solutionUniqueName));
+
+            if (webResourceName == null)
+            {
+                var prefix = await GetSolutionPublisherPrefixAsync(service, solutionUniqueName);
+                webResourceName = $"{prefix}_/{_fileName}";
+            }
+
+            record["name"] = webResourceName;
+            record["displayname"] = webResourceName;
             record.Id = await service.CreateAsync(record);
 
             State = WebResourceState.None;
@@ -158,12 +168,17 @@ namespace WebResource.Syncer.Models
 
             throw new Exception($@"File extension '{extension}' cannot be mapped to a webresource type!");
         }
-        public async Task CreateOrUpdate(ServiceClient service)
+        public async Task CreateOrUpdate(ServiceClient service, string solutionUniqueName)
         {
-            var remoteRecord = await RetreiveWebResource(Name, service);
+            if (string.IsNullOrEmpty(solutionUniqueName)) throw new ArgumentNullException(nameof(solutionUniqueName));
+
+            var prefix = await GetSolutionPublisherPrefixAsync(service, solutionUniqueName);
+            var name = $"{prefix}_/{_fileName}";
+
+            var remoteRecord = await RetreiveWebResource(name, service);
             if (remoteRecord == null)
             {
-                await Create(service);
+                await Create(service, solutionUniqueName, name);
                 return;
             }
             else
@@ -218,6 +233,26 @@ namespace WebResource.Syncer.Models
 
             //byte[] b = Convert.FromBase64String(record.GetAttributeValue<string>("content"));
             //return Encoding.Default.GetString(b);
+        }
+
+        private async Task<string> GetSolutionPublisherPrefixAsync(ServiceClient serviceClient, string solutionUniqueName)
+        {
+            var fetchXml = new FetchExpression($@"
+                <fetch top='1'>
+                    <entity name='solution'>
+                        <attribute name='solutionid' />
+                        <link-entity name='publisher' from='publisherid' to='publisherid' alias='pub'>
+                            <attribute name='customizationprefix' />
+                        </link-entity>
+                        <filter>
+                            <condition attribute='uniquename' operator='eq' value='{solutionUniqueName}' />
+                        </filter>
+                    </entity>
+                </fetch>");
+            var response = await serviceClient.RetrieveMultipleAsync(fetchXml);
+            var solution = response.Entities.FirstOrDefault();
+            var prefix = solution?.GetAttributeValue<AliasedValue>("pub.customizationprefix")?.Value as string;
+            return prefix ?? throw new Exception($"Unable to determine publisher for solution {solutionUniqueName}.");
         }
     }
 

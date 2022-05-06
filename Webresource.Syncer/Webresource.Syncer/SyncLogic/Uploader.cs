@@ -50,7 +50,7 @@ namespace WebResource.Syncer.SyncLogic
 
                 if (CommandLineOptions.UpdateIfExists)
                 {
-                    await wr.CreateOrUpdate(ServiceClient);
+                    await wr.CreateOrUpdate(ServiceClient, CommandLineOptions.Solution);
                     responseObject.ActionList.Add(new WebResouceUploadAction
                     {
                         WebResourceName = wr.Name,
@@ -60,7 +60,7 @@ namespace WebResource.Syncer.SyncLogic
                 }
                 else
                 {
-                    await wr.Create(ServiceClient);
+                    await wr.Create(ServiceClient, CommandLineOptions.Solution);
                     responseObject.ActionList.Add(new WebResouceUploadAction
                     {
                         WebResourceName = wr.Name,
