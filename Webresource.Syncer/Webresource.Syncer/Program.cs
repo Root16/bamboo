@@ -12,10 +12,10 @@ await Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsedAsync(as
 {
     IConfiguration config = new ConfigurationBuilder()
         .AddJsonFile("appsettings.json", false)
-        .AddJsonFile("appsettings.Development.json", false)
+        .AddJsonFile("appsettings.Development.json", true)
         .Build();
 
-    if(options.ListWebResources)
+    if (options.ListWebResources)
     {
         var lister = new Lister(config, options);
 
