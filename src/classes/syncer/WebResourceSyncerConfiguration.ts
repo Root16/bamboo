@@ -5,7 +5,7 @@ export abstract class WebResourceSyncerConfiguration {
 	}
 
 	public static getSolution(): string {
-		return "";
+		return "vscodeextentiontest";
 	}
 
 	public static getFilePath(): string {

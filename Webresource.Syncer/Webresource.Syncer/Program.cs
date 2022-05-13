@@ -8,24 +8,32 @@ using WebResource.Syncer.SyncLogic;
 using Microsoft.Extensions.Logging.Console;
 using WebResource.Syncer;
 
-await Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsedAsync(async options =>
-{
-    IConfiguration config = new ConfigurationBuilder()
-        .AddJsonFile("appsettings.json", false)
-        .AddJsonFile("appsettings.Development.json", false)
-        .Build();
 
-    if(options.ListWebResources)
-    {
-        var lister = new Lister(config, options);
+var fileOption = new Option<FileInfo?>(
+    name: "--file",
+    description: "The file to read and display on the console.");
 
-        await lister.ListFilesInSolutionAsync();
+var rootCommand = new RootCommand("Sample app for System.CommandLine");
+rootCommand.AddOption(fileOption);
 
-        return;
-    }
+//await Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsedAsync(async options =>
+//{
+//    IConfiguration config = new ConfigurationBuilder()
+//        .AddJsonFile("appsettings.json", false)
+//        .AddJsonFile("appsettings.Development.json", true)
+//        .Build();
 
-    IUploader uploader = new Uploader(config, options);
+//    if(options.ListWebResources)
+//    {
+//        var lister = new Lister(config, options);
 
-    await uploader.UploadFileAsync();
+//        await lister.ListFilesInSolutionAsync();
 
-});
+//        return;
+//    }
+
+//    IUploader uploader = new Uploader(config, options);
+
+//    await uploader.UploadFileAsync();
+
+//});
