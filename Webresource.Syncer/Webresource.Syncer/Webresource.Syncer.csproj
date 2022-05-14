@@ -19,6 +19,7 @@
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="0.5.17" />
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client.Dynamics" Version="0.5.17" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta3.22114.1" />
   </ItemGroup>
 
   <ItemGroup>
