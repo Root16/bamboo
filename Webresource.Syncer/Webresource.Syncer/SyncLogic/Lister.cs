@@ -1,14 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿#nullable enable
+using Microsoft.Extensions.Configuration;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Organization;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using WebResource.Syncer.Models;
 
@@ -16,8 +15,8 @@ namespace WebResource.Syncer.SyncLogic
 {
     internal class Lister
     {
-        private readonly CommandLineOptions CommandLineOptions;
         private readonly ServiceClient ServiceClient;
+        private readonly string SolutionName;
         private readonly JsonSerializerSettings JsonSerializerSettings = new()
         {
             ContractResolver = new IgnorePropertiesResolver(new[] { "stringContent", "state" })
@@ -31,20 +30,19 @@ namespace WebResource.Syncer.SyncLogic
         };
 
 
-        public Lister(IConfiguration configuration,
-                        CommandLineOptions options)
+        public Lister(IConfiguration configuration, string solutionName, string? connectionString)
         {
-            CommandLineOptions = options;
-            ServiceClient = string.IsNullOrEmpty(CommandLineOptions.ConnectionString) ?
+            ServiceClient = string.IsNullOrEmpty(connectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
-                                new ServiceClient(options.ConnectionString);
+                                new ServiceClient(connectionString);
+            SolutionName = solutionName;
         }
 
-        public async Task ListFilesInSolutionAsync()
+        public async Task<string> ListFilesInSolutionAsync()
         {
             var responseObject = new WebResoureceSyncerResponse();
 
-            var targetSolution = await RetreiveSolution(CommandLineOptions.Solution);
+            var targetSolution = await RetreiveSolution(SolutionName);
 
             var resources = await RetrieveWebresourcesAsync(ServiceClient, targetSolution.Id, new List<int>(), filterByLcid: false);
 
@@ -55,9 +53,7 @@ namespace WebResource.Syncer.SyncLogic
                 Successful = true,
             });
 
-            var s = JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
-
-            Console.WriteLine(s);
+            return JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
         }
         public async Task<Entity> RetreiveSolution(string solutionName)
         {

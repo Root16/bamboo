@@ -1,7 +1,7 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -10,15 +10,17 @@ using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using WebResource.Syncer.Interface;
 using WebResource.Syncer.Models;
+using System.IO;
 
 namespace WebResource.Syncer.SyncLogic
 {
-    class Uploader : IUploader
+    class Uploader
     {
-        private readonly CommandLineOptions CommandLineOptions;
         private readonly ServiceClient ServiceClient;
+        private readonly bool UpdateIfExists;
+        private readonly string SolutionName;
+        private readonly FileInfo File;
         private readonly JsonSerializerSettings JsonSerializerSettings = new()
         {
             ContractResolver = new DefaultContractResolver
@@ -27,71 +29,52 @@ namespace WebResource.Syncer.SyncLogic
             },
         };
 
-        public Uploader(IConfiguration configuration,
-                        CommandLineOptions options)
+        public Uploader(IConfiguration configuration, FileInfo file, string solutionName, bool updateIfExists, string? connectionString)
         {
-            CommandLineOptions = options;
-            ServiceClient = string.IsNullOrEmpty(CommandLineOptions.ConnectionString) ?
+            ServiceClient = string.IsNullOrEmpty(connectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
-                                new ServiceClient(options.ConnectionString);
+                                new ServiceClient(connectionString);
+            UpdateIfExists = updateIfExists;
+            SolutionName = solutionName;
+            File = file;
         }
-        public async Task UploadFileAsync()
+        public async Task<string> UploadFileAsync()
         {
             var responseObject = new WebResoureceSyncerResponse();
-            if (CommandLineOptions.DryRun)
+            var wr = new Models.WebResource(@$"{File.FullName}");
+
+            var listOfWebResources = new List<Models.WebResource> { wr };
+
+            if (UpdateIfExists)
             {
-                responseObject.DryRun = true;
-            }
-            else
-            {
-                var wr = new Models.WebResource(@$"{CommandLineOptions.WebResourceFilePath}");
-
-                var listOfWebResources = new List<Models.WebResource> { wr };
-
-                if (CommandLineOptions.UpdateIfExists)
-                {
-                    await wr.CreateOrUpdate(ServiceClient, CommandLineOptions.Solution);
-                    responseObject.ActionList.Add(new WebResouceUploadAction
-                    {
-                        WebResourceName = wr.Name,
-                        ActionName = ActionName.Update,
-                        Successful = true,
-                    });
-                }
-                else
-                {
-                    await wr.Create(ServiceClient, CommandLineOptions.Solution);
-                    responseObject.ActionList.Add(new WebResouceUploadAction
-                    {
-                        WebResourceName = wr.Name,
-                        ActionName = ActionName.Create,
-                        Successful = true,
-                    });
-                }
-
-                await AddToSolution(listOfWebResources, CommandLineOptions.Solution, ServiceClient);
+                await wr.CreateOrUpdate(ServiceClient, SolutionName);
                 responseObject.ActionList.Add(new WebResouceUploadAction
                 {
                     WebResourceName = wr.Name,
-                    ActionName = ActionName.AddedToSolution,
+                    ActionName = ActionName.Update,
                     Successful = true,
                 });
-
-                if (CommandLineOptions.PublishFile)
+            }
+            else
+            {
+                await wr.Create(ServiceClient, SolutionName);
+                responseObject.ActionList.Add(new WebResouceUploadAction
                 {
-                    await Publish(listOfWebResources, ServiceClient);
-                    responseObject.ActionList.Add(new WebResouceUploadAction
-                    {
-                        WebResourceName = wr.Name,
-                        ActionName = ActionName.Publish,
-                        Successful = true,
-                    });
-                }
+                    WebResourceName = wr.Name,
+                    ActionName = ActionName.Create,
+                    Successful = true,
+                });
             }
 
-            var s = JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
+            await AddToSolution(listOfWebResources, SolutionName, ServiceClient);
+            responseObject.ActionList.Add(new WebResouceUploadAction
+            {
+                WebResourceName = wr.Name,
+                ActionName = ActionName.AddedToSolution,
+                Successful = true,
+            });
 
-            Console.WriteLine(s);
+            return JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
         }
         private static async Task Publish(List<Models.WebResource> webresources, ServiceClient service)
         {
