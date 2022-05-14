@@ -14,6 +14,5 @@ export interface ListWebResourcesInSolutionAction extends Action {
 }
 
 export interface WebResoureceSyncerResponse {
-    actionList: Action[];
-    dryRun: boolean;
+    action: Action;
 }

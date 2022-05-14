@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using WebResource.Syncer.Models;
 using System.IO;
+using System;
 
 namespace WebResource.Syncer.SyncLogic
 {
@@ -32,20 +33,41 @@ namespace WebResource.Syncer.SyncLogic
         }
         public async Task<string> PublishFileAsync()
         {
-            var responseObject = new WebResoureceSyncerResponse();
             var wr = new Models.WebResource(@$"{File.FullName}");
-
             var listOfWebResources = new List<Models.WebResource> { wr };
 
-            await Publish(listOfWebResources, ServiceClient);
-            responseObject.ActionList.Add(new WebResouceUploadAction
+            try
             {
-                WebResourceName = wr.Name,
-                ActionName = ActionName.Publish,
-                Successful = true,
-            });
+                await Publish(listOfWebResources, ServiceClient);
+                return JsonConvert.SerializeObject(
+                    new WebResoureceSyncerResponse
+                    {
+                        Action =
+                        new WebResouceUploadAction
+                        {
+                            WebResourceName = wr.Name,
+                            ActionName = ActionName.Publish,
+                            Successful = true,
+                        }
+                    }
+                    , JsonSerializerSettings);
 
-            return JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
+            }
+            catch (Exception ex)
+            {
+                return JsonConvert.SerializeObject(
+                    new WebResoureceSyncerResponse
+                    {
+                        Action =
+                        new WebResoucePublishAction
+                        {
+                            WebResourceName = wr.Name,
+                            Successful = false,
+                            ErrorMessage = ex.Message,
+                        }
+                    }
+                    , JsonSerializerSettings);
+            }
         }
         private static async Task Publish(List<Models.WebResource> webresources, ServiceClient service)
         {

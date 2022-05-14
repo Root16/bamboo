@@ -40,41 +40,54 @@ namespace WebResource.Syncer.SyncLogic
         }
         public async Task<string> UploadFileAsync()
         {
-            var responseObject = new WebResoureceSyncerResponse();
             var wr = new Models.WebResource(@$"{File.FullName}");
-
             var listOfWebResources = new List<Models.WebResource> { wr };
 
-            if (UpdateIfExists)
+            try
             {
-                await wr.CreateOrUpdate(ServiceClient, SolutionName);
-                responseObject.ActionList.Add(new WebResouceUploadAction
+                ActionName action;
+                if (UpdateIfExists)
                 {
-                    WebResourceName = wr.Name,
-                    ActionName = ActionName.Update,
-                    Successful = true,
-                });
-            }
-            else
-            {
-                await wr.Create(ServiceClient, SolutionName);
-                responseObject.ActionList.Add(new WebResouceUploadAction
+                    action = ActionName.Update;
+                    await wr.CreateOrUpdate(ServiceClient, SolutionName);
+                }
+                else
                 {
-                    WebResourceName = wr.Name,
-                    ActionName = ActionName.Create,
-                    Successful = true,
-                });
+                    action = ActionName.Create;
+                    await wr.Create(ServiceClient, SolutionName);
+                }
+
+                await AddToSolution(listOfWebResources, SolutionName, ServiceClient);
+
+                return JsonConvert.SerializeObject(
+                    new WebResoureceSyncerResponse
+                    {
+                        Action =
+                        new WebResouceUploadAction
+                        {
+                            WebResourceName = wr.Name,
+                            ActionName = action,
+                            Successful = true,
+                        }
+                    }
+                    , JsonSerializerSettings);
+
             }
-
-            await AddToSolution(listOfWebResources, SolutionName, ServiceClient);
-            responseObject.ActionList.Add(new WebResouceUploadAction
+            catch (Exception ex)
             {
-                WebResourceName = wr.Name,
-                ActionName = ActionName.AddedToSolution,
-                Successful = true,
-            });
-
-            return JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
+                return JsonConvert.SerializeObject(
+                    new WebResoureceSyncerResponse
+                    {
+                        Action =
+                        new WebResouceUploadAction
+                        {
+                            WebResourceName = wr.Name,
+                            Successful = false,
+                            ErrorMessage = ex.Message,
+                        }
+                    }
+                    , JsonSerializerSettings);
+            }
         }
         private static async Task Publish(List<Models.WebResource> webresources, ServiceClient service)
         {

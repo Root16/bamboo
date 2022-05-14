@@ -34,8 +34,8 @@
 				"category": "Webber"
 			},
 			{
-				"command": "webber.uploadAndPublishFile",
-				"title": "Upload and publish file to Power Apps",
+				"command": "webber.publishFile",
+				"title": "Publish file to Power Apps",
 				"category": "Webber"
 			}
 		],
@@ -46,7 +46,7 @@
 					"group": "navigation"
 				},
 				{
-					"command": "webber.uploadAndPublishFile",
+					"command": "webber.publishFile",
 					"group": "navigation"
 				}
 			]

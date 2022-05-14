@@ -40,20 +40,40 @@ namespace WebResource.Syncer.SyncLogic
 
         public async Task<string> ListFilesInSolutionAsync()
         {
-            var responseObject = new WebResoureceSyncerResponse();
-
-            var targetSolution = await RetreiveSolution(SolutionName);
-
-            var resources = await RetrieveWebresourcesAsync(ServiceClient, targetSolution.Id, new List<int>(), filterByLcid: false);
-
-            responseObject.ActionList.Add(new ListWebResourcesInSolutionAction
+            try
             {
-                ActionName = ActionName.ListWebResourcesInSolution,
-                WebResources = resources.ToList(),
-                Successful = true,
-            });
+                var targetSolution = await RetreiveSolution(SolutionName);
 
-            return JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
+                var resources = await RetrieveWebresourcesAsync(ServiceClient, targetSolution.Id, new List<int>(), filterByLcid: false);
+
+                return JsonConvert.SerializeObject(
+                    new WebResoureceSyncerResponse
+                    {
+                        Action =
+                        new ListWebResourcesInSolutionAction
+                        {
+                            ActionName = ActionName.ListWebresourcesInSolution,
+                            WebResources = resources.ToList(),
+                            Successful = true,
+                        }
+                    }
+                    , JsonSerializerSettings);
+
+            }
+            catch (Exception ex)
+            {
+                return JsonConvert.SerializeObject(
+                    new WebResoureceSyncerResponse
+                    {
+                        Action =
+                        new ListWebResourcesInSolutionAction
+                        {
+                            Successful = false,
+                            ErrorMessage = ex.Message,
+                        }
+                    }
+                    , JsonSerializerSettings);
+            }
         }
         public async Task<Entity> RetreiveSolution(string solutionName)
         {
@@ -67,6 +87,7 @@ namespace WebResource.Syncer.SyncLogic
 
             querySampleSolution.Criteria.AddCondition("uniquename", ConditionOperator.Equal, solutionName);
 
+            ///TODO - scary :(
             return (await ServiceClient.RetrieveMultipleAsync(querySampleSolution)).Entities.FirstOrDefault();
         }
         public static async Task<IEnumerable<Models.WebResource>> RetrieveWebresourcesAsync(ServiceClient service, Guid solutionId, List<int> types, bool filterByLcid = false, params int[] lcids)

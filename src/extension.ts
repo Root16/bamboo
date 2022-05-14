@@ -23,12 +23,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	vscode.commands.registerCommand('webber.uploadFile', async (resource: vscode.Uri) => {
 		const solutionName = WebResourceSyncerConfiguration.getSolution();
-		await syncer.uploadFile(solutionName, resource.fsPath);
+		await syncer.uploadFile(solutionName, resource.fsPath, true);
 	});
 
-	vscode.commands.registerCommand('webber.uploadAndPublishFile', async (resource: vscode.Uri) => {
-		const solutionName = WebResourceSyncerConfiguration.getSolution();
-		await syncer.uploadFile(solutionName, resource.fsPath, true);
+	vscode.commands.registerCommand('webber.publishFile', async (resource: vscode.Uri) => {
+		await syncer.publishFile(resource.fsPath);
 	});
 
 	vscode.commands.registerCommand('test.view.showError', async (item: WebResource) => {

@@ -13,9 +13,8 @@ namespace WebResource.Syncer.Models
     {
         Create,
         Update,
-        AddedToSolution,
         Publish,
-        ListWebResourcesInSolution,
+        ListWebresourcesInSolution,
     }
     class Action
     {
@@ -24,7 +23,10 @@ namespace WebResource.Syncer.Models
         public bool Successful { get; set; }
         public string ErrorMessage { get; set; }
     }
-
+    internal class WebResoucePublishAction : Action
+    {
+        public string WebResourceName { get; set; }
+    }
     internal class WebResouceUploadAction : Action
     {
         public string WebResourceName { get; set; }
@@ -36,7 +38,6 @@ namespace WebResource.Syncer.Models
 
     internal class WebResoureceSyncerResponse
     {
-        public bool DryRun { get; set; }
-        public List<Action> ActionList { get; set; } = new List<Action>();
+        public Action Action { get; set; }
     }
 }
