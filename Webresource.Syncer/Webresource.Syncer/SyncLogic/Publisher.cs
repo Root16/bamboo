@@ -1,25 +1,20 @@
 ﻿#nullable enable
-using System;
 using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using WebResource.Syncer.Models;
 using System.IO;
+using System;
 
 namespace WebResource.Syncer.SyncLogic
 {
-    class Uploader
+    class Publisher
     {
         private readonly ServiceClient ServiceClient;
-        private readonly bool UpdateIfExists;
-        private readonly string SolutionName;
         private readonly FileInfo File;
         private readonly JsonSerializerSettings JsonSerializerSettings = new()
         {
@@ -29,36 +24,21 @@ namespace WebResource.Syncer.SyncLogic
             },
         };
 
-        public Uploader(IConfiguration configuration, FileInfo file, string solutionName, bool updateIfExists, string? connectionString)
+        public Publisher(IConfiguration configuration, FileInfo file, string? connectionString)
         {
             ServiceClient = string.IsNullOrEmpty(connectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
                                 new ServiceClient(connectionString);
-            UpdateIfExists = updateIfExists;
-            SolutionName = solutionName;
             File = file;
         }
-        public async Task<string> UploadFileAsync()
+        public async Task<string> PublishFileAsync()
         {
             var wr = new Models.WebResource(@$"{File.FullName}");
             var listOfWebResources = new List<Models.WebResource> { wr };
 
             try
             {
-                ActionName action;
-                if (UpdateIfExists)
-                {
-                    action = ActionName.Update;
-                    await wr.CreateOrUpdate(ServiceClient, SolutionName);
-                }
-                else
-                {
-                    action = ActionName.Create;
-                    await wr.Create(ServiceClient, SolutionName);
-                }
-
-                await AddToSolution(listOfWebResources, SolutionName, ServiceClient);
-
+                await Publish(listOfWebResources, ServiceClient);
                 return JsonConvert.SerializeObject(
                     new WebResoureceSyncerResponse
                     {
@@ -66,7 +46,7 @@ namespace WebResource.Syncer.SyncLogic
                         new WebResouceUploadAction
                         {
                             WebResourceName = wr.Name,
-                            ActionName = action,
+                            ActionName = ActionName.Publish,
                             Successful = true,
                         }
                     }
@@ -79,7 +59,7 @@ namespace WebResource.Syncer.SyncLogic
                     new WebResoureceSyncerResponse
                     {
                         Action =
-                        new WebResouceUploadAction
+                        new WebResoucePublishAction
                         {
                             WebResourceName = wr.Name,
                             Successful = false,
@@ -104,39 +84,6 @@ namespace WebResource.Syncer.SyncLogic
             };
 
             await service.ExecuteAsync(publishRequest);
-        }
-
-        private static async Task AddToSolution(List<Models.WebResource> resources, string solutionUniqueName, ServiceClient service)
-        {
-            var bulkRequest = new ExecuteMultipleRequest
-            {
-                Settings = new ExecuteMultipleSettings
-                {
-                    ContinueOnError = true,
-                    ReturnResponses = false
-                },
-                Requests = new OrganizationRequestCollection()
-            };
-
-            foreach (var resource in resources)
-            {
-                bulkRequest.Requests.Add(new AddSolutionComponentRequest
-                {
-                    AddRequiredComponents = false,
-                    ComponentId = resource.Id,
-                    ComponentType = 61, // WebResource
-                    SolutionUniqueName = solutionUniqueName
-                });
-            }
-
-            if (bulkRequest.Requests.Count == 1)
-            {
-                await service.ExecuteAsync(bulkRequest.Requests.First());
-            }
-            else
-            {
-                await service.ExecuteAsync(bulkRequest);
-            }
         }
     }
 }

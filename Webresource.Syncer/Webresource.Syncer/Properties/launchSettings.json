@@ -2,11 +2,19 @@
   "profiles": {
     "WebResource.Syncer - Test Upload": {
       "commandName": "Project",
-      "commandLineArgs": "--filePath c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\test.js --solution vscodeextentiontest --publish --updateIfExists"
+      "commandLineArgs": "upload --file c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\test2.js --solution vscodeextentiontest"
+    },
+    "WebResource.Syncer - Test Upload (Update if Exists)": {
+      "commandName": "Project",
+      "commandLineArgs": "upload --file c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\test2.js --solution vscodeextentiontest --update-if-exists"
     },
     "WebResource.Syncer - Test List Files": {
       "commandName": "Project",
-      "commandLineArgs": "--solution vscodeextentiontest --listWebResources"
+      "commandLineArgs": "list --solution vscodeextentiontest"
+    },
+    "WebResource.Syncer - Test Publish File": {
+      "commandName": "Project",
+      "commandLineArgs": "publish --file c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\test2.js"
     }
   }
 }

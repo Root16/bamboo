@@ -1,14 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿#nullable enable
+using Microsoft.Extensions.Configuration;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Organization;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using WebResource.Syncer.Models;
 
@@ -16,8 +15,8 @@ namespace WebResource.Syncer.SyncLogic
 {
     internal class Lister
     {
-        private readonly CommandLineOptions CommandLineOptions;
         private readonly ServiceClient ServiceClient;
+        private readonly string SolutionName;
         private readonly JsonSerializerSettings JsonSerializerSettings = new()
         {
             ContractResolver = new IgnorePropertiesResolver(new[] { "stringContent", "state" })
@@ -31,33 +30,50 @@ namespace WebResource.Syncer.SyncLogic
         };
 
 
-        public Lister(IConfiguration configuration,
-                        CommandLineOptions options)
+        public Lister(IConfiguration configuration, string solutionName, string? connectionString)
         {
-            CommandLineOptions = options;
-            ServiceClient = string.IsNullOrEmpty(CommandLineOptions.ConnectionString) ?
+            ServiceClient = string.IsNullOrEmpty(connectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
-                                new ServiceClient(options.ConnectionString);
+                                new ServiceClient(connectionString);
+            SolutionName = solutionName;
         }
 
-        public async Task ListFilesInSolutionAsync()
+        public async Task<string> ListFilesInSolutionAsync()
         {
-            var responseObject = new WebResoureceSyncerResponse();
-
-            var targetSolution = await RetreiveSolution(CommandLineOptions.Solution);
-
-            var resources = await RetrieveWebresourcesAsync(ServiceClient, targetSolution.Id, new List<int>(), filterByLcid: false);
-
-            responseObject.ActionList.Add(new ListWebResourcesInSolutionAction
+            try
             {
-                ActionName = ActionName.ListWebResourcesInSolution,
-                WebResources = resources.ToList(),
-                Successful = true,
-            });
+                var targetSolution = await RetreiveSolution(SolutionName);
 
-            var s = JsonConvert.SerializeObject(responseObject, JsonSerializerSettings);
+                var resources = await RetrieveWebresourcesAsync(ServiceClient, targetSolution.Id, new List<int>(), filterByLcid: false);
 
-            Console.WriteLine(s);
+                return JsonConvert.SerializeObject(
+                    new WebResoureceSyncerResponse
+                    {
+                        Action =
+                        new ListWebResourcesInSolutionAction
+                        {
+                            ActionName = ActionName.ListWebresourcesInSolution,
+                            WebResources = resources.ToList(),
+                            Successful = true,
+                        }
+                    }
+                    , JsonSerializerSettings);
+
+            }
+            catch (Exception ex)
+            {
+                return JsonConvert.SerializeObject(
+                    new WebResoureceSyncerResponse
+                    {
+                        Action =
+                        new ListWebResourcesInSolutionAction
+                        {
+                            Successful = false,
+                            ErrorMessage = ex.Message,
+                        }
+                    }
+                    , JsonSerializerSettings);
+            }
         }
         public async Task<Entity> RetreiveSolution(string solutionName)
         {
@@ -71,6 +87,7 @@ namespace WebResource.Syncer.SyncLogic
 
             querySampleSolution.Criteria.AddCondition("uniquename", ConditionOperator.Equal, solutionName);
 
+            ///TODO - scary :(
             return (await ServiceClient.RetrieveMultipleAsync(querySampleSolution)).Entities.FirstOrDefault();
         }
         public static async Task<IEnumerable<Models.WebResource>> RetrieveWebresourcesAsync(ServiceClient service, Guid solutionId, List<int> types, bool filterByLcid = false, params int[] lcids)

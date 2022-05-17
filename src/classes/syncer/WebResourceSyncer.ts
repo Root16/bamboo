@@ -38,7 +38,7 @@ export class WebResourceSyncer {
 		id: string;
 	}[]> {
 		let asyncFunc = async (solutionName: string) => {
-			const args = ['--solution', solutionName, '--listWebResources',];
+			const args = ['list', '--solution', solutionName,];
 
 			const procResult = await this._execFile(this._exePath, args, {
 				shell: true,
@@ -47,23 +47,22 @@ export class WebResourceSyncer {
 
 			let response: WebResoureceSyncerResponse = JSON.parse(procResult.stdout);
 
-			if (response.dryRun) {
-				await vscode.window.showInformationMessage("Dry run successful");
-				return Promise.resolve([]);
+			let string = `Action: ${response.action.actionName}. Successful: ${response.action.successful}. ` 
+							+ (response.action.successful ? "" : `Error message: ${response.action.errorMessage}`);
+
+			if (response.action.successful) {
+				vscode.window.showInformationMessage(string);
+			} else {
+				vscode.window.showErrorMessage(string, "Rerun this action?");
 			}
 
-			for (let action of response.actionList) {
-				let string = `Stage: ${action.actionName}. Successful: ${action.successful}. ` + (action.successful ? "" : `Error message: ${action.errorMessage}`);
-				vscode.window.showInformationMessage(string, "Reun this stage?");
+			if (response.action.actionName === "ListWebresourcesInSolution") {
+				let listAction = response.action as ListWebResourcesInSolutionAction;
 
-				if (action.actionName === "ListWebResourcesInSolution") {
-					let listAction = action as ListWebResourcesInSolutionAction;
-
-					return listAction.webResources;
-				}
+				return listAction.webResources;
+			} else {
+				throw new Error("No ListWebResourceAction found?");
 			}
-
-			throw new Error("No ListWebResourceAction found?");
 		};
 
 		return await this.reportProgress<{
@@ -72,13 +71,13 @@ export class WebResourceSyncer {
 		}[]>("Fetching Webresources...", asyncFunc, solutionName);
 	}
 
-	async uploadFile(solutionName: string, path: string, publish: boolean = false) {
+	async uploadFile(solutionName: string, path: string, updateIfExists: boolean = false) {
 
-		let asyncFunc = async (solutionName: string, path: string, publish: boolean) => {
-			const args = ['--filePath', path, '--solution', solutionName, '--updateIfExists',];
+		let asyncFunc = async (solutionName: string, path: string, updateIfExists: boolean) => {
+			const args = ['upload', '--file', path, '--solution', solutionName,];
 
-			if (publish) {
-				args.push('--publish');
+			if (updateIfExists) {
+				args.push('--update-if-exists');
 			}
 
 			const procResult = await this._execFile(this._exePath, args, {
@@ -88,17 +87,41 @@ export class WebResourceSyncer {
 
 			let response: WebResoureceSyncerResponse = JSON.parse(procResult.stdout);
 
-			if (response.dryRun) {
-				await vscode.window.showInformationMessage("Dry run successful");
-				return;
-			}
+			let string = `Action: ${response.action.actionName}. Successful: ${response.action.successful}. ` 
+							+ (response.action.successful ? "" : `Error message: ${response.action.errorMessage}`);
 
-			for (let action of response.actionList) {
-				let string = `Stage: ${action.actionName}. Successful: ${action.successful}. ` + (action.successful ? "" : `Error message: ${action.errorMessage}`);
-				vscode.window.showInformationMessage(string, "Reun this stage?");
+			if (response.action.successful) {
+				vscode.window.showInformationMessage(string);
+			} else {
+				vscode.window.showErrorMessage(string, "Rerun this action?");
 			}
 		};
 
-		await this.reportProgress("Uploading Webresource...", asyncFunc, solutionName, path, publish);
+		await this.reportProgress("Uploading Webresource...", asyncFunc, solutionName, path, updateIfExists);
+	}
+
+	async publishFile(path: string) {
+
+		let asyncFunc = async (path: string) => {
+			const args = ['publish', '--file', path];
+
+			const procResult = await this._execFile(this._exePath, args, {
+				shell: true,
+				windowsHide: true,
+			});
+
+			let response: WebResoureceSyncerResponse = JSON.parse(procResult.stdout);
+
+			let string = `Action: ${response.action.actionName}. Successful: ${response.action.successful}. ` 
+							+ (response.action.successful ? "" : `Error message: ${response.action.errorMessage}`);
+
+			if (response.action.successful) {
+				vscode.window.showInformationMessage(string);
+			} else {
+				vscode.window.showErrorMessage(string, "Rerun this action?");
+			}
+		};
+
+		await this.reportProgress("Publishing Webresource...", asyncFunc, path);
 	}
 }
