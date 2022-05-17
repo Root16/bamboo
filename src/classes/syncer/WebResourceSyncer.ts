@@ -2,8 +2,6 @@ import * as vscode from 'vscode';
 import { WebResoureceSyncerResponse, ListWebResourcesInSolutionAction } from '../../models/WebResourceSyncerResponse';
 import util = require('util');
 import { Func } from 'mocha';
-import { Value } from 'sass';
-
 
 
 export class WebResourceSyncer {
