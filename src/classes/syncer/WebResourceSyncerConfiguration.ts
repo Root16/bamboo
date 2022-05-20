@@ -1,6 +1,21 @@
 import * as vscode from 'vscode';
 
 export abstract class WebResourceSyncerConfiguration {
+	public static async currentWorkspaceHasConfigFile(): Promise<boolean> {
+		if (vscode.workspace.workspaceFolders === undefined) {
+			throw new Error("Cannot activate extension. Workspace is undefined");
+		}
+
+		const fileName = 'package.json';
+		const workspacePath = vscode.workspace.workspaceFolders[0].uri.path;
+
+		try {
+			await vscode.workspace.fs.stat(vscode.Uri.file(workspacePath + '/' + fileName));
+			return true;
+		} catch (error) {
+			return false;
+		}
+	}
 	public static async getConfigFileAsJson(): Promise<any> {
 		if (vscode.workspace.workspaceFolders === undefined) {
 			throw new Error("Cannot activate extension. Workspace is undefined");
