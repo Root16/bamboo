@@ -24,6 +24,7 @@ export abstract class WebResourceSyncerConfiguration {
 		if (json.hasOwnProperty(propertyName)) {
 			return json[propertyName];
 		} else {
+			vscode.window.showErrorMessage(`No property named ${propertyName} in package.json`);
 			throw new Error(`No property named ${propertyName} in package.json`);
 		}
 	}
@@ -34,6 +35,7 @@ export abstract class WebResourceSyncerConfiguration {
 		if (json.hasOwnProperty(propertyName)) {
 			return json[propertyName];
 		} else {
+			vscode.window.showErrorMessage(`No property named ${propertyName} in package.json`);
 			throw new Error(`No property named ${propertyName} in package.json`);
 		}
 	}
@@ -44,6 +46,7 @@ export abstract class WebResourceSyncerConfiguration {
 		if (json.hasOwnProperty(propertyName)) {
 			return json[propertyName];
 		} else {
+			vscode.window.showErrorMessage(`No property named ${propertyName} in package.json`);
 			throw new Error(`No property named ${propertyName} in package.json`);
 		}
 	}

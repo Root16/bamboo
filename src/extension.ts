@@ -7,7 +7,7 @@ import { WebResourceSyncerConfiguration } from './classes/syncer/WebResourceSync
 const syncerExePath = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/WebResource.Syncer.exe";
 
 export async function activate(context: vscode.ExtensionContext) {
-	let syncer = new WebResourceSyncer(context.extensionPath + syncerExePath);
+	let syncer = new WebResourceSyncer(context.extensionPath + syncerExePath, await WebResourceSyncerConfiguration.getConnectionString());
 
 	const solutionName = await WebResourceSyncerConfiguration.getSolution();
 	let resources = await syncer.retreiveWebResourcesInSolution(solutionName);

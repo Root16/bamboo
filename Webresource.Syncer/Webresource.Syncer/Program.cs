@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 IConfiguration config = new ConfigurationBuilder()
         .AddJsonFile("appsettings.json", false)
-        .AddJsonFile("appsettings.Development.json", true)
         .Build();
 
 var uploadFunc = async (FileInfo file, string solutionName, bool updateIfExists, string? connectionString) => 
@@ -34,6 +33,7 @@ static RootCommand GenerateCommandLineArguments(
         name: "--conn-string",
         description: "Connection string to authenticate with Power Apps")
     {
+        IsRequired = true,
     };
 
     var fileOption = new Option<FileInfo?>(
