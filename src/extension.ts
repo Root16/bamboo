@@ -7,7 +7,13 @@ import { WebResourceSyncerConfiguration } from './classes/syncer/WebResourceSync
 const syncerExePath = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/WebResource.Syncer.exe";
 
 export async function activate(context: vscode.ExtensionContext) {
-	let syncer = new WebResourceSyncer(context.extensionPath + syncerExePath);
+	if (! await WebResourceSyncerConfiguration.currentWorkspaceHasConfigFile())
+	{
+		vscode.window.showErrorMessage(`There is no package.json in the root of the current workspace! Please add one with the properties: 'connectionString' and 'solutionName', and then refresh the extension by running the command: '>Reload Window'`);
+		return;
+	}
+
+	let syncer = new WebResourceSyncer(context.extensionPath + syncerExePath, await WebResourceSyncerConfiguration.getConnectionString());
 
 	const solutionName = await WebResourceSyncerConfiguration.getSolution();
 	let resources = await syncer.retreiveWebResourcesInSolution(solutionName);

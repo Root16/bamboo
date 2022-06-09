@@ -8,8 +8,7 @@ export class WebResourceSyncer {
 	_exePath: string;
 	_execFile: Function;
 
-
-	constructor(exePath: string) {
+	constructor(exePath: string, private connString: string) {
 		this._exePath = exePath;
 		this._execFile = util.promisify(require('child_process').execFile);
 	}
@@ -38,7 +37,7 @@ export class WebResourceSyncer {
 		id: string;
 	}[]> {
 		let asyncFunc = async (solutionName: string) => {
-			const args = ['list', '--solution', solutionName,];
+			const args = ['list', '--solution', solutionName, '--conn-string', this.connString];
 
 			const procResult = await this._execFile(this._exePath, args, {
 				shell: true,
@@ -74,7 +73,7 @@ export class WebResourceSyncer {
 	async uploadFile(solutionName: string, path: string, updateIfExists: boolean = false) {
 
 		let asyncFunc = async (solutionName: string, path: string, updateIfExists: boolean) => {
-			const args = ['upload', '--file', path, '--solution', solutionName,];
+			const args = ['upload', '--file', path, '--solution', solutionName, '--conn-string', this.connString];
 
 			if (updateIfExists) {
 				args.push('--update-if-exists');
@@ -103,7 +102,7 @@ export class WebResourceSyncer {
 	async publishFile(path: string) {
 
 		let asyncFunc = async (path: string) => {
-			const args = ['publish', '--file', path];
+			const args = ['publish', '--file', path, '--conn-string', this.connString];
 
 			const procResult = await this._execFile(this._exePath, args, {
 				shell: true,
