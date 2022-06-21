@@ -21,8 +21,6 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
     var listFuncAsync = async (string solutionName, string connectionString) =>
         await (new Lister(config, solutionName, connectionString)).ListFilesInSolutionAsync();
 
-    var publishFuncAsync = async (FileInfo file, string connectionString) =>
-        await (new Publisher(config, file, connectionString)).PublishFileAsync();
 
     var fileOption = new Option<FileInfo>(
         name: "--file",
@@ -75,6 +73,7 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
     var publishCommand = new Command("publish", "Publish Webresource in PowerApps")
     {
         fileOption,
+        filePathInPowerAppsOption,
         connStringOption,
     };
 
@@ -94,10 +93,11 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
     }, solutionOption, connStringOption);
 
 
-    publishCommand.SetHandler(async (FileInfo fileInfo, string connectionString) =>
+    publishCommand.SetHandler(async (FileInfo file, string filePathInPowerApps, string connectionString) =>
     {
-        Console.WriteLine(await publishFuncAsync(fileInfo, connectionString));
-    }, fileOption, connStringOption);
+        var publisher = new Publisher(config, file, filePathInPowerApps, connectionString);
+        Console.WriteLine(await publisher.PublishFileAsync());
+    },fileOption, filePathInPowerAppsOption, connStringOption);    
 
     var rootCommand = new RootCommand("Webresource.Syncer");
 

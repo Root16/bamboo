@@ -15,17 +15,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	let syncer = new WebResourceSyncer(context.extensionPath + syncerExePath, await WebResourceSyncerConfiguration.getConnectionString());
 
-	const solutionName = await WebResourceSyncerConfiguration.getSolution();
-	let resources = await syncer.retreiveWebResourcesInSolution(solutionName);
+	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
+		const solutionName = await WebResourceSyncerConfiguration.getSolution();
 
-	let updated = resources.map(r => new WebResource(r.name, r.id, true,
-		vscode.TreeItemCollapsibleState.Collapsed
-	));
+		let resources = await syncer.retreiveWebResourcesInSolution(solutionName);
 
-	vscode.window.registerTreeDataProvider(
-		`webresourcetree`,
-		new WebResourcesProvider(updated),
-	);
+		let updated = resources.map(r => new WebResource(r.name, r.id, true,
+			vscode.TreeItemCollapsibleState.Collapsed
+		));
+		vscode.window.registerTreeDataProvider(
+			`webresourcetree`,
+			new WebResourcesProvider(updated),
+		);
+	}
 
 	vscode.commands.registerCommand('bamboo.createAndUploadFile', async (resource: vscode.Uri) => {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
@@ -38,7 +40,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
 
-		let updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.updateIfExists");
+		const updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.updateIfExists");
 
 		await syncer.uploadFile(solutionName, resource.fsPath, filePathInPowerApps, updateIfExists);
 	});

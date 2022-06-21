@@ -72,7 +72,7 @@ export class WebResourceSyncer {
 
 	async uploadFile(solutionName: string, path: string, filePathInPowerApps: string, updateIfExists: boolean = false) {
 
-		let asyncFunc = async (solutionName: string, path: string, updateIfExists: boolean) => {
+		let asyncFunc = async (solutionName: string, path: string, filePathInPowerApps: string, updateIfExists: boolean)  => {
 			const args = ['upload', '--file', path, '--file-name-in-pa', filePathInPowerApps,  '--solution',  solutionName, '--conn-string', this.connString];
 
 			if (updateIfExists) {
@@ -94,15 +94,21 @@ export class WebResourceSyncer {
 			} else {
 				vscode.window.showErrorMessage(string, "Rerun this action?");
 			}
+
+			return response.action.successful;
 		};
 
-		await this.reportProgress("Uploading Webresource...", asyncFunc, solutionName, path, updateIfExists);
+		let successful = await this.reportProgress<boolean>("Uploading Webresource...", asyncFunc, solutionName, path, filePathInPowerApps, updateIfExists);
+		let shouldPublish = vscode.workspace.getConfiguration().get<boolean>("bamboo.uploadWebresource.publishIfSuccessful");
+		if (successful && shouldPublish) {
+			await this.publishFile(path, filePathInPowerApps);
+		}
 	}
 
-	async publishFile(path: string) {
+	async publishFile(path: string, filePathInPowerApps: string) {
 
 		let asyncFunc = async (path: string) => {
-			const args = ['publish', '--file', path, '--conn-string', this.connString];
+			const args = ['publish', '--file', path, '--file-name-in-pa', filePathInPowerApps, '--conn-string', this.connString];
 
 			const procResult = await this._execFile(this._exePath, args, {
 				shell: true,
