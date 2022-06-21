@@ -27,12 +27,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		new WebResourcesProvider(updated),
 	);
 
-	vscode.commands.registerCommand('webber.uploadFile', async (resource: vscode.Uri) => {
+	vscode.commands.registerCommand('bamboo.uploadFile', async (resource: vscode.Uri) => {
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
 		await syncer.uploadFile(solutionName, resource.fsPath);
 	});
 
-	vscode.commands.registerCommand('webber.uploadAndPublishFile', async (resource: vscode.Uri) => {
+	vscode.commands.registerCommand('bamboo.uploadAndPublishFile', async (resource: vscode.Uri) => {
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
 		await syncer.uploadFile(solutionName, resource.fsPath, true);
 	});

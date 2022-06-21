@@ -1,11 +1,11 @@
 {
-	"name": "powerapps-wre",
-	"displayName": "powerapps-web-resource-syncer",
+	"name": "bamboo",
+	"displayName": "Bamboo",
 	"publisher": "root16",
 	"repository": {
 		"url": "https://github.com/Root16/vscode-web-resource-explorer"
 	},
-	"description": "Allows users to upload and explore powerapps web resources straight from vscode",
+	"description": "Allows users to create, update, and publish and webresources on the Microsoft Power Platform straight from vscode",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.61.0"
@@ -29,24 +29,24 @@
 		},
 		"commands": [
 			{
-				"command": "webber.uploadFile",
+				"command": "bamboo.uploadFile",
 				"title": "Upload file to Power Apps",
-				"category": "Webber"
+				"category": "Bamboo"
 			},
 			{
-				"command": "webber.publishFile",
+				"command": "bamboo.publishFile",
 				"title": "Publish file to Power Apps",
-				"category": "Webber"
+				"category": "Bamboo"
 			}
 		],
 		"menus": {
 			"explorer/context": [
 				{
-					"command": "webber.uploadFile",
+					"command": "bamboo.uploadFile",
 					"group": "navigation"
 				},
 				{
-					"command": "webber.publishFile",
+					"command": "bamboo.publishFile",
 					"group": "navigation"
 				}
 			]
