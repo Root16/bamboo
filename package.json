@@ -3,7 +3,7 @@
 	"displayName": "Bamboo",
 	"publisher": "root16",
 	"repository": {
-		"url": "https://github.com/Root16/vscode-web-resource-explorer"
+		"url": "https://github.com/Root16/bamboo"
 	},
 	"description": "Allows users to create, update, and publish and webresources on the Microsoft Power Platform straight from vscode",
 	"version": "0.0.1",
@@ -32,21 +32,12 @@
 				"command": "bamboo.uploadFile",
 				"title": "Upload file to Power Apps",
 				"category": "Bamboo"
-			},
-			{
-				"command": "bamboo.publishFile",
-				"title": "Publish file to Power Apps",
-				"category": "Bamboo"
 			}
 		],
 		"menus": {
 			"explorer/context": [
 				{
 					"command": "bamboo.uploadFile",
-					"group": "navigation"
-				},
-				{
-					"command": "bamboo.publishFile",
 					"group": "navigation"
 				}
 			]

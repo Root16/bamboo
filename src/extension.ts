@@ -7,8 +7,7 @@ import { WebResourceSyncerConfiguration } from './classes/syncer/WebResourceSync
 const syncerExePath = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/WebResource.Syncer.exe";
 
 export async function activate(context: vscode.ExtensionContext) {
-	if (! await WebResourceSyncerConfiguration.currentWorkspaceHasConfigFile())
-	{
+	if (! await WebResourceSyncerConfiguration.currentWorkspaceHasConfigFile()) {
 		vscode.window.showErrorMessage(`There is no package.json in the root of the current workspace! Please add one with the properties: 'connectionString' and 'solutionName', and then refresh the extension by running the command: '>Reload Window'`);
 		return;
 	}
@@ -22,20 +21,29 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.TreeItemCollapsibleState.Collapsed
 	));
 
-	vscode.window.registerTreeDataProvider(
-		`webresourcetree`,
-		new WebResourcesProvider(updated),
-	);
+	// vscode.window.registerTreeDataProvider(
+	// 	`webresourcetree`,
+	// 	new WebResourcesProvider(updated),
+	// );
 
 	vscode.commands.registerCommand('bamboo.uploadFile', async (resource: vscode.Uri) => {
+		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
+		}
+		let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+
+		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
+
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
-		await syncer.uploadFile(solutionName, resource.fsPath);
+
+		await syncer.uploadFile(solutionName, resource.fsPath, filePathInPowerApps);
 	});
 
-	vscode.commands.registerCommand('bamboo.uploadAndPublishFile', async (resource: vscode.Uri) => {
-		const solutionName = await WebResourceSyncerConfiguration.getSolution();
-		await syncer.uploadFile(solutionName, resource.fsPath, true);
-	});
+	// vscode.commands.registerCommand('bamboo.uploadAndPublishFile', async (resource: vscode.Uri) => {
+	// 	const solutionName = await WebResourceSyncerConfiguration.getSolution();
+	// 	await syncer.uploadFile(solutionName, resource.fsPath, true);
+	// });
 
 	vscode.commands.registerCommand('test.view.showError', async (item: WebResource) => {
 		console.log(item);

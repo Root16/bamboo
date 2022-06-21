@@ -33,7 +33,7 @@ namespace WebResource.Syncer.SyncLogic
         }
         public async Task<string> PublishFileAsync()
         {
-            var wr = new Models.WebResource(@$"{File.FullName}");
+            var wr = new Models.WebResource(@$"{File.FullName}", "BROKeN");
             var listOfWebResources = new List<Models.WebResource> { wr };
 
             try

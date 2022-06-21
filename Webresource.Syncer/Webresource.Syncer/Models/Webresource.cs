@@ -53,7 +53,7 @@ namespace WebResource.Syncer.Models
             //Plugin = parent;
         }
 
-        public WebResource(string filePath)
+        public WebResource(string filePath, string fileName)
         {
             var fi = new FileInfo(filePath);
 
@@ -69,10 +69,10 @@ namespace WebResource.Syncer.Models
             // If the same, then we did not find any root folder
             // similar to a customization prefix and the file does
             // not come from a locally saved web resources list
-            if (resourceName.Replace("/", "\\") == fi.FullName)
-            {
-                resourceName = fi.Name;
-            }
+            //if (resourceName.Replace("/", "\\") == fi.FullName)
+            //{
+            //    resourceName = fi.Name;
+            //}
 
             _fileName = resourceName;
 
@@ -91,7 +91,7 @@ namespace WebResource.Syncer.Models
             }
 
             State = WebResourceState.None;
-            this.filePath = filePath;
+            this.filePath = fileName;
 
             //if (string.IsNullOrEmpty(this.filePath) && !string.IsNullOrEmpty("figure it out"))
             //{
@@ -111,8 +111,10 @@ namespace WebResource.Syncer.Models
             if (webResourceName == null)
             {
                 var prefix = await GetSolutionPublisherPrefixAsync(service, solutionUniqueName);
-                webResourceName = $"{prefix}_/{_fileName}";
+                webResourceName = $"{prefix}_/{filePath}";
             }
+
+            webResourceName = webResourceName.Replace("//", "/");
 
             record["name"] = webResourceName;
             record["displayname"] = webResourceName;
@@ -173,7 +175,9 @@ namespace WebResource.Syncer.Models
             if (string.IsNullOrEmpty(solutionUniqueName)) throw new ArgumentNullException(nameof(solutionUniqueName));
 
             var prefix = await GetSolutionPublisherPrefixAsync(service, solutionUniqueName);
-            var name = $"{prefix}_/{_fileName}";
+            var name = $"{prefix}_/{filePath}";
+
+            name = name.Replace("//", "/");
 
             var remoteRecord = await RetreiveWebResource(name, service);
             if (remoteRecord == null)

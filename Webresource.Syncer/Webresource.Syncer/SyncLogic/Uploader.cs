@@ -21,6 +21,7 @@ namespace WebResource.Syncer.SyncLogic
         private readonly bool UpdateIfExists;
         private readonly string SolutionName;
         private readonly FileInfo File;
+        private readonly string FilePathInPowerApps;
         private readonly JsonSerializerSettings JsonSerializerSettings = new()
         {
             ContractResolver = new DefaultContractResolver
@@ -29,7 +30,7 @@ namespace WebResource.Syncer.SyncLogic
             },
         };
 
-        public Uploader(IConfiguration configuration, FileInfo file, string solutionName, bool updateIfExists, string? connectionString)
+        public Uploader(IConfiguration configuration, FileInfo file, string filePathInPowerApps, string solutionName, bool updateIfExists, string? connectionString)
         {
             ServiceClient = string.IsNullOrEmpty(connectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
@@ -37,10 +38,11 @@ namespace WebResource.Syncer.SyncLogic
             UpdateIfExists = updateIfExists;
             SolutionName = solutionName;
             File = file;
+            FilePathInPowerApps = filePathInPowerApps;
         }
         public async Task<string> UploadFileAsync()
         {
-            var wr = new Models.WebResource(@$"{File.FullName}");
+            var wr = new Models.WebResource(File.FullName, FilePathInPowerApps);
             var listOfWebResources = new List<Models.WebResource> { wr };
 
             try
@@ -89,23 +91,6 @@ namespace WebResource.Syncer.SyncLogic
                     , JsonSerializerSettings);
             }
         }
-        private static async Task Publish(List<Models.WebResource> webresources, ServiceClient service)
-        {
-            string idsAsXML = string.Empty;
-
-            foreach (Models.WebResource webresource in webresources)
-            {
-                idsAsXML += $"<webresource>{webresource.Id:B}</webresource>";
-            }
-
-            var publishRequest = new PublishXmlRequest
-            {
-                ParameterXml = $"<importexportxml><webresources>{idsAsXML}</webresources></importexportxml>"
-            };
-
-            await service.ExecuteAsync(publishRequest);
-        }
-
         private static async Task AddToSolution(List<Models.WebResource> resources, string solutionUniqueName, ServiceClient service)
         {
             var bulkRequest = new ExecuteMultipleRequest

@@ -2,11 +2,11 @@
   "profiles": {
     "WebResource.Syncer - Test Upload": {
       "commandName": "Project",
-      "commandLineArgs": "upload --file c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\test2.js --solution vscodeextentiontest"
+      "commandLineArgs": "upload --file c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\one\\two\\test.js --file-name-in-pa /one/two/test.js --solution vscodeextentiontest --conn-string AuthType=OAuth;Url=https://root16dev.crm.dynamics.com;Username=jyenterbriars@root16.com;ClientId={51f81489-12ee-4a9e-aaae-a2591f45987d};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=./oauth-cache.txt;"
     },
     "WebResource.Syncer - Test Upload (Update if Exists)": {
       "commandName": "Project",
-      "commandLineArgs": "upload --file c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\test2.js --solution vscodeextentiontest --update-if-exists"
+      "commandLineArgs": "upload --file c:\\Users\\JohnYenter-Briars\\hackathon\\dev\\one\\two\\test.js --file-name-in-pa /one/two/test.js --solution vscodeextentiontest --conn-string AuthType=OAuth;Url=https://root16dev.crm.dynamics.com;Username=jyenterbriars@root16.com;ClientId={51f81489-12ee-4a9e-aaae-a2591f45987d};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=./oauth-cache.txt; --update-if-exists"
     },
     "WebResource.Syncer - Test List Files": {
       "commandName": "Project",
