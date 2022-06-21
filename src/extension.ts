@@ -5,6 +5,7 @@ import { WebResourceSyncer } from './classes/syncer/WebResourceSyncer';
 import { WebResourceSyncerConfiguration } from './classes/syncer/WebResourceSyncerConfiguration';
 
 const syncerExePath = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/WebResource.Syncer.exe";
+const ExtensionName = "bamboo";
 
 export async function activate(context: vscode.ExtensionContext) {
 	if (! await WebResourceSyncerConfiguration.currentWorkspaceHasConfigFile()) {
@@ -21,12 +22,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.TreeItemCollapsibleState.Collapsed
 	));
 
-	// vscode.window.registerTreeDataProvider(
-	// 	`webresourcetree`,
-	// 	new WebResourcesProvider(updated),
-	// );
+	vscode.window.registerTreeDataProvider(
+		`webresourcetree`,
+		new WebResourcesProvider(updated),
+	);
 
-	vscode.commands.registerCommand('bamboo.uploadFile', async (resource: vscode.Uri) => {
+	vscode.commands.registerCommand('bamboo.createAndUploadFile', async (resource: vscode.Uri) => {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
 			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
@@ -37,7 +38,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
 
-		await syncer.uploadFile(solutionName, resource.fsPath, filePathInPowerApps);
+		let updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.updateIfExists");
+
+		await syncer.uploadFile(solutionName, resource.fsPath, filePathInPowerApps, updateIfExists);
 	});
 
 	// vscode.commands.registerCommand('bamboo.uploadAndPublishFile', async (resource: vscode.Uri) => {
