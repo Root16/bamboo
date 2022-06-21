@@ -1,11 +1,12 @@
-# Powerapps-WRE README
+# Bamboo
+Simple webresource management for the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/)
 
-Welcome to the XXX extension for Visual Studio Code! This extension provides the following features inside VS Code:
+Welcome to Bamboo - the simple extension for Visual Studio Code! This extension provides the following features inside VS Code:
 
 - Create or Update Webresources in PowerApps straight from VS Code.
 - Publish Webresourecs automatically
 
-### Getting Started with XXX
+### Getting Started with Bamboo
 - Install the extesion at: [LINK](google.com)
 - Add a `package.json` at the root of your project with the following parameters
 ```
