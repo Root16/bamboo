@@ -10,18 +10,12 @@ IConfiguration config = new ConfigurationBuilder()
         .AddJsonFile("appsettings.json", false)
         .Build();
 
-var idk = args;
-
 var rootCommand = GenerateCommandLineArguments(config);
 
 return rootCommand.InvokeAsync(args).Result;
 
 static RootCommand GenerateCommandLineArguments(IConfiguration config)
 {
-    var listFuncAsync = async (string solutionName, string connectionString) =>
-        await (new Lister(config, solutionName, connectionString)).ListFilesInSolutionAsync();
-
-
     var fileOption = new Option<FileInfo>(
         name: "--file",
         description: "The file path on disk for the given action")
@@ -89,7 +83,8 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
 
     listCommand.SetHandler(async (string solutionName, string connectionString) =>
     {
-        Console.WriteLine(await listFuncAsync(solutionName, connectionString));
+        var lister = new Lister(config, solutionName, connectionString);
+        Console.WriteLine(await lister.ListFilesInSolutionAsync());
     }, solutionOption, connStringOption);
 
 

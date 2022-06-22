@@ -99,7 +99,9 @@ export class WebResourceSyncer {
 		};
 
 		let successful = await this.reportProgress<boolean>("Uploading Webresource...", asyncFunc, solutionName, path, filePathInPowerApps, updateIfExists);
+
 		let shouldPublish = vscode.workspace.getConfiguration().get<boolean>("bamboo.uploadWebresource.publishIfSuccessful");
+
 		if (successful && shouldPublish) {
 			await this.publishFile(path, filePathInPowerApps);
 		}

@@ -1,9 +1,9 @@
-﻿//short helper class to ignore some properties from serialization
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.Reflection;
 
+//short helper class to ignore some properties from serialization
 public class IgnorePropertiesResolver : DefaultContractResolver
 {
     private readonly HashSet<string> ignoreProps;
