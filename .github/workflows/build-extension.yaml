@@ -8,7 +8,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
-      - run: ls -la
       - run: npm ci
+      - run: ls -la
       - run: npm run compile
 
