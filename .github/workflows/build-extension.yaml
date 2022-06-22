@@ -23,6 +23,7 @@ jobs:
           dotnet-version: 6.0.x
 
       - run: cd Webresource.Syncer
+      - run: ls -la
       - name: Restore dependencies
         run: dotnet restore
     
