@@ -22,18 +22,11 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
-      - run: ls -la
-      - run: ls -la Webresource.Syncer/
-      - run: ls -la Webresource.Syncer/Webresource.Syncer
-
-      - name: Restore dependencies
-        run: dotnet restore Webresource.Syncer/Webresource.Syncer/Webresource.Syncer.csproj
-
       - name: Restore dependencies
         run: dotnet restore Webresource.Syncer/
     
       - name: Build
-        run: dotnet build -c Release --no-restore Webresource.Syncer/Webresource.Syncer/Webresource.Syncer.csproj
+        run: dotnet build -c Release --no-restore Webresource.Syncer/
 
 
 
