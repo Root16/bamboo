@@ -8,6 +8,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
+      - run: npm --version
+      - run: node --version
       - run: npm install
       - run: ls -la
       - run: npm run compile
