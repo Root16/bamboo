@@ -6,10 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WebResource.Syncer.Enum;
-using WebResource.Syncer.Helper;
+using Webresource.Syncer.Enum;
+using Webresource.Syncer.Helper;
 
-namespace WebResource.Syncer.Models
+namespace Webresource.Syncer.Models
 {
     public class WebResource
     {

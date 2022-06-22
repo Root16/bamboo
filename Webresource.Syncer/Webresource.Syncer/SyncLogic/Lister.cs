@@ -9,9 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using WebResource.Syncer.Models;
+using Webresource.Syncer.Models;
 
-namespace WebResource.Syncer.SyncLogic
+namespace Webresource.Syncer.SyncLogic
 {
     internal class Lister
     {

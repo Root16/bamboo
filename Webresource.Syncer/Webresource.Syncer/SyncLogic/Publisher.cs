@@ -6,11 +6,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using WebResource.Syncer.Models;
+using Webresource.Syncer.Models;
 using System.IO;
 using System;
 
-namespace WebResource.Syncer.SyncLogic
+namespace Webresource.Syncer.SyncLogic
 {
     class Publisher
     {

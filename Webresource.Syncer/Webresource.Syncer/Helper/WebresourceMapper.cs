@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WebResource.Syncer.Enum;
+using Webresource.Syncer.Enum;
 
-namespace WebResource.Syncer.Helper
+namespace Webresource.Syncer.Helper
 {
     class WebResourceMapper
     {

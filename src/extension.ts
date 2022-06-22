@@ -4,7 +4,7 @@ import { WebResource } from './models/WebResource';
 import { WebResourceSyncer } from './classes/syncer/WebResourceSyncer';
 import { WebResourceSyncerConfiguration } from './classes/syncer/WebResourceSyncerConfiguration';
 
-const syncerExePath = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/WebResource.Syncer.exe";
+const syncerExePath = "/Webresource.Syncer/Webresource.Syncer/bin/Release/net6.0/Webresource.Syncer.exe";
 const ExtensionName = "bamboo";
 
 export async function activate(context: vscode.ExtensionContext) {
