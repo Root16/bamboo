@@ -1,7 +1,7 @@
-name: build-extension
+name: build-test-extension
 on: [push]
 jobs:
-  build-extension:
+  build-extension-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -13,4 +13,21 @@ jobs:
       - run: npm install
       - run: ls -la
       - run: npm run compile
+  build-extension-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+
+      - run: cd Webresource.Syncer
+      - name: Restore dependencies
+        run: dotnet restore
+    
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+
 
