@@ -30,51 +30,22 @@ namespace WebResource.Syncer.Models
         }
 
         public Guid Id => record?.Id ?? Guid.Empty;
+        /// <summary>
+        /// Represents the PATH of the Webresource in PowerApps. For example: /one/two/test.js
+        /// </summary>
         private string filePath;
-        private string _fileName;
         public WebResourceState State;
         public WebResource(Entity record)
         {
             this.record = record;
             StringContent = GetPlainText();
 
-            //if (string.IsNullOrEmpty(filePath) && !string.IsNullOrEmpty(settings.LastFolderUsed))
-            //{
-            //    string expectedFilePath = Path.Combine(settings.LastFolderUsed, record.GetAttributeValue<string>("name")?.Replace("/", "\\") ?? "");
-            //    if (File.Exists(expectedFilePath))
-            //    {
-            //        filePath = expectedFilePath;
-            //    }
-            //}
-
-            //Synced = true;
             State = WebResourceState.None;
-            //loadedOn = DateTime.Now;
-            //Plugin = parent;
         }
 
-        public WebResource(string filePath)
+        public WebResource(string filePath, string fileName)
         {
             var fi = new FileInfo(filePath);
-
-            var resourceName = string.Empty;
-            var parts = fi.FullName.Split('\\');
-            for (var i = parts.Length - 1; i >= 0; i--)
-            {
-                resourceName = resourceName == string.Empty ? parts[i] : $"{parts[i]}/{resourceName}";
-
-                if (parts[i].EndsWith("_")) break;
-            }
-
-            // If the same, then we did not find any root folder
-            // similar to a customization prefix and the file does
-            // not come from a locally saved web resources list
-            if (resourceName.Replace("/", "\\") == fi.FullName)
-            {
-                resourceName = fi.Name;
-            }
-
-            _fileName = resourceName;
 
             record = new Entity("webresource")
             {
@@ -91,17 +62,7 @@ namespace WebResource.Syncer.Models
             }
 
             State = WebResourceState.None;
-            this.filePath = filePath;
-
-            //if (string.IsNullOrEmpty(this.filePath) && !string.IsNullOrEmpty("figure it out"))
-            //{
-            //    string expectedFilePath = Path.Combine("i'm sad", resourceName.Replace("/", "\\") ?? "");
-            //    if (File.Exists(expectedFilePath))
-            //    {
-            //        this.filePath = expectedFilePath;
-            //    }
-            //}
-
+            this.filePath = fileName;
         }
 
         public async Task Create(ServiceClient service, string solutionUniqueName, string webResourceName = null)
@@ -111,8 +72,10 @@ namespace WebResource.Syncer.Models
             if (webResourceName == null)
             {
                 var prefix = await GetSolutionPublisherPrefixAsync(service, solutionUniqueName);
-                webResourceName = $"{prefix}_/{_fileName}";
+                webResourceName = $"{prefix}_/{filePath}";
             }
+
+            webResourceName = webResourceName.Replace("//", "/");
 
             record["name"] = webResourceName;
             record["displayname"] = webResourceName;
@@ -173,7 +136,9 @@ namespace WebResource.Syncer.Models
             if (string.IsNullOrEmpty(solutionUniqueName)) throw new ArgumentNullException(nameof(solutionUniqueName));
 
             var prefix = await GetSolutionPublisherPrefixAsync(service, solutionUniqueName);
-            var name = $"{prefix}_/{_fileName}";
+            var name = $"{prefix}_/{filePath}";
+
+            name = name.Replace("//", "/");
 
             var remoteRecord = await RetreiveWebResource(name, service);
             if (remoteRecord == null)
@@ -230,9 +195,6 @@ namespace WebResource.Syncer.Models
             }
 
             return resourceContent;
-
-            //byte[] b = Convert.FromBase64String(record.GetAttributeValue<string>("content"));
-            //return Encoding.Default.GetString(b);
         }
 
         private async Task<string> GetSolutionPublisherPrefixAsync(ServiceClient serviceClient, string solutionUniqueName)

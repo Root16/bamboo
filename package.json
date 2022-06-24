@@ -3,7 +3,7 @@
 	"displayName": "Bamboo",
 	"publisher": "root16",
 	"repository": {
-		"url": "https://github.com/Root16/vscode-web-resource-explorer"
+		"url": "https://github.com/Root16/bamboo"
 	},
 	"description": "Allows users to create, update, and publish and webresources on the Microsoft Power Platform straight from vscode",
 	"version": "0.0.1",
@@ -19,6 +19,26 @@
 		"onCommand:extension.doThing"
 	],
 	"contributes": {
+		"configuration": {
+			"title": "Bamboo",
+			"properties": {
+				"bamboo.createWebresource.updateIfExists": {
+					"type": "boolean",
+					"default": false,
+					"description": "When creating a Webresource, override it's contents if it already exists"
+				},
+				"bamboo.uploadWebresource.publishIfSuccessful": {
+					"type": "boolean",
+					"default": true,
+					"description": "When creating or updaing a Webresource, publish it."
+				},
+				"bamboo.general.listFilesOnStartup": {
+					"type": "boolean",
+					"default": false,
+					"description": "When the extension is loaded, list all files in the currently selected solution in the tree explorer"
+				}
+			}
+		},
 		"views": {
 			"explorer": [
 				{
@@ -29,24 +49,15 @@
 		},
 		"commands": [
 			{
-				"command": "bamboo.uploadFile",
-				"title": "Upload file to Power Apps",
-				"category": "Bamboo"
-			},
-			{
-				"command": "bamboo.publishFile",
-				"title": "Publish file to Power Apps",
+				"command": "bamboo.createAndUploadFile",
+				"title": "Create and upload file to Power Apps",
 				"category": "Bamboo"
 			}
 		],
 		"menus": {
 			"explorer/context": [
 				{
-					"command": "bamboo.uploadFile",
-					"group": "navigation"
-				},
-				{
-					"command": "bamboo.publishFile",
+					"command": "bamboo.createAndUploadFile",
 					"group": "navigation"
 				}
 			]
