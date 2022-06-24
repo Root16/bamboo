@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System.IO;
 using Microsoft.Extensions.Configuration;
-using WebResource.Syncer.SyncLogic;
+using Webresource.Syncer.SyncLogic;
 using System.CommandLine;
 using System;
 using System.Threading.Tasks;

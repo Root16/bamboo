@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WebResource.Syncer.Enum
+namespace Webresource.Syncer.Enum
 {
     public enum WebResourceType
     {

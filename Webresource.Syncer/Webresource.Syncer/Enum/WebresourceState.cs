@@ -1,4 +1,4 @@
-﻿namespace WebResource.Syncer.Enum
+﻿namespace Webresource.Syncer.Enum
 {
     public enum WebResourceState
     {
