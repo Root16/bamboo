@@ -24,7 +24,7 @@ This extension provides the following features inside VS Code:
 ## Usage
 #### Creating a Webresource
 - Right click on a item in the file tree you would like to create
-- Input the name the logical name of the Webresource  
+- Optionally input the name of the Webresource  
 
 #### Updating a Webresource
 - Right click on an item in the file tree you would like to update

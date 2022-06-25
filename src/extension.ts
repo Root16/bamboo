@@ -39,12 +39,15 @@ export async function activate(context: vscode.ExtensionContext) {
 		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
 
 		if (vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.askForName")) {
-			let options: vscode.InputBoxOptions = {
-				prompt: "Input the full name of the webresource: ",
+			let userRequestedFilePath = await vscode.window.showInputBox({
+				prompt: "Input the full name of the webresource. Cancel this dialog to use the relative path from 'package.json' instead.",
 				placeHolder: "/my-webresources/forms/project.js"
-			};
+			});
 
-			filePathInPowerApps = (await vscode.window.showInputBox(options))!;
+			if (userRequestedFilePath !== undefined && userRequestedFilePath !== "") {
+				userRequestedFilePath = userRequestedFilePath[0] === "/" ? userRequestedFilePath : "/" + userRequestedFilePath;
+				filePathInPowerApps = userRequestedFilePath;
+			}
 		}
 
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
