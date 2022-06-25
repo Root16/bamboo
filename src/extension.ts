@@ -38,6 +38,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
 
+		if (vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.askForName")) {
+			let options: vscode.InputBoxOptions = {
+				prompt: "Input the full name of the webresource: ",
+				placeHolder: "/my-webresources/forms/project.js"
+			};
+
+			filePathInPowerApps = (await vscode.window.showInputBox(options))!;
+		}
+
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
 
 		const updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.updateIfExists");

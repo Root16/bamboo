@@ -27,6 +27,11 @@
 					"default": false,
 					"description": "When creating a Webresource, override it's contents if it already exists"
 				},
+				"bamboo.createWebresource.askForName": {
+					"type": "boolean",
+					"default": false,
+					"description": "When creating a Webresource, manually enter the full name (path included) of the Webresource"
+				},
 				"bamboo.uploadWebresource.publishIfSuccessful": {
 					"type": "boolean",
 					"default": true,
@@ -50,7 +55,7 @@
 		"commands": [
 			{
 				"command": "bamboo.createAndUploadFile",
-				"title": "Create and upload file to Power Apps",
+				"title": "Create and upload webresource to Power Apps",
 				"category": "Bamboo"
 			}
 		],

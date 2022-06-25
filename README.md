@@ -5,7 +5,7 @@ This extension provides the following features inside VS Code:
 
 - Create or Update Webresources in PowerApps straight from VS Code.
 - Publish Webresourecs automatically
-- List all webresources in a given solution in a neat tree view
+- List all webresources in a given solution in a VS Code tree view
 
 ## Getting Started
 - Install the extesion [here](google.com)
