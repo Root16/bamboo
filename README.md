@@ -14,7 +14,7 @@ This extension provides the following features inside VS Code:
 {
     ...
     "solutionName": "<your-solution-name>",
-    "connectionString": "<your-connection-string>",
+    "connectionString": "AuthType=OAuth;Url=https://<your-org>.crm.dynamics.com;Username=<your-username>;ClientId={<client-id>};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=./oauth-cache.txt;",
     ...
 }
 ```
