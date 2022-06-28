@@ -13,8 +13,8 @@ This extension provides the following features inside VS Code:
 ```
 {
     ...
-    "solutionName": "<your-solution-name>",
-    "connectionString": "AuthType=OAuth;Url=https://<your-org>.crm.dynamics.com;Username=<your-username>;ClientId={<client-id>};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=./oauth-cache.txt;",
+    "bamboo-solutionName": "<your-solution-name>",
+    "bamboo-connectionString": "AuthType=OAuth;Url=https://<your-org>.crm.dynamics.com;Username=<your-username>;ClientId={<client-id>};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=./oauth-cache.txt;",
     ...
 }
 ```
