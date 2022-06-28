@@ -18,13 +18,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
 
-		let resources = await syncer.retreiveWebResourcesInSolution(solutionName);
+		// let resources = await syncer.retreiveWebResourcesInSolution(solutionName);
 
-		let updated = resources.map(r => new WebResource(r.name, r.id, true,
-			vscode.TreeItemCollapsibleState.Collapsed
-		));
+		// let updated = resources.map(r => new WebResource(r.name, r.id, true,
+		// 	vscode.TreeItemCollapsibleState.Collapsed
+		// ));
 
-		const webResourceProvider = new WebResourcesProvider(updated);
+		const webResourceProvider = new WebResourcesProvider(solutionName, syncer);
 
 		vscode.window.registerTreeDataProvider(
 			`webresourceTree`,
