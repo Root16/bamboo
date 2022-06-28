@@ -44,7 +44,7 @@ This extension provides the following features inside VS Code:
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
 ## Contact
 
-[Open an Issue](https://github.com/johnyenter-briars/reverse-date-parser/issues/new)
+[Open an Issue](https://github.com/Root16/bamboo/issues/new)
 
 [Contact Us](https://root16.com/resources/contact-us/)
 
