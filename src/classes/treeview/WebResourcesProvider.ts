@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Event, EventEmitter } from 'vscode';
 import { WebResource } from '../../models/WebResource';
 
 export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource> {
@@ -22,5 +23,16 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
             // )));
             return Promise.resolve(this.webResources);
         }
+    }
+
+    private _onDidChangeTreeData: EventEmitter<
+        WebResource | undefined
+    > = new EventEmitter<WebResource | undefined>();
+
+    readonly onDidChangeTreeData: Event<WebResource | undefined> = this
+        ._onDidChangeTreeData.event;
+
+    refresh(): void {
+        this._onDidChangeTreeData.fire(undefined);
     }
 }

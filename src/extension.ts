@@ -23,9 +23,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		let updated = resources.map(r => new WebResource(r.name, r.id, true,
 			vscode.TreeItemCollapsibleState.Collapsed
 		));
+
+		const webResourceProvider = new WebResourcesProvider(updated);
+
 		vscode.window.registerTreeDataProvider(
-			`webresourcetree`,
-			new WebResourcesProvider(updated),
+			`webresourceTree`,
+			webResourceProvider,
+		);
+
+		vscode.commands.registerCommand('bamboo.webresourceTree.refreshEntry', () =>
+			webResourceProvider.refresh()
 		);
 	}
 
