@@ -27,6 +27,11 @@
 					"default": false,
 					"description": "When creating a Webresource, override it's contents if it already exists"
 				},
+				"bamboo.createWebresource.askForName": {
+					"type": "boolean",
+					"default": false,
+					"description": "When creating a Webresource, manually enter the full name (path included) of the Webresource"
+				},
 				"bamboo.uploadWebresource.publishIfSuccessful": {
 					"type": "boolean",
 					"default": true,
@@ -42,7 +47,7 @@
 		"views": {
 			"explorer": [
 				{
-					"id": "webresourcetree",
+					"id": "webresourceTree",
 					"name": "WebResouces in Current Solution"
 				}
 			]
@@ -50,14 +55,29 @@
 		"commands": [
 			{
 				"command": "bamboo.createAndUploadFile",
-				"title": "Create and upload file to Power Apps",
+				"title": "Create and upload webresource to Power Apps",
 				"category": "Bamboo"
+			},
+			{
+				"command": "bamboo.webresourceTree.refreshEntry",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
 			}
 		],
 		"menus": {
 			"explorer/context": [
 				{
 					"command": "bamboo.createAndUploadFile",
+					"group": "navigation"
+				}
+			],
+			"view/title": [
+				{
+					"command": "bamboo.webresourceTree.refreshEntry",
+					"when": "view == webresourceTree",
 					"group": "navigation"
 				}
 			]

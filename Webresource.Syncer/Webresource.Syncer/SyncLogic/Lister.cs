@@ -30,8 +30,9 @@ namespace Webresource.Syncer.SyncLogic
         };
 
 
-        public Lister(IConfiguration configuration, string solutionName, string? connectionString)
+        public Lister(IConfiguration configuration, string solutionName, string connectionString)
         {
+            connectionString = connectionString.Replace("'", "");
             ServiceClient = string.IsNullOrEmpty(connectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
                                 new ServiceClient(connectionString);
