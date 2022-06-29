@@ -4,8 +4,8 @@ import { WebResource } from './models/WebResource';
 import { WebResourceSyncer } from './classes/syncer/WebResourceSyncer';
 import { WebResourceSyncerConfiguration } from './classes/syncer/WebResourceSyncerConfiguration';
 
-const syncerExePath = "/Webresource.Syncer/Webresource.Syncer/bin/Release/net6.0/Webresource.Syncer.exe";
-const ExtensionName = "bamboo";
+const SYNCER_EXE_PATH = "/Webresource.Syncer/Webresource.Syncer/bin/Release/net6.0/win-x64/publish/Webresource.Syncer.exe";
+const EXTENSION_NAME = "bamboo";
 
 export async function activate(context: vscode.ExtensionContext) {
 	if (! await WebResourceSyncerConfiguration.currentWorkspaceHasConfigFile()) {
@@ -13,7 +13,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	let syncer = new WebResourceSyncer(context.extensionPath + syncerExePath, await WebResourceSyncerConfiguration.getConnectionString());
+	let syncer = new WebResourceSyncer(context.extensionPath + SYNCER_EXE_PATH, await WebResourceSyncerConfiguration.getConnectionString());
 
 	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
@@ -37,6 +37,18 @@ export async function activate(context: vscode.ExtensionContext) {
 		let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
 
 		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
+
+		if (vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.askForName")) {
+			let userRequestedFilePath = await vscode.window.showInputBox({
+				prompt: "Input the full name of the webresource. Cancel this dialog to use the relative path from 'package.json' instead.",
+				placeHolder: "/my-webresources/forms/project.js"
+			});
+
+			if (userRequestedFilePath !== undefined && userRequestedFilePath !== "") {
+				userRequestedFilePath = userRequestedFilePath[0] === "/" ? userRequestedFilePath : "/" + userRequestedFilePath;
+				filePathInPowerApps = userRequestedFilePath;
+			}
+		}
 
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
 

@@ -10,7 +10,7 @@
     },
     "Webresource.Syncer - Test List Files": {
       "commandName": "Project",
-      "commandLineArgs": "list --solution vscodeextentiontest"
+      "commandLineArgs": "list --solution vscodeextentiontest --conn-string 'AuthType=OAuth;Url=https://root16dev.crm.dynamics.com;Username=jyenterbriars@root16.com;ClientId={51f81489-12ee-4a9e-aaae-a2591f45987d};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=./oauth-cache.txt'';"
     },
     "Webresource.Syncer - Test Publish File": {
       "commandName": "Project",

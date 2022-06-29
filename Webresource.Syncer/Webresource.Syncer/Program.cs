@@ -92,7 +92,7 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
     {
         var publisher = new Publisher(config, file, filePathInPowerApps, connectionString);
         Console.WriteLine(await publisher.PublishFileAsync());
-    },fileOption, filePathInPowerAppsOption, connStringOption);    
+    }, fileOption, filePathInPowerAppsOption, connStringOption);
 
     var rootCommand = new RootCommand("Webresource.Syncer");
 
