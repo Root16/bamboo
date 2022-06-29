@@ -9,3 +9,9 @@
 - Read solution and connection string from package.json
 - Create and Update Webresources to PowerApps
 - Optionally publish 
+
+## [0.2.0]
+
+- Frontend UI updates
+- List webresources in tree view
+- VS Code settings to manage default behavior of Bamboo

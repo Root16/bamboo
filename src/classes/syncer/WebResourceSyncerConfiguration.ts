@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 export abstract class WebResourceSyncerConfiguration {
-	private static workspaceConfigFileName: string = 'package.json';
+	private static workspaceConfigFileName: string = 'bamboo.conf.json';
 
 	public static async currentWorkspaceHasConfigFile(): Promise<boolean> {
 		if (vscode.workspace.workspaceFolders === undefined) {
