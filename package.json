@@ -47,7 +47,7 @@
 		"views": {
 			"explorer": [
 				{
-					"id": "webresourcetree",
+					"id": "webresourceTree",
 					"name": "WebResouces in Current Solution"
 				}
 			]
@@ -57,12 +57,27 @@
 				"command": "bamboo.createAndUploadFile",
 				"title": "Create and upload webresource to Power Apps",
 				"category": "Bamboo"
+			},
+			{
+				"command": "bamboo.webresourceTree.refreshEntry",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
 			}
 		],
 		"menus": {
 			"explorer/context": [
 				{
 					"command": "bamboo.createAndUploadFile",
+					"group": "navigation"
+				}
+			],
+			"view/title": [
+				{
+					"command": "bamboo.webresourceTree.refreshEntry",
+					"when": "view == webresourceTree",
 					"group": "navigation"
 				}
 			]
