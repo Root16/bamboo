@@ -14,6 +14,7 @@ jobs:
       - run: npm run compile
 
   test-extension-frontend:
+    needs: build-extension-frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
