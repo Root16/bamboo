@@ -9,9 +9,9 @@ export default class WebResourceSyncer {
 	_execFile: Function;
 
 	constructor(exePath: string, private connString: string) {
-        // if ([exePath, connString].some((s: string) => s === undefined || s === "")){
-        //     throw new Error("Invalid parameters");
-		// }
+        if ([exePath, connString].some((s: string) => s === undefined || s === "")){
+            throw new Error("Invalid parameters");
+		}
 
 		this._exePath = exePath;
 		this._execFile = util.promisify(require('child_process').execFile);
