@@ -1,10 +1,12 @@
 # Bamboo
-Simple webresource management for the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/). Providing Dynamics365 developers the ability to interact and manage their webresources on a per-solution basis - all from within VS Code.
+Simple webresource management for the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/). Providing Dynamics365 developers the ability to edit and manage their webresources on a per-solution basis - all from within VS Code.
 
 This extension provides the following features inside VS Code:
 
-- Create or Update Webresources in PowerApps straight from VS Code.
-- Publish Webresourecs automatically
+- Create or update webresources in PowerApps straight from VS Code.
+  - Assign and customize the webresource name
+  - Duplicate the resource's name from it's path on disk
+- Publish webresourecs automatically
 - List all webresources in a given solution in a VS Code tree view
 
 ## Getting Started
@@ -14,11 +16,11 @@ This extension provides the following features inside VS Code:
 {
     ...
     "solutionName": "<your-solution-name>",
-    "connectionString": "AuthType=OAuth;Url=https://<your-org>.crm.dynamics.com;Username=<your-username>;ClientId={<client-id>};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=C:\\Temp\\oauth-cache.txt;",
+    "connectionString": "AuthType=OAuth;Url=https://<org>.crm.dynamics.com;Username=<username>;ClientId={<client-id>};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=C:\\Temp\\oauth-cache.txt;",
     ...
 }
 ```
-- Open up the folder which holds your Webresources in VS Code
+- Open up the folder which holds your webresources in VS Code
 
 
 ## Usage
