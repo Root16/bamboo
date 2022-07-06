@@ -1,4 +1,4 @@
-name: build-test-extension
+name: build-extension
 on: [push]
 jobs:
   build-extension-frontend:
