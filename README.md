@@ -11,7 +11,7 @@ This extension provides the following features inside VS Code:
 
 ## Getting Started
 - Install the extesion [here](https://marketplace.visualstudio.com/publishers/root16)
-- Add a `package.json` at the root of your project with the following parameters
+- Add a `bamboo.conf.json` at the root of your project with the following parameters
 ```
 {
     ...
