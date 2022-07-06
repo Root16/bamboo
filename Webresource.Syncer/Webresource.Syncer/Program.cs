@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Webresource.Syncer.SyncLogic;
 using System.CommandLine;
 using System;
-using System.Threading.Tasks;
 
 IConfiguration config = new ConfigurationBuilder()
         .AddJsonFile("appsettings.json", false)
