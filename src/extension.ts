@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
 import { WebResource } from './models/WebResource';
-import { WebResourceSyncer } from './classes/syncer/WebResourceSyncer';
 import { WebResourceSyncerConfiguration } from './classes/syncer/WebResourceSyncerConfiguration';
+import WebResourceSyncer from './classes/syncer/WebResourceSyncer';
 
 const SYNCER_EXE_PATH = "/Webresource.Syncer/Webresource.Syncer/bin/Release/net6.0/win-x64/publish/Webresource.Syncer.exe";
 const EXTENSION_NAME = "bamboo";
@@ -17,12 +17,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
 		const solutionName = await WebResourceSyncerConfiguration.getSolution();
-
-		// let resources = await syncer.retreiveWebResourcesInSolution(solutionName);
-
-		// let updated = resources.map(r => new WebResource(r.name, r.id, true,
-		// 	vscode.TreeItemCollapsibleState.Collapsed
-		// ));
 
 		const webResourceProvider = new WebResourcesProvider(solutionName, syncer);
 

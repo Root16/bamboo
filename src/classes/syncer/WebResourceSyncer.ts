@@ -4,11 +4,15 @@ import { Func } from 'mocha';
 import { ListWebResourcesInSolutionAction, WebResoureceSyncerResponse } from '../../models/webresourcesyncerresponse';
 
 
-export class WebResourceSyncer {
+export default class WebResourceSyncer {
 	_exePath: string;
 	_execFile: Function;
 
 	constructor(exePath: string, private connString: string) {
+        if ([exePath, connString].some((s: string) => s === undefined || s === "")){
+            throw new Error("Invalid parameters");
+		}
+
 		this._exePath = exePath;
 		this._execFile = util.promisify(require('child_process').execFile);
 	}

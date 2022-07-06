@@ -1,4 +1,4 @@
-name: build-extension
+name: build-test-extension
 on: [push]
 jobs:
   build-extension-frontend:
@@ -11,8 +11,20 @@ jobs:
       - run: npm --version
       - run: node --version
       - run: npm install
-      - run: ls -la
       - run: npm run compile
+
+  test-extension-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm --version
+      - run: node --version
+      - run: npm install
+      - run: npm run test
+
   build-extension-backend:
     runs-on: ubuntu-latest
     steps:
