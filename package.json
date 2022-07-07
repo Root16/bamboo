@@ -7,6 +7,7 @@
 	},
 	"description": "Allows users to create, update, and publish and webresources on the Microsoft Power Platform straight from vscode",
 	"version": "0.0.1",
+	"icon": "resources/bamboo-green.png",
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -89,7 +90,8 @@
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"package": "vsce package -o bamboo.vsix"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.61.0",
