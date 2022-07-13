@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Event, EventEmitter } from 'vscode';
 import { WebResource } from '../../models/WebResource';
-import WebResourceSyncer from '../syncer/WebResourceSyncer';
+import WebResourceSyncer from '../syncer/WebresourceSyncer';
 
 export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource> {
     // webresources: WebResource[] = [];

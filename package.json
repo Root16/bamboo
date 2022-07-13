@@ -5,7 +5,7 @@
 	"repository": {
 		"url": "https://github.com/Root16/bamboo"
 	},
-	"description": "Allows users to create, update, and publish and webresources on the Microsoft Power Platform straight from vscode",
+	"description": "Allows users to create, update, and publish webresources on the Microsoft Power Platform straight from vscode",
 	"version": "0.0.1",
 	"icon": "resources/bamboo-green.png",
 	"engines": {

@@ -4,7 +4,7 @@ import { Func } from 'mocha';
 import { ListWebResourcesInSolutionAction, WebResoureceSyncerResponse } from '../../models/webresourcesyncerresponse';
 
 
-export default class WebResourceSyncer {
+export default class WebresourceSyncer {
 	_exePath: string;
 	_execFile: Function;
 
@@ -18,6 +18,7 @@ export default class WebResourceSyncer {
 	}
 
 	//TODO - this should be not a singular function, but a list of steps
+	//TODO - this should not use any[]
 	private async reportProgress<T>(actionName: string, asyncFunc: Function, ...functionParams: any[]): Promise<T> {
 
 		return await vscode.window.withProgress({
