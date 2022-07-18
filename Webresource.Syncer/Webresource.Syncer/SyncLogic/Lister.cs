@@ -9,9 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Webresource.Syncer.Models;
+using WebResource.Syncer.Models;
 
-namespace Webresource.Syncer.SyncLogic
+namespace WebResource.Syncer.SyncLogic
 {
     internal class Lister
     {
@@ -45,7 +45,7 @@ namespace Webresource.Syncer.SyncLogic
             {
                 var targetSolution = await RetreiveSolution(SolutionName);
 
-                var resources = await RetrieveWebresourcesAsync(ServiceClient, targetSolution.Id, new List<int>(), filterByLcid: false);
+                var resources = await RetrieveWebResourcesAsync(ServiceClient, targetSolution.Id, new List<int>(), filterByLcid: false);
 
                 return JsonConvert.SerializeObject(
                     new WebResoureceSyncerResponse
@@ -53,7 +53,7 @@ namespace Webresource.Syncer.SyncLogic
                         Action =
                         new ListWebResourcesInSolutionAction
                         {
-                            ActionName = ActionName.ListWebresourcesInSolution,
+                            ActionName = ActionName.ListWebResourcesInSolution,
                             WebResources = resources.ToList(),
                             Successful = true,
                         }
@@ -91,7 +91,7 @@ namespace Webresource.Syncer.SyncLogic
             ///TODO - scary :(
             return (await ServiceClient.RetrieveMultipleAsync(querySampleSolution)).Entities.FirstOrDefault();
         }
-        public static async Task<IEnumerable<Models.WebResource>> RetrieveWebresourcesAsync(ServiceClient service, Guid solutionId, List<int> types, bool filterByLcid = false, params int[] lcids)
+        public static async Task<IEnumerable<Models.WebResource>> RetrieveWebResourcesAsync(ServiceClient service, Guid solutionId, List<int> types, bool filterByLcid = false, params int[] lcids)
         {
             try
             {

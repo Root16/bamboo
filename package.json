@@ -23,20 +23,20 @@
 		"configuration": {
 			"title": "Bamboo",
 			"properties": {
-				"bamboo.createWebresource.updateIfExists": {
+				"bamboo.createWebResource.updateIfExists": {
 					"type": "boolean",
 					"default": false,
-					"description": "When creating a Webresource, override it's contents if it already exists"
+					"description": "When creating a WebResource, override it's contents if it already exists"
 				},
-				"bamboo.createWebresource.askForName": {
+				"bamboo.createWebResource.askForName": {
 					"type": "boolean",
 					"default": false,
-					"description": "When creating a Webresource, manually enter the full name (path included) of the Webresource"
+					"description": "When creating a WebResource, manually enter the full name (path included) of the WebResource"
 				},
-				"bamboo.uploadWebresource.publishIfSuccessful": {
+				"bamboo.uploadWebResource.publishIfSuccessful": {
 					"type": "boolean",
 					"default": true,
-					"description": "When creating or updaing a Webresource, publish it."
+					"description": "When creating or updaing a WebResource, publish it."
 				},
 				"bamboo.general.listFilesOnStartup": {
 					"type": "boolean",

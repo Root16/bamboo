@@ -7,7 +7,7 @@
 ## [0.1.0]
 
 - Read solution and connection string from package.json
-- Create and Update Webresources to PowerApps
+- Create and Update WebResources to PowerApps
 - Optionally publish 
 
 ## [0.2.0]

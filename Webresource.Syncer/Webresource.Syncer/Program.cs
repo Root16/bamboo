@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System.IO;
 using Microsoft.Extensions.Configuration;
-using Webresource.Syncer.SyncLogic;
+using WebResource.Syncer.SyncLogic;
 using System.CommandLine;
 using System;
 
@@ -57,13 +57,13 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
         connStringOption,
     };
 
-    var listCommand = new Command("list", "List the Webresources in a given solution")
+    var listCommand = new Command("list", "List the WebResources in a given solution")
     {
         solutionOption,
         connStringOption,
     };
 
-    var publishCommand = new Command("publish", "Publish Webresource in PowerApps")
+    var publishCommand = new Command("publish", "Publish WebResource in PowerApps")
     {
         fileOption,
         filePathInPowerAppsOption,
@@ -93,7 +93,7 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
         Console.WriteLine(await publisher.PublishFileAsync());
     }, fileOption, filePathInPowerAppsOption, connStringOption);
 
-    var rootCommand = new RootCommand("Webresource.Syncer");
+    var rootCommand = new RootCommand("WebResource.Syncer");
 
     rootCommand.AddCommand(uploadCommand);
     rootCommand.AddCommand(listCommand);

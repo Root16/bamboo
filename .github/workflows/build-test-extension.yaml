@@ -36,10 +36,10 @@ jobs:
           dotnet-version: 6.0.x
 
       - name: Restore dependencies
-        run: dotnet restore Webresource.Syncer/
+        run: dotnet restore WebResource.Syncer/
     
       - name: Build
-        run: dotnet build -c Release --no-restore Webresource.Syncer/
+        run: dotnet build -c Release --no-restore WebResource.Syncer/
 
 
 

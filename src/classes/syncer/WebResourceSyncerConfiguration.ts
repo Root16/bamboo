@@ -1,4 +1,4 @@
-export interface WebresourceSyncerConfiguration {
+export interface WebResourceSyncerConfiguration {
     connectionString: string;
     solutionName: string;
 }

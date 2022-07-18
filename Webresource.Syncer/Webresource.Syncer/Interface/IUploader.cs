@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Webresource.Syncer.Interface
+namespace WebResource.Syncer.Interface
 {
     public interface IUploader
     {

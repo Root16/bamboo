@@ -2,14 +2,14 @@
 using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
 
-namespace Webresource.Syncer.Models
+namespace WebResource.Syncer.Models
 {
     internal enum ActionName
     {
         Create,
         Update,
         Publish,
-        ListWebresourcesInSolution,
+        ListWebResourcesInSolution,
     }
     class Action
     {

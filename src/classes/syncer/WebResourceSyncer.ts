@@ -4,7 +4,7 @@ import { Func } from 'mocha';
 import { ListWebResourcesInSolutionAction, WebResoureceSyncerResponse } from '../../models/webresourcesyncerresponse';
 
 
-export default class WebresourceSyncer {
+export default class WebResourceSyncer {
 	_exePath: string;
 	_execFile: Function;
 
@@ -60,7 +60,7 @@ export default class WebresourceSyncer {
 				vscode.window.showErrorMessage(string, "Rerun this action?");
 			}
 
-			if (response.action.actionName === "ListWebresourcesInSolution") {
+			if (response.action.actionName === "ListWebResourcesInSolution") {
 				let listAction = response.action as ListWebResourcesInSolutionAction;
 
 				return listAction.webResources;
@@ -72,7 +72,7 @@ export default class WebresourceSyncer {
 		return await this.reportProgress<{
 			name: string;
 			id: string;
-		}[]>("Fetching Webresources...", asyncFunc, solutionName);
+		}[]>("Fetching WebResources...", asyncFunc, solutionName);
 	}
 
 	async uploadFile(solutionName: string, path: string, filePathInPowerApps: string, updateIfExists: boolean = false) {
@@ -103,9 +103,9 @@ export default class WebresourceSyncer {
 			return response.action.successful;
 		};
 
-		let successful = await this.reportProgress<boolean>("Uploading Webresource...", asyncFunc, solutionName, path, filePathInPowerApps, updateIfExists);
+		let successful = await this.reportProgress<boolean>("Uploading WebResource...", asyncFunc, solutionName, path, filePathInPowerApps, updateIfExists);
 
-		let shouldPublish = vscode.workspace.getConfiguration().get<boolean>("bamboo.uploadWebresource.publishIfSuccessful");
+		let shouldPublish = vscode.workspace.getConfiguration().get<boolean>("bamboo.uploadWebResource.publishIfSuccessful");
 
 		if (successful && shouldPublish) {
 			await this.publishFile(path, filePathInPowerApps);
@@ -134,6 +134,6 @@ export default class WebresourceSyncer {
 			}
 		};
 
-		await this.reportProgress("Publishing Webresource...", asyncFunc, path);
+		await this.reportProgress("Publishing WebResource...", asyncFunc, path);
 	}
 }

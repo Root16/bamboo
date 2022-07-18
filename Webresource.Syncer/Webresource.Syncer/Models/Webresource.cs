@@ -6,10 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Webresource.Syncer.Enum;
-using Webresource.Syncer.Helper;
+using WebResource.Syncer.Enum;
+using WebResource.Syncer.Helper;
 
-namespace Webresource.Syncer.Models
+namespace WebResource.Syncer.Models
 {
     public class WebResource
     {
@@ -31,7 +31,7 @@ namespace Webresource.Syncer.Models
 
         public Guid Id => record?.Id ?? Guid.Empty;
         /// <summary>
-        /// Represents the PATH of the Webresource in PowerApps. For example: /one/two/test.js
+        /// Represents the PATH of the WebResource in PowerApps. For example: /one/two/test.js
         /// </summary>
         private string filePath;
         public WebResourceState State;

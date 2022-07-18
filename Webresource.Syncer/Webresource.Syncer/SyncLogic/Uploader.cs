@@ -10,10 +10,10 @@ using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Webresource.Syncer.Models;
+using WebResource.Syncer.Models;
 using System.IO;
 
-namespace Webresource.Syncer.SyncLogic
+namespace WebResource.Syncer.SyncLogic
 {
     class Uploader
     {

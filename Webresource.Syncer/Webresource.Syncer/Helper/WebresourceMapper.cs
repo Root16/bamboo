@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using Webresource.Syncer.Enum;
+using WebResource.Syncer.Enum;
 
-namespace Webresource.Syncer.Helper
+namespace WebResource.Syncer.Helper
 {
     class WebResourceMapper
     {

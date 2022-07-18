@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { WebresourceSyncerConfiguration } from './WebResourceSyncerConfiguration';
+import { WebResourceSyncerConfiguration } from './WebResourceSyncerConfiguration';
 
-export abstract class WebresourceSyncerConfigurationManager {
+export abstract class WebResourceSyncerConfigurationManager {
 	private static workspaceConfigFileName: string = 'bamboo.conf.json';
 
 	public static async currentWorkspaceHasConfigFile(): Promise<boolean> {
@@ -19,7 +19,7 @@ export abstract class WebresourceSyncerConfigurationManager {
 		}
 	}
 
-	public static async getConfigFileAsJson(): Promise<WebresourceSyncerConfiguration> {
+	public static async getConfigFileAsJson(): Promise<WebResourceSyncerConfiguration> {
 		if (vscode.workspace.workspaceFolders === undefined) {
 			throw new Error("Cannot activate extension. Workspace is undefined");
 		}
@@ -28,7 +28,7 @@ export abstract class WebresourceSyncerConfigurationManager {
 		try {
 			const dataAsU8Array = await vscode.workspace.fs.readFile(packageJsonUri);
 			const jsonString = Buffer.from(dataAsU8Array).toString('utf8');
-			const json:WebresourceSyncerConfiguration = JSON.parse(jsonString);
+			const json:WebResourceSyncerConfiguration = JSON.parse(jsonString);
 			return json;
 		} catch (error) {
 			throw new Error(`Unable to open file ${workspacePath + '/' + this.workspaceConfigFileName}. Please make sure it exists.`);
@@ -38,7 +38,7 @@ export abstract class WebresourceSyncerConfigurationManager {
 	public static async getConnectionString(): Promise<string> {
 		const propertyName = 'connectionString';
 
-		const json: WebresourceSyncerConfiguration = await this.getConfigFileAsJson();
+		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
 
 		if (json.hasOwnProperty(propertyName)) {
 			return json.connectionString;
@@ -51,7 +51,7 @@ export abstract class WebresourceSyncerConfigurationManager {
 	public static async getSolution(): Promise<string> {
 		const propertyName = 'solutionName';
 
-		const json: WebresourceSyncerConfiguration = await this.getConfigFileAsJson();
+		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
 
 		if (json.hasOwnProperty(propertyName)) {
 			return json.solutionName;

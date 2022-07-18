@@ -24,11 +24,11 @@ This extension provides the following features inside VS Code:
 
 
 ## Usage
-#### Creating a Webresource
+#### Creating a WebResource
 - Right click on a item in the file tree you would like to create
-- Optionally input the name of the Webresource  
+- Optionally input the name of the WebResource  
 
-#### Updating a Webresource
+#### Updating a WebResource
 - Right click on an item in the file tree you would like to update
 - Select the file in the current solution you would like to update the contents
 
@@ -36,9 +36,9 @@ This extension provides the following features inside VS Code:
 
 | Setting Name      | Description |
 | ----------- | ----------- |
-| bamboo.createWebresource.updateIfExists      | When creating a Webresource, override it's contents if it already exists       |
-| bamboo.createWebresource.askForName   | When creating a Webresource, manually enter the full name (path included) of the Webresource. If set to false, this webresource will be created with a path equal to the relative path on disk from the 'package.json' in the workspace           |
-| bamboo.uploadWebresource.publishIfSuccessful   | When creating or updaing a Webresource, publish id        |
+| bamboo.createWebResource.updateIfExists      | When creating a WebResource, override it's contents if it already exists       |
+| bamboo.createWebResource.askForName   | When creating a WebResource, manually enter the full name (path included) of the WebResource. If set to false, this webresource will be created with a path equal to the relative path on disk from the 'package.json' in the workspace           |
+| bamboo.uploadWebResource.publishIfSuccessful   | When creating or updaing a WebResource, publish id        |
 | bamboo.general.listFilesOnStartup   | When the extension is loaded, list all files in the currently selected solution in the tree explorer        |
 
 ## License
