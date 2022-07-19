@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import util = require('util');
 import { Func } from 'mocha';
-import { ListWebResourcesInSolutionAction, WebResoureceSyncerResponse } from '../../models/webresourcesyncerresponse';
+import { ListWebResourcesInSolutionAction, WebResoureceSyncerResponse } from '../../models/WebResourceSyncerResponse';
 
 
 export default class WebResourceSyncer {
