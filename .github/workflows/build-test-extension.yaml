@@ -1,0 +1,45 @@
+name: build-test-extension
+on: [push]
+jobs:
+  build-extension-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm --version
+      - run: node --version
+      - run: npm install
+      - run: npm run compile
+
+  test-extension-frontend:
+    needs: build-extension-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm --version
+      - run: node --version
+      - run: npm install
+      - run: xvfb-run -a npm test
+
+  build-extension-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore WebResource.Syncer/
+    
+      - name: Build
+        run: dotnet build -c Release --no-restore WebResource.Syncer/
+
+
+

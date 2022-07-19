@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Run Extension",
+			"name": "Debug Bamboo",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -18,7 +18,7 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
-			"name": "Extension Tests",
+			"name": "Debug Bamboo Tests",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [

@@ -1,19 +1,24 @@
 import * as vscode from 'vscode';
 import util = require('util');
 import { Func } from 'mocha';
-import { ListWebResourcesInSolutionAction, WebResoureceSyncerResponse } from '../../models/webresourcesyncerresponse';
+import { ListWebResourcesInSolutionAction, WebResoureceSyncerResponse } from '../../models/WebResourceSyncerResponse';
 
 
-export class WebResourceSyncer {
+export default class WebResourceSyncer {
 	_exePath: string;
 	_execFile: Function;
 
 	constructor(exePath: string, private connString: string) {
+        if ([exePath, connString].some((s: string) => s === undefined || s === "")){
+            throw new Error("Invalid parameters");
+		}
+
 		this._exePath = exePath;
 		this._execFile = util.promisify(require('child_process').execFile);
 	}
 
 	//TODO - this should be not a singular function, but a list of steps
+	//TODO - this should not use any[]
 	private async reportProgress<T>(actionName: string, asyncFunc: Function, ...functionParams: any[]): Promise<T> {
 
 		return await vscode.window.withProgress({
@@ -55,7 +60,7 @@ export class WebResourceSyncer {
 				vscode.window.showErrorMessage(string, "Rerun this action?");
 			}
 
-			if (response.action.actionName === "ListWebresourcesInSolution") {
+			if (response.action.actionName === "ListWebResourcesInSolution") {
 				let listAction = response.action as ListWebResourcesInSolutionAction;
 
 				return listAction.webResources;
@@ -67,7 +72,7 @@ export class WebResourceSyncer {
 		return await this.reportProgress<{
 			name: string;
 			id: string;
-		}[]>("Fetching Webresources...", asyncFunc, solutionName);
+		}[]>("Fetching WebResources...", asyncFunc, solutionName);
 	}
 
 	async uploadFile(solutionName: string, path: string, filePathInPowerApps: string, updateIfExists: boolean = false) {
@@ -98,9 +103,9 @@ export class WebResourceSyncer {
 			return response.action.successful;
 		};
 
-		let successful = await this.reportProgress<boolean>("Uploading Webresource...", asyncFunc, solutionName, path, filePathInPowerApps, updateIfExists);
+		let successful = await this.reportProgress<boolean>("Uploading WebResource...", asyncFunc, solutionName, path, filePathInPowerApps, updateIfExists);
 
-		let shouldPublish = vscode.workspace.getConfiguration().get<boolean>("bamboo.uploadWebresource.publishIfSuccessful");
+		let shouldPublish = vscode.workspace.getConfiguration().get<boolean>("bamboo.uploadWebResource.publishIfSuccessful");
 
 		if (successful && shouldPublish) {
 			await this.publishFile(path, filePathInPowerApps);
@@ -129,6 +134,6 @@ export class WebResourceSyncer {
 			}
 		};
 
-		await this.reportProgress("Publishing Webresource...", asyncFunc, path);
+		await this.reportProgress("Publishing WebResource...", asyncFunc, path);
 	}
 }

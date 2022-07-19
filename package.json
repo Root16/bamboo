@@ -5,8 +5,9 @@
 	"repository": {
 		"url": "https://github.com/Root16/bamboo"
 	},
-	"description": "Allows users to create, update, and publish and webresources on the Microsoft Power Platform straight from vscode",
+	"description": "Allows users to create, update, and publish webresources on the Microsoft Power Platform straight from vscode",
 	"version": "0.0.1",
+	"icon": "resources/bamboo-green.png",
 	"engines": {
 		"vscode": "^1.61.0"
 	},
@@ -22,20 +23,20 @@
 		"configuration": {
 			"title": "Bamboo",
 			"properties": {
-				"bamboo.createWebresource.updateIfExists": {
+				"bamboo.createWebResource.updateIfExists": {
 					"type": "boolean",
 					"default": false,
-					"description": "When creating a Webresource, override it's contents if it already exists"
+					"description": "When creating a WebResource, override it's contents if it already exists"
 				},
-				"bamboo.createWebresource.askForName": {
+				"bamboo.createWebResource.askForName": {
 					"type": "boolean",
 					"default": false,
-					"description": "When creating a Webresource, manually enter the full name (path included) of the Webresource"
+					"description": "When creating a WebResource, manually enter the full name (path included) of the WebResource"
 				},
-				"bamboo.uploadWebresource.publishIfSuccessful": {
+				"bamboo.uploadWebResource.publishIfSuccessful": {
 					"type": "boolean",
 					"default": true,
-					"description": "When creating or updaing a Webresource, publish it."
+					"description": "When creating or updaing a WebResource, publish it."
 				},
 				"bamboo.general.listFilesOnStartup": {
 					"type": "boolean",
@@ -89,7 +90,8 @@
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"package": "vsce package -o bamboo.vsix"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.61.0",

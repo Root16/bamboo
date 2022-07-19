@@ -1,28 +1,22 @@
 import * as vscode from 'vscode';
 import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
 import { WebResource } from './models/WebResource';
-import { WebResourceSyncer } from './classes/syncer/WebResourceSyncer';
-import { WebResourceSyncerConfiguration } from './classes/syncer/WebResourceSyncerConfiguration';
+import { WebResourceSyncerConfigurationManager } from './classes/syncer/WebResourceSyncerConfigurationManager';
+import WebResourceSyncer from './classes/syncer/WebResourceSyncer';
 
-const SYNCER_EXE_PATH = "/Webresource.Syncer/Webresource.Syncer/bin/Release/net6.0/win-x64/publish/Webresource.Syncer.exe";
+const SYNCER_EXE_PATH = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/win-x64/publish/WebResource.Syncer.exe";
 const EXTENSION_NAME = "bamboo";
 
 export async function activate(context: vscode.ExtensionContext) {
-	if (! await WebResourceSyncerConfiguration.currentWorkspaceHasConfigFile()) {
+	if (! await WebResourceSyncerConfigurationManager.currentWorkspaceHasConfigFile()) {
 		vscode.window.showErrorMessage(`There is no package.json in the root of the current workspace! Please add one with the properties: 'connectionString' and 'solutionName', and then refresh the extension by running the command: '>Reload Window'`);
 		return;
 	}
 
-	let syncer = new WebResourceSyncer(context.extensionPath + SYNCER_EXE_PATH, await WebResourceSyncerConfiguration.getConnectionString());
+	let syncer = new WebResourceSyncer(context.extensionPath + SYNCER_EXE_PATH, await WebResourceSyncerConfigurationManager.getConnectionString());
 
 	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
-		const solutionName = await WebResourceSyncerConfiguration.getSolution();
-
-		// let resources = await syncer.retreiveWebResourcesInSolution(solutionName);
-
-		// let updated = resources.map(r => new WebResource(r.name, r.id, true,
-		// 	vscode.TreeItemCollapsibleState.Collapsed
-		// ));
+		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
 
 		const webResourceProvider = new WebResourcesProvider(solutionName, syncer);
 
@@ -45,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
 
-		if (vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.askForName")) {
+		if (vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.askForName")) {
 			let userRequestedFilePath = await vscode.window.showInputBox({
 				prompt: "Input the full name of the webresource. Cancel this dialog to use the relative path from 'package.json' instead.",
 				placeHolder: "/my-webresources/forms/project.js"
@@ -57,9 +51,9 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		}
 
-		const solutionName = await WebResourceSyncerConfiguration.getSolution();
+		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
 
-		const updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebresource.updateIfExists");
+		const updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.updateIfExists");
 
 		await syncer.uploadFile(solutionName, resource.fsPath, filePathInPowerApps, updateIfExists);
 	});
