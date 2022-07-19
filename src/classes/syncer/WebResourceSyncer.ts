@@ -83,7 +83,7 @@ export default class WebResourceSyncer {
 			if (updateIfExists) {
 				args.push('--update-if-exists');
 			}
-
+			
 			const procResult = await this._execFile(this._exePath, args, {
 				shell: true,
 				windowsHide: true,

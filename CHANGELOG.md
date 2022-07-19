@@ -15,3 +15,5 @@
 - Frontend UI updates
 - List webresources in tree view
 - VS Code settings to manage default behavior of Bamboo
+- Create and update flow changes
+- Store mapping from local path -> remote path in config for each web resourece

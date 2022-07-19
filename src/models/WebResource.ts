@@ -10,7 +10,7 @@ export class WebResource extends vscode.TreeItem {
     ) {
         super(name, collapsibleState);
         this.tooltip = `${this.name}`;
-        this.description = `In sync: ${this.inSync}`;
+        this.description = ``;
     }
 
     command = {

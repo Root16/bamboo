@@ -37,34 +37,58 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 		let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
 
-		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
+		let localPath = resource.path.replace(currentWorkspacePath, "");
 
-		if (vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.askForName")) {
-			let userRequestedFilePath = await vscode.window.showInputBox({
+		let possibleRemotePath = await WebResourceSyncerConfigurationManager.getWebResourceFileMapping(localPath);
+		let remotePath = possibleRemotePath;
+
+		if (
+			vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.askForName") &&
+			possibleRemotePath === null
+		) {
+			remotePath = localPath;
+			let userRequestedRemotePath = await vscode.window.showInputBox({
 				prompt: "Input the full name of the webresource. Cancel this dialog to use the relative path from 'package.json' instead.",
 				placeHolder: "/my-webresources/forms/project.js"
 			});
 
-			if (userRequestedFilePath !== undefined && userRequestedFilePath !== "") {
-				userRequestedFilePath = userRequestedFilePath[0] === "/" ? userRequestedFilePath : "/" + userRequestedFilePath;
-				filePathInPowerApps = userRequestedFilePath;
+			if (userRequestedRemotePath !== undefined && userRequestedRemotePath !== "") {
+				userRequestedRemotePath = userRequestedRemotePath[0] === "/" ? userRequestedRemotePath : "/" + userRequestedRemotePath;
+				remotePath = userRequestedRemotePath;
 			}
+
+			await WebResourceSyncerConfigurationManager.saveWebResourceFileMapping(localPath, remotePath);
+		}
+		else if (possibleRemotePath === null) {
+			remotePath = localPath;
+			await WebResourceSyncerConfigurationManager.saveWebResourceFileMapping(localPath, remotePath);
 		}
 
 		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
 
 		const updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.updateIfExists");
 
-		await syncer.uploadFile(solutionName, resource.fsPath, filePathInPowerApps, updateIfExists);
+		await syncer.uploadFile(solutionName, resource.fsPath, remotePath!, updateIfExists);
 	});
 
-	// vscode.commands.registerCommand('bamboo.uploadAndPublishFile', async (resource: vscode.Uri) => {
-	// 	const solutionName = await WebResourceSyncerConfiguration.getSolution();
-	// 	await syncer.uploadFile(solutionName, resource.fsPath, true);
-	// });
+	vscode.commands.registerCommand('bamboo.updateFile', async (resource: vscode.Uri) => {
+		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
+		}
+		let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
 
-	vscode.commands.registerCommand('test.view.showError', async (item: WebResource) => {
-		console.log(item);
+		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
+
+		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
+
+		const webResourceFileName = await WebResourceSyncerConfigurationManager.getWebResourceFileMapping(filePathInPowerApps);
+
+		if(webResourceFileName === null) {
+			throw new Error("File mapping not found in config file! Please either manually add the mapping to the config file, or create the webresource through this tool.");
+		}
+
+		await syncer.uploadFile(solutionName, resource.fsPath, webResourceFileName, true);
 	});
 }
 
