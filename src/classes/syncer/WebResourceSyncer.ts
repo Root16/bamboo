@@ -83,6 +83,8 @@ export default class WebResourceSyncer {
 			if (updateIfExists) {
 				args.push('--update-if-exists');
 			}
+			
+			let idk = args.join(" ");
 
 			const procResult = await this._execFile(this._exePath, args, {
 				shell: true,

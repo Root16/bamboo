@@ -25,12 +25,15 @@ This extension provides the following features inside VS Code:
 
 ## Usage
 #### Creating a WebResource
-- Right click on a item in the file tree you would like to create
+- Right click on a item in the file tree you would like to create and select the command `Create and upload webresource to Power Apps`
 - Optionally input the name of the WebResource  
 
 #### Updating a WebResource
-- Right click on an item in the file tree you would like to update
-- Select the file in the current solution you would like to update the contents
+- Right click on an item in the file tree you would like to update and select the command `Update webresource in Power Apps`
+- NOTE: this requires a mapping to be saved in `bamboo.config.json`
+
+## Usage in an Existing Solution
+- ADD HERE
 
 ## Extension Settings 
 

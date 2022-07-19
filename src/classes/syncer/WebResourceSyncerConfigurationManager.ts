@@ -35,6 +35,15 @@ export abstract class WebResourceSyncerConfigurationManager {
 		}
 	}
 
+	public static async getWebResourceFileMapping(webResourceFilePath: string): Promise<string | null> {
+		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
+		if (json.fileMappings.hasOwnProperty(webResourceFilePath)) {
+			return json.fileMappings[webResourceFilePath];
+		} else {
+			return null;
+		}
+	}
+
 	public static async getConnectionString(): Promise<string> {
 		const propertyName = 'connectionString';
 
@@ -61,7 +70,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 		}
 	}
 
-	public static async saveWebResourceFileMapping(webResourceName: string, relativeFilePath: string): Promise<void> {
+	public static async saveWebResourceFileMapping(localPath: string, remotePath: string): Promise<void> {
 		let config;
 		try {
 			config = await this.getConfigFileAsJson();
@@ -72,7 +81,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 
 		config = config || {};
 		config.fileMappings = config.fileMappings || {};
-		config.fileMappings[webResourceName] = relativeFilePath;
+		config.fileMappings[localPath] = remotePath;
 
 		await this.overwriteConfigFile(config);
 	}
@@ -84,7 +93,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 		const workspacePath = vscode.workspace.workspaceFolders[0].uri.path;
 		const packageJsonUri = vscode.Uri.file(workspacePath + '/' + this.workspaceConfigFileName);
 		try {
-			let configFileAsString = JSON.stringify(configFile);
+			let configFileAsString = JSON.stringify(configFile, null, 4);
 			let dataBuffer = Buffer.from(configFileAsString, 'utf8');
 			await vscode.workspace.fs.writeFile(packageJsonUri, dataBuffer);
 		}
