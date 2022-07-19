@@ -12,7 +12,7 @@ This extension provides the following features inside VS Code:
 ## Getting Started
 - Install the extesion [here](https://marketplace.visualstudio.com/publishers/root16)
 - Add a `bamboo.conf.json` at the root of your project with the following parameters
-```
+```json
 {
     ...
     "solutionName": "<your-solution-name>",
@@ -33,7 +33,17 @@ This extension provides the following features inside VS Code:
 - NOTE: this requires a mapping to be saved in `bamboo.config.json`
 
 ## Usage in an Existing Solution
-- ADD HERE
+- If using bamboo against a previously existing solution, as of release `0.2.0` the developer has to manually assign the mappings in `bamboo.conf.json`
+- For example, if the web resource is stored in Power Apps as `new_/my-webresources/forms/account.js`, the developer would define a mapping such as:
+```json
+{
+    ...
+    "fileMappings": {
+        "new_/my-webresources/forms/account.js": "/path/from/bamboo.conf.json/here/account.js",
+    }
+    ...
+}
+```
 
 ## Extension Settings 
 
@@ -41,7 +51,7 @@ This extension provides the following features inside VS Code:
 | ----------- | ----------- |
 | bamboo.createWebResource.updateIfExists      | When creating a WebResource, override it's contents if it already exists       |
 | bamboo.createWebResource.askForName   | When creating a WebResource, manually enter the full name (path included) of the WebResource. If set to false, this webresource will be created with a path equal to the relative path on disk from the 'package.json' in the workspace           |
-| bamboo.uploadWebResource.publishIfSuccessful   | When creating or updaing a WebResource, publish id        |
+| bamboo.uploadWebResource.publishIfSuccessful   | When creating or updaing a WebResource, publish the web resource if the write is successful        |
 | bamboo.general.listFilesOnStartup   | When the extension is loaded, list all files in the currently selected solution in the tree explorer        |
 
 ## License

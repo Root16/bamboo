@@ -76,6 +76,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 			config = await this.getConfigFileAsJson();
 		}
 		catch {
+			vscode.window.showErrorMessage(`Unable to save file mapping. Please make sure ${this.workspaceConfigFileName} exists.`);
 			return;
 		}
 
