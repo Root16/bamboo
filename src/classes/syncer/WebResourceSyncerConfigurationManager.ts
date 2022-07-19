@@ -60,4 +60,36 @@ export abstract class WebResourceSyncerConfigurationManager {
 			throw new Error(`No property named ${propertyName} in package.json`);
 		}
 	}
+
+	public static async saveWebResourceFileMapping(webResourceName: string, relativeFilePath: string): Promise<void> {
+		let config;
+		try {
+			config = await this.getConfigFileAsJson();
+		}
+		catch {
+			return;
+		}
+
+		config = config || {};
+		config.fileMappings = config.fileMappings || {};
+		config.fileMappings[webResourceName] = relativeFilePath;
+
+		await this.overwriteConfigFile(config);
+	}
+
+	private static async overwriteConfigFile(configFile: any): Promise<void> {
+		if (vscode.workspace.workspaceFolders === undefined) {
+			throw new Error("Cannot activate extension. Workspace is undefined");
+		}
+		const workspacePath = vscode.workspace.workspaceFolders[0].uri.path;
+		const packageJsonUri = vscode.Uri.file(workspacePath + '/' + this.workspaceConfigFileName);
+		try {
+			let configFileAsString = JSON.stringify(configFile);
+			let dataBuffer = Buffer.from(configFileAsString, 'utf8');
+			await vscode.workspace.fs.writeFile(packageJsonUri, dataBuffer);
+		}
+		catch (error) {
+			throw new Error(`Unable to overwrite file ${workspacePath + '/' + this.workspaceConfigFileName}`);
+		}
+	}
 }
