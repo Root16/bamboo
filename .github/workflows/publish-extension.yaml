@@ -23,4 +23,4 @@ jobs:
         run: npm i -g vsce
 
       - name: Publish
-        run: vsce publish -p ${{ secrets.VSCE_PAT_JYB }}
+        run: vsce publish -p ${{ secrets.VSCE_PAT_JYB2 }}
