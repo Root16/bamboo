@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { WebResourceSyncerConfiguration } from './WebResourceSyncerConfiguration';
 
 export abstract class WebResourceSyncerConfigurationManager {
-	private static workspaceConfigFileName: string = 'bamboo.conf.json';
+	public static workspaceConfigFileName: string = 'bamboo.conf.json';
 
 	public static async currentWorkspaceHasConfigFile(): Promise<boolean> {
 		if (vscode.workspace.workspaceFolders === undefined) {
@@ -52,8 +52,8 @@ export abstract class WebResourceSyncerConfigurationManager {
 		if (json.hasOwnProperty(propertyName)) {
 			return json.connectionString;
 		} else {
-			vscode.window.showErrorMessage(`No property named ${propertyName} in package.json`);
-			throw new Error(`No property named ${propertyName} in package.json`);
+			vscode.window.showErrorMessage(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
+			throw new Error(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
 		}
 	}
 
@@ -65,8 +65,8 @@ export abstract class WebResourceSyncerConfigurationManager {
 		if (json.hasOwnProperty(propertyName)) {
 			return json.solutionName;
 		} else {
-			vscode.window.showErrorMessage(`No property named ${propertyName} in package.json`);
-			throw new Error(`No property named ${propertyName} in package.json`);
+			vscode.window.showErrorMessage(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
+			throw new Error(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
 		}
 	}
 

@@ -17,3 +17,7 @@
 - VS Code settings to manage default behavior of Bamboo
 - Create and update flow changes
 - Store mapping from local path -> remote path in config for each web resourece
+
+## [0.2.1]
+
+- Fixed error messages

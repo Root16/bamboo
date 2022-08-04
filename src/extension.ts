@@ -9,7 +9,7 @@ const EXTENSION_NAME = "bamboo";
 
 export async function activate(context: vscode.ExtensionContext) {
 	if (! await WebResourceSyncerConfigurationManager.currentWorkspaceHasConfigFile()) {
-		vscode.window.showErrorMessage(`There is no package.json in the root of the current workspace! Please add one with the properties: 'connectionString' and 'solutionName', and then refresh the extension by running the command: '>Reload Window'`);
+		vscode.window.showErrorMessage(`There is no ${WebResourceSyncerConfigurationManager.workspaceConfigFileName} in the root of the current workspace! Please add one with the properties: 'connectionString' and 'solutionName', and then refresh the extension by running the command: '>Reload Window'`);
 		return;
 	}
 
@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		) {
 			remotePath = localPath;
 			let userRequestedRemotePath = await vscode.window.showInputBox({
-				prompt: "Input the full name of the webresource. Cancel this dialog to use the relative path from 'package.json' instead.",
+				prompt: `Input the full name of the webresource. Cancel this dialog to use the relative path from ${WebResourceSyncerConfigurationManager.workspaceConfigFileName} instead.`,
 				placeHolder: "/my-webresources/forms/project.js"
 			});
 
