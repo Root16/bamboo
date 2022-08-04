@@ -50,7 +50,7 @@ This extension provides the following features inside VS Code:
 | Setting Name      | Description |
 | ----------- | ----------- |
 | bamboo.createWebResource.updateIfExists      | When creating a WebResource, override it's contents if it already exists       |
-| bamboo.createWebResource.askForName   | When creating a WebResource, manually enter the full name (path included) of the WebResource. If set to false, this webresource will be created with a path equal to the relative path on disk from the 'package.json' in the workspace           |
+| bamboo.createWebResource.askForName   | When creating a WebResource, manually enter the full name (path included) of the WebResource. If set to false, this webresource will be created with a path equal to the relative path on disk from the 'bamboo.conf.json' in the workspace           |
 | bamboo.uploadWebResource.publishIfSuccessful   | When creating or updaing a WebResource, publish the web resource if the write is successful        |
 | bamboo.general.listFilesOnStartup   | When the extension is loaded, list all files in the currently selected solution in the tree explorer        |
 
