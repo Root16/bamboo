@@ -136,4 +136,28 @@ export default class WebResourceSyncer {
 
 		await this.reportProgress("Publishing WebResource...", asyncFunc, path);
 	}
+
+	async testConnection() {
+		let asyncFunc = async () => {
+			const args = ['authenticate', '--conn-string', this.connString];
+
+			const procResult = await this._execFile(this._exePath, args, {
+				shell: true,
+				windowsHide: true,
+			});
+
+			let response: WebResoureceSyncerResponse = JSON.parse(procResult.stdout);
+
+			let string = `Action: ${response.action.actionName}. Successful: ${response.action.successful}. ` 
+							+ (response.action.successful ? "" : `Error message: ${response.action.errorMessage}`);
+
+			if (response.action.successful) {
+				vscode.window.showInformationMessage(string);
+			} else {
+				vscode.window.showErrorMessage(string, "Rerun this action?");
+			}
+		};
+
+		await this.reportProgress("Testing connection to Power Platform...", asyncFunc);
+	}
 }

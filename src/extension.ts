@@ -15,6 +15,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	let syncer = new WebResourceSyncer(context.extensionPath + SYNCER_EXE_PATH, await WebResourceSyncerConfigurationManager.getConnectionString());
 
+	//Always test connection on startup
+	await syncer.testConnection();
+
 	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
 		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
 

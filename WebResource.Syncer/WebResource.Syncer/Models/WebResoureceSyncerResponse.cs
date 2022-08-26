@@ -10,6 +10,7 @@ namespace WebResource.Syncer.Models
         Update,
         Publish,
         ListWebResourcesInSolution,
+        AuthenticationTest,
     }
     class Action
     {
@@ -29,6 +30,9 @@ namespace WebResource.Syncer.Models
     internal class ListWebResourcesInSolutionAction : Action
     {
         public List<WebResource> WebResources { get; set; }
+    }
+    internal class AuthenticationTestAction : Action
+    {
     }
 
     internal class WebResoureceSyncerResponse
