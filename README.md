@@ -30,7 +30,7 @@ This extension provides the following features inside VS Code:
 
 #### Updating a WebResource
 - Right click on an item in the file tree you would like to update and select the command `Update webresource in Power Apps`
-- NOTE: this requires a mapping to be saved in `bamboo.config.json`
+- NOTE: this requires a mapping to be saved in `bamboo.conf.json`
 
 ## Usage in an Existing Solution
 - If using bamboo against a previously existing solution, as of release `0.2.0` the developer has to manually assign the mappings in `bamboo.conf.json`
@@ -39,7 +39,7 @@ This extension provides the following features inside VS Code:
 {
     ...
     "fileMappings": {
-        "new_/my-webresources/forms/account.js": "/path/from/bamboo.conf.json/here/account.js",
+        "/path/from/bamboo.conf.json/on/disk/account.js": "/path/in/powerapps/account.js",
     }
     ...
 }
