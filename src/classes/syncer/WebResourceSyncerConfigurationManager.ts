@@ -3,13 +3,15 @@ import { WebResourceSyncerConfiguration } from './WebResourceSyncerConfiguration
 
 export abstract class WebResourceSyncerConfigurationManager {
 	public static workspaceConfigFileName: string = 'bamboo.conf.json';
+	private static undefinedWorkspaceExceptionMessage: string = "Cannot activate Bamboo. Workspace is undefined";
 
 	public static async currentWorkspaceHasConfigFile(): Promise<boolean> {
-		if (vscode.workspace.workspaceFolders === undefined) {
-			throw new Error("Cannot activate extension. Workspace is undefined");
+		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			throw new Error(this.undefinedWorkspaceExceptionMessage);
 		}
 
-		const workspacePath = vscode.workspace.workspaceFolders[0].uri.path;
+		const workspacePath = currentWorkspaceFolders![0].uri.path;
 
 		try {
 			await vscode.workspace.fs.stat(vscode.Uri.file(workspacePath + '/' + this.workspaceConfigFileName));
@@ -20,10 +22,12 @@ export abstract class WebResourceSyncerConfigurationManager {
 	}
 
 	public static async getConfigFileAsJson(): Promise<WebResourceSyncerConfiguration> {
-		if (vscode.workspace.workspaceFolders === undefined) {
-			throw new Error("Cannot activate extension. Workspace is undefined");
+		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			throw new Error(this.undefinedWorkspaceExceptionMessage);
 		}
-		const workspacePath = vscode.workspace.workspaceFolders[0].uri.path;
+
+		const workspacePath = currentWorkspaceFolders![0].uri.path;
 		const packageJsonUri = vscode.Uri.file(workspacePath + '/' + this.workspaceConfigFileName);
 		try {
 			const dataAsU8Array = await vscode.workspace.fs.readFile(packageJsonUri);
@@ -88,10 +92,11 @@ export abstract class WebResourceSyncerConfigurationManager {
 	}
 
 	private static async overwriteConfigFile(configFile: any): Promise<void> {
-		if (vscode.workspace.workspaceFolders === undefined) {
-			throw new Error("Cannot activate extension. Workspace is undefined");
+		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			throw new Error(this.undefinedWorkspaceExceptionMessage);
 		}
-		const workspacePath = vscode.workspace.workspaceFolders[0].uri.path;
+		const workspacePath = currentWorkspaceFolders![0].uri.path;
 		const packageJsonUri = vscode.Uri.file(workspacePath + '/' + this.workspaceConfigFileName);
 		try {
 			let configFileAsString = JSON.stringify(configFile, null, 4);
