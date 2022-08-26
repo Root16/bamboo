@@ -136,7 +136,7 @@ export default class WebResourceSyncer {
 		await this.reportProgress("Publishing WebResource...", asyncFunc, path);
 	}
 
-	async testConnection() {
+	async testConnection(): Promise<boolean> {
 		let asyncFunc = async () => {
 			const args = ['authenticate', '--conn-string', this.connString];
 
@@ -155,8 +155,10 @@ export default class WebResourceSyncer {
 			} else {
 				vscode.window.showErrorMessage(string, "Rerun this action?");
 			}
+
+			return response.action.successful;
 		};
 
-		await this.reportProgress("Testing connection to Power Platform...", asyncFunc);
+		return await this.reportProgress<boolean>("Testing connection to Power Platform...", asyncFunc);
 	}
 }
