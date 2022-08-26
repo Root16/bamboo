@@ -10,7 +10,7 @@ jobs:
           node-version: '18'
       - run: npm --version
       - run: node --version
-      - run: npm install
+      - run: npm ci
       - run: npm run compile
 
   test-extension-frontend:
@@ -23,7 +23,7 @@ jobs:
           node-version: '18'
       - run: npm --version
       - run: node --version
-      - run: npm install
+      - run: npm ci
       - run: xvfb-run -a npm test
 
   build-extension-backend:
