@@ -39,13 +39,27 @@ export abstract class WebResourceSyncerConfigurationManager {
 		}
 	}
 
-	public static async getWebResourceFileMapping(webResourceFilePath: string): Promise<string | null> {
+	public static async getWRPathInPowerApps(pathToFileOnDisk: string): Promise<string | null> {
 		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
-		if (json.fileMappings.hasOwnProperty(webResourceFilePath)) {
-			return json.fileMappings[webResourceFilePath];
+		if (json.fileMappings.hasOwnProperty(pathToFileOnDisk)) {
+			return json.fileMappings[pathToFileOnDisk];
 		} else {
 			return null;
 		}
+	}
+
+	public static async getWRDiskPath(pathToFileInPowerApps: string): Promise<string | null> {
+		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
+
+		for (let key in json.fileMappings) {
+			if (json.fileMappings.hasOwnProperty(key)) {
+				if (json.fileMappings[key] === pathToFileInPowerApps) {
+					return key;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	public static async getConnectionString(): Promise<string> {

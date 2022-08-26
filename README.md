@@ -44,6 +44,7 @@ This extension provides the following features inside VS Code:
     ...
 }
 ```
+- **Note the '/' prefix on all paths**
 
 ## Extension Settings 
 

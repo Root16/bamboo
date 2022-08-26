@@ -42,7 +42,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		let localPath = resource.path.replace(currentWorkspacePath, "");
 
-		let possibleRemotePath = await WebResourceSyncerConfigurationManager.getWebResourceFileMapping(localPath);
+		let possibleRemotePath = await WebResourceSyncerConfigurationManager.getWRPathInPowerApps(localPath);
 		let remotePath = possibleRemotePath;
 
 		if (
@@ -85,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
 
-		const webResourceFileName = await WebResourceSyncerConfigurationManager.getWebResourceFileMapping(filePathInPowerApps);
+		const webResourceFileName = await WebResourceSyncerConfigurationManager.getWRPathInPowerApps(filePathInPowerApps);
 
 		if(webResourceFileName === null) {
 			throw new Error("File mapping not found in config file! Please either manually add the mapping to the config file, or create the webresource through this tool.");

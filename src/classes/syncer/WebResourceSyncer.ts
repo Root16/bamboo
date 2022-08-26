@@ -18,7 +18,6 @@ export default class WebResourceSyncer {
 	}
 
 	//TODO - this should be not a singular function, but a list of steps
-	//TODO - this should not use any[]
 	private async reportProgress<T>(actionName: string, asyncFunc: Function, ...functionParams: any[]): Promise<T> {
 
 		return await vscode.window.withProgress({
