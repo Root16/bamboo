@@ -33,7 +33,7 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
                     vscode.TreeItemCollapsibleState.Collapsed
                 );
 
-                var pathInPAWithoutPublisher = r.name.split("_")[1];
+                var pathInPAWithoutPublisher = r.name.substring(r.name.indexOf("_") + 1);
 
                 var diskPath = await WebResourceSyncerConfigurationManager.getWRDiskPath(pathInPAWithoutPublisher);
                 if (diskPath !== null) {
