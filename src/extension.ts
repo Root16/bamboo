@@ -15,6 +15,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	let syncer = new WebResourceSyncer(context.extensionPath + SYNCER_EXE_PATH, await WebResourceSyncerConfigurationManager.getConnectionString());
 
+	//Always test connection on startup
+	let successfulAuthenticate = await syncer.testConnection();
+	if (!successfulAuthenticate) {
+		vscode.window.showErrorMessage("Unable to authenticate with the CRM instance. Please check your connection string.");
+		return;
+	}
+
 	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
 		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
 
@@ -39,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		let localPath = resource.path.replace(currentWorkspacePath, "");
 
-		let possibleRemotePath = await WebResourceSyncerConfigurationManager.getWebResourceFileMapping(localPath);
+		let possibleRemotePath = await WebResourceSyncerConfigurationManager.getWRPathInPowerApps(localPath);
 		let remotePath = possibleRemotePath;
 
 		if (
@@ -82,7 +89,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
 
-		const webResourceFileName = await WebResourceSyncerConfigurationManager.getWebResourceFileMapping(filePathInPowerApps);
+		const webResourceFileName = await WebResourceSyncerConfigurationManager.getWRPathInPowerApps(filePathInPowerApps);
 
 		if(webResourceFileName === null) {
 			throw new Error("File mapping not found in config file! Please either manually add the mapping to the config file, or create the webresource through this tool.");

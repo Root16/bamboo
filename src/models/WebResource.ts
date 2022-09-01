@@ -2,14 +2,15 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 export class WebResource extends vscode.TreeItem {
+    public pathOnDisk: string = "";
     constructor(
-        public readonly name: string,
+        public readonly pathInPowerApps: string,
         public readonly id: string,
         public inSync: boolean,
         public collapsibleState: vscode.TreeItemCollapsibleState
     ) {
-        super(name, collapsibleState);
-        this.tooltip = `${this.name}`;
+        super(pathInPowerApps, collapsibleState);
+        this.tooltip = `${this.pathInPowerApps}`;
         this.description = ``;
     }
 

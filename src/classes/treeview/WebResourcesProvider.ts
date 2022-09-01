@@ -1,10 +1,12 @@
+import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 import { Event, EventEmitter } from 'vscode';
 import { WebResource } from '../../models/WebResource';
 import WebResourceSyncer from '../syncer/WebResourceSyncer';
+import { WebResourceSyncerConfigurationManager } from '../syncer/WebResourceSyncerConfigurationManager';
 
+//TODO - this class should not use 'WebResource' as it's model, instead it should use a new model that is more generic
 export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource> {
-    // webresources: WebResource[] = [];
     constructor(private solutionName: string, private syncer: WebResourceSyncer) {
     }
 
@@ -15,18 +17,33 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
 
     async getChildren(element?: WebResource): Promise<WebResource[]> {
         if (element) {
-            //I think we're at the end of a branch of the tree? Just return nothing
-            return Promise.resolve([]);
+            if (element.pathOnDisk) {
+                return Promise.resolve([new WebResource(element.pathOnDisk, element.id + "idk", true,
+                    vscode.TreeItemCollapsibleState.Collapsed
+                )]);
+
+            } else {
+                return Promise.resolve([]);
+            }
         } else {
-            //I think we're at the root of the tree? Just return the list
-
             var webresources = await this.syncer.retreiveWebResourcesInSolution(this.solutionName);
-            
-            var mapped = webresources.map(r => new WebResource(r.name, r.id, true,
-                vscode.TreeItemCollapsibleState.Collapsed
-            ));
 
-            return Promise.resolve(mapped);
+            var mapped = Promise.all(webresources.map(async r => {
+                var webResource = new WebResource(r.name, r.id, true,
+                    vscode.TreeItemCollapsibleState.Collapsed
+                );
+
+                var pathInPAWithoutPublisher = r.name.substring(r.name.indexOf("_") + 1);
+
+                var diskPath = await WebResourceSyncerConfigurationManager.getWRDiskPath(pathInPAWithoutPublisher);
+                if (diskPath !== null) {
+                    webResource.pathOnDisk = diskPath;
+                }
+
+                return webResource;
+            }));
+
+            return mapped;
         }
     }
 

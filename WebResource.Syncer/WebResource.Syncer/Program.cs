@@ -48,6 +48,11 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
         IsRequired = true,
     };
 
+    var authenticateCommand = new Command("authenticate", "Test authentication method")
+    {
+        connStringOption,
+    };
+
     var uploadCommand = new Command("upload", "Upload the file to PowerApps")
     {
         fileOption,
@@ -69,6 +74,12 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
         filePathInPowerAppsOption,
         connStringOption,
     };
+
+    authenticateCommand.SetHandler(async (string connectionString) =>
+    {
+        var syncer = new AuthenticationTester(config, connectionString);
+        Console.WriteLine(await syncer.Authenticate());
+    }, connStringOption);
 
     uploadCommand.SetHandler(async (FileInfo fileInfo,
                                     string filePathInPowerApps,
@@ -98,6 +109,7 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
     rootCommand.AddCommand(uploadCommand);
     rootCommand.AddCommand(listCommand);
     rootCommand.AddCommand(publishCommand);
+    rootCommand.AddCommand(authenticateCommand);
 
     return rootCommand;
 }
