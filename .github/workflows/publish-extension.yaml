@@ -22,5 +22,11 @@ jobs:
       - name: Install vsce
         run: npm i -g vsce
 
-      - name: Publish
+      - name: Publish to Visual Studio Marketplace
         run: vsce publish -p ${{ secrets.VSCE_PAT_JYB2 }}
+        
+      - name: Install osvx
+        run: npm i -g osvx
+        
+      - name: Publish to Open VSX
+        run: ovsx publish -p ${{ secrets.OPEN_VSX_TOKEN_PL }}
