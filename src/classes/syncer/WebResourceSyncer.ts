@@ -107,14 +107,14 @@ export default class WebResourceSyncer {
 		let shouldPublish = vscode.workspace.getConfiguration().get<boolean>("bamboo.uploadWebResource.publishIfSuccessful");
 
 		if (successful && shouldPublish) {
-			await this.publishFile(path, filePathInPowerApps);
+			await this.publishFile(solutionName, path, filePathInPowerApps);
 		}
 	}
 
-	async publishFile(path: string, filePathInPowerApps: string) {
+	async publishFile(solutionName: string, path: string, filePathInPowerApps: string) {
 
-		let asyncFunc = async (path: string) => {
-			const args = ['publish', '--file', path, '--file-name-in-pa', filePathInPowerApps, '--conn-string', this.connString];
+		let asyncFunc = async (solutionName: string, path: string, filePathInPowerApps: string) => {
+			const args = ['publish', '--solution', solutionName, '--file', path, '--file-name-in-pa', filePathInPowerApps, '--conn-string', this.connString];
 
 			const procResult = await this._execFile(this._exePath, args, {
 				shell: true,
@@ -133,7 +133,7 @@ export default class WebResourceSyncer {
 			}
 		};
 
-		await this.reportProgress("Publishing WebResource...", asyncFunc, path);
+		await this.reportProgress("Publishing WebResource...", asyncFunc, solutionName, path, filePathInPowerApps);
 	}
 
 	async testConnection(): Promise<boolean> {

@@ -28,3 +28,6 @@
 - [Webresource tree view lists the matching files on disk underneath the file name in PA](https://github.com/Root16/bamboo/issues/42)
 - [Authenticate automatically on startup](https://github.com/Root16/bamboo/issues/41)
 - [Fix extension failing when workspace is undefined](https://github.com/Root16/bamboo/issues/40)
+
+## [0.2.3]
+- [Fix bug ing publishing web resources](https://github.com/Root16/bamboo/issues/47)
