@@ -17,6 +17,7 @@ namespace WebResource.Syncer.SyncLogic
         private readonly ServiceClient ServiceClient;
         private readonly FileInfo File;
         private readonly string FilePathInPowerApps;
+        private readonly string SolutionName;
         private readonly JsonSerializerSettings JsonSerializerSettings = new()
         {
             ContractResolver = new DefaultContractResolver
@@ -25,17 +26,19 @@ namespace WebResource.Syncer.SyncLogic
             },
         };
 
-        public Publisher(IConfiguration configuration, FileInfo file, string filePathInPowerApps, string? connectionString)
+        public Publisher(IConfiguration configuration, string solutionName, FileInfo file, string filePathInPowerApps, string? connectionString)
         {
             ServiceClient = string.IsNullOrEmpty(connectionString) ?
                                 new ServiceClient(configuration["ConnectionString"]) :
                                 new ServiceClient(connectionString);
             File = file;
             FilePathInPowerApps = filePathInPowerApps;
+            SolutionName = solutionName;
         }
         public async Task<string> PublishFileAsync()
         {
             var wr = new Models.WebResource(File.FullName, FilePathInPowerApps);
+            await wr.CreateOrUpdate(ServiceClient, SolutionName, resync: false);
             var listOfWebResources = new List<Models.WebResource> { wr };
 
             try

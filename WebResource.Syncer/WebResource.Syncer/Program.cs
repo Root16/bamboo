@@ -71,6 +71,7 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
     var publishCommand = new Command("publish", "Publish WebResource in PowerApps")
     {
         fileOption,
+        solutionOption,
         filePathInPowerAppsOption,
         connStringOption,
     };
@@ -98,11 +99,11 @@ static RootCommand GenerateCommandLineArguments(IConfiguration config)
     }, solutionOption, connStringOption);
 
 
-    publishCommand.SetHandler(async (FileInfo file, string filePathInPowerApps, string connectionString) =>
+    publishCommand.SetHandler(async (string solutionName, FileInfo file, string filePathInPowerApps, string connectionString) =>
     {
-        var publisher = new Publisher(config, file, filePathInPowerApps, connectionString);
+        var publisher = new Publisher(config, solutionName, file, filePathInPowerApps, connectionString);
         Console.WriteLine(await publisher.PublishFileAsync());
-    }, fileOption, filePathInPowerAppsOption, connStringOption);
+    }, solutionOption, fileOption, filePathInPowerAppsOption, connStringOption);
 
     var rootCommand = new RootCommand("WebResource.Syncer");
 

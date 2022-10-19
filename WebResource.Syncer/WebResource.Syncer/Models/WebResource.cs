@@ -131,7 +131,7 @@ namespace WebResource.Syncer.Models
 
             throw new Exception($@"File extension '{extension}' cannot be mapped to a webresource type!");
         }
-        public async Task CreateOrUpdate(ServiceClient service, string solutionUniqueName)
+        public async Task CreateOrUpdate(ServiceClient service, string solutionUniqueName, bool resync = true)
         {
             if (string.IsNullOrEmpty(solutionUniqueName)) throw new ArgumentNullException(nameof(solutionUniqueName));
 
@@ -149,7 +149,10 @@ namespace WebResource.Syncer.Models
             else
             {
                 record.Id = remoteRecord.Id;
-                await service.UpdateAsync(record);
+                if (resync)
+                {
+                    await service.UpdateAsync(record);
+                }
             }
 
             State = WebResourceState.None;

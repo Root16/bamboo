@@ -19,6 +19,10 @@
     "WebResource.Syncer - Test Authentication": {
       "commandName": "Project",
       "commandLineArgs": "authenticate --conn-string AuthType=OAuth;Url=https://root16dev.crm.dynamics.com;Username=jyenterbriars@root16.com;ClientId={51f81489-12ee-4a9e-aaae-a2591f45987d};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=./oauth-cache.txt;"
+    },
+    "WebResource.Syncer - Test Publishing Issues": {
+      "commandName": "Project",
+      "commandLineArgs": "publish --solution vscodeextentiontest --file c:\\Users\\JohnYenter-Briars\\r16_internal\\bamboo_test\\ribbons\\ribbon.opportunity.js --file-name-in-pa /ribbons/ribbon.opportunity.js --conn-string AuthType=OAuth;Url=https://root16dev.crm.dynamics.com;Username=jyenterbriars@root16.com;ClientId={51f81489-12ee-4a9e-aaae-a2591f45987d};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=C:\\Temp\\oauth-cache.txt;"
     }
   }
 }
