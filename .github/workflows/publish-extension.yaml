@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  release:
+  publish-to-vscode-marketplace:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,6 +24,17 @@ jobs:
 
       - name: Publish to Visual Studio Marketplace
         run: vsce publish -p ${{ secrets.VSCE_PAT_JYB2 }}
+
+  publish-to-osvx-marketplace:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+          registry-url: https://registry.npmjs.org/
+
         
       - name: Install osvx
         run: npm i -g osvx
