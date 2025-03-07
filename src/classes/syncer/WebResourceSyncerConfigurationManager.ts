@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import { WebResourceSyncerConfiguration } from './WebResourceSyncerConfiguration';
+import path from 'path';
 
 export abstract class WebResourceSyncerConfigurationManager {
 	public static workspaceConfigFileName: string = 'bamboo.conf.json';
+	public static workspaceTokenCacheFolderName: string = '.bamboo_tokens';
 	private static undefinedWorkspaceExceptionMessage: string = "Cannot activate Bamboo. Workspace is undefined";
 
 	public static async currentWorkspaceHasConfigFile(): Promise<boolean> {
@@ -32,11 +34,45 @@ export abstract class WebResourceSyncerConfigurationManager {
 		try {
 			const dataAsU8Array = await vscode.workspace.fs.readFile(packageJsonUri);
 			const jsonString = Buffer.from(dataAsU8Array).toString('utf8');
-			const json:WebResourceSyncerConfiguration = JSON.parse(jsonString);
+			const json: WebResourceSyncerConfiguration = JSON.parse(jsonString);
 			return json;
 		} catch (error) {
 			throw new Error(`Unable to open file ${workspacePath + '/' + this.workspaceConfigFileName}. Please make sure it exists.`);
 		}
+	}
+
+	public static async getTokenCacheFolderPath(): Promise<vscode.Uri> {
+		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			throw new Error(this.undefinedWorkspaceExceptionMessage);
+		}
+
+		const workspacePath = currentWorkspaceFolders![0].uri.path;
+
+		const tokenCacheFolder = vscode.Uri.file(workspacePath + '/' + this.workspaceTokenCacheFolderName);
+
+		return tokenCacheFolder;
+	}
+
+	public static async getTokenCacheFilePath(): Promise<string> {
+		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			throw new Error(this.undefinedWorkspaceExceptionMessage);
+		}
+
+		const workspacePath = currentWorkspaceFolders![0].uri.path;
+
+		const tokenCacheFolder = vscode.Uri.file(workspacePath + '/' + this.workspaceTokenCacheFolderName);
+
+		const cacheFile = path.join(
+			(
+				await WebResourceSyncerConfigurationManager.getTokenCacheFolderPath()
+			).path, "tokenCache.json");
+
+		//TODO
+		const normalizedPath = path.resolve(cacheFile).replace("\\c:", "");
+
+		return normalizedPath;
 	}
 
 	public static async getWRPathInPowerApps(pathToFileOnDisk: string): Promise<string | null> {
