@@ -3,6 +3,7 @@ import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
 import { WebResource } from './models/WebResource';
 import { WebResourceSyncerConfigurationManager } from './classes/syncer/WebResourceSyncerConfigurationManager';
 import WebResourceSyncer from './classes/syncer/WebResourceSyncer';
+import { getDataverseToken, getSingle } from './dataverse/client';
 
 const SYNCER_EXE_PATH = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/win-x64/publish/WebResource.Syncer.exe";
 const EXTENSION_NAME = "bamboo";
@@ -12,6 +13,14 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.window.showErrorMessage(`There is no ${WebResourceSyncerConfigurationManager.workspaceConfigFileName} in the root of the current workspace! Please add one with the properties: 'connectionString' and 'solutionName', and then refresh the extension by running the command: '>Reload Window'`);
 		return;
 	}
+
+	const [token, baseUrl] = await getDataverseToken(await WebResourceSyncerConfigurationManager.getConnectionString());
+
+	const foo = await getSingle('accounts', "b3ae0b11-60ea-eb11-bacb-000d3a332312", token, baseUrl);
+
+	console.log(foo);
+
+	return;
 
 	let syncer = new WebResourceSyncer(context.extensionPath + SYNCER_EXE_PATH, await WebResourceSyncerConfigurationManager.getConnectionString());
 
@@ -91,7 +100,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const webResourceFileName = await WebResourceSyncerConfigurationManager.getWRPathInPowerApps(filePathInPowerApps);
 
-		if(webResourceFileName === null) {
+		if (webResourceFileName === null) {
 			throw new Error("File mapping not found in config file! Please either manually add the mapping to the config file, or create the webresource through this tool.");
 		}
 
