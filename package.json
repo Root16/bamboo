@@ -16,8 +16,7 @@
 	],
 	"main": "./out/extension.js",
 	"activationEvents": [
-		"onStartupFinished",
-		"onCommand:extension.doThing"
+		"onStartupFinished"
 	],
 	"contributes": {
 		"configuration": {
@@ -28,20 +27,15 @@
 					"default": false,
 					"description": "When creating a WebResource, override it's contents if it already exists"
 				},
-				"bamboo.createWebResource.askForName": {
-					"type": "boolean",
-					"default": false,
-					"description": "When creating a WebResource, manually enter the full name (path included) of the WebResource"
-				},
-				"bamboo.uploadWebResource.publishIfSuccessful": {
-					"type": "boolean",
-					"default": true,
-					"description": "When creating or updaing a WebResource, publish it."
-				},
 				"bamboo.general.listFilesOnStartup": {
 					"type": "boolean",
 					"default": false,
 					"description": "When the extension is loaded, list all files in the currently selected solution in the tree explorer"
+				},
+				"bamboo.general.publishAfterSync": {
+					"type": "boolean",
+					"default": false,
+					"description": "When syncing a web resource, publish after uploading the contents."
 				}
 			}
 		},
@@ -55,18 +49,13 @@
 		},
 		"commands": [
 			{
-				"command": "bamboo.updateFile",
-				"title": "Update webresource in Power Apps",
+				"command": "bamboo.syncCurrentFile",
+				"title": "Sync current open file in Power Apps",
 				"category": "Bamboo"
 			},
 			{
 				"command": "bamboo.syncAllFiles",
 				"title": "Sync all files with Power Apps",
-				"category": "Bamboo"
-			},
-			{
-				"command": "bamboo.createAndUploadFile",
-				"title": "Create and upload webresource to Power Apps",
 				"category": "Bamboo"
 			},
 			{
@@ -79,16 +68,7 @@
 			}
 		],
 		"menus": {
-			"explorer/context": [
-				{
-					"command": "bamboo.updateFile",
-					"group": "navigation"
-				},
-				{
-					"command": "bamboo.createAndUploadFile",
-					"group": "navigation"
-				}
-			],
+			"explorer/context": [],
 			"view/title": [
 				{
 					"command": "bamboo.webresourceTree.refreshEntry",

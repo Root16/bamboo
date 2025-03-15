@@ -35,7 +35,8 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
 
                 var pathInPAWithoutPublisher = r.name.substring(r.name.indexOf("_") + 1);
 
-                var diskPath = await BambooManager.getWRDiskPath(pathInPAWithoutPublisher);
+                // var diskPath = await BambooManager.getWRDiskPath(pathInPAWithoutPublisher);
+                var diskPath = "";
                 if (diskPath !== null) {
                     webResource.pathOnDisk = diskPath;
                 }
