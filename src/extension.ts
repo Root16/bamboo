@@ -1,13 +1,6 @@
 import * as vscode from 'vscode';
-import path from "path";
-import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
-import { WebResource } from './models/WebResource';
 import { BambooManager } from './classes/syncer/BambooManager';
-import WebResourceSyncer from './classes/syncer/WebResourceSyncer';
-import { getOAuthToken, getSingle, uploadJavaScriptFile } from './dataverse/client';
-
-const SYNCER_EXE_PATH = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/win-x64/publish/WebResource.Syncer.exe";
-const EXTENSION_NAME = "bamboo";
+import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
 	const bambooManager = BambooManager.getInstance();
@@ -29,22 +22,18 @@ export async function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	const account = await getSingle('accounts', "b3ae0b11-60ea-eb11-bacb-000d3a332312", token, bambooConfig.credential.baseUrl);
+	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
+		const webResourceProvider = new WebResourcesProvider(bambooManager);
 
-	// if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
-	// 	const solutionName = await BambooManager.getSolution();
+		vscode.window.registerTreeDataProvider(
+			`webresourceTree`,
+			webResourceProvider,
+		);
 
-	// 	const webResourceProvider = new WebResourcesProvider(solutionName, syncer);
-
-	// 	vscode.window.registerTreeDataProvider(
-	// 		`webresourceTree`,
-	// 		webResourceProvider,
-	// 	);
-
-	// 	vscode.commands.registerCommand('bamboo.webresourceTree.refreshEntry', () =>
-	// 		webResourceProvider.refresh()
-	// 	);
-	// }
+		vscode.commands.registerCommand('bamboo.webresourceTree.refreshEntry', () =>
+			webResourceProvider.refresh()
+		);
+	}
 
 	vscode.commands.registerCommand('bamboo.syncCurrentFile', async (resource: vscode.Uri) => {
 		const foo = 10;
@@ -59,8 +48,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
 
 		await bambooManager.syncAllFiles(currentWorkspacePath);
-
-		const foo = 10;
 	});
 
 	vscode.window.showInformationMessage(`Bamboo initialized successfully.`);

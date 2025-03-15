@@ -1,2 +1,12 @@
 ### Todos for v0.3.0
-- [ ] Test
+- [ ] Update to use all extension settings
+- [ ] Sync current file
+- [ ] Sync all files
+- [ ] Remove all old 'Web Resource Syncer' code
+- [ ] File tree view
+- [ ] Progress report + step report
+    - [ ] Sync current file
+    - [ ] Sync all files
+- [ ] Test creating a new file
+- [ ] Dont throw exceptions anywhere in extension
+- [ ] Support PCF controls

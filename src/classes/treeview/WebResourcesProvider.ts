@@ -1,24 +1,24 @@
 import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 import { Event, EventEmitter } from 'vscode';
-import { WebResource } from '../../models/WebResource';
+import { WebResourceTreeItem } from './WebResource';
 import WebResourceSyncer from '../syncer/WebResourceSyncer';
 import { BambooManager } from '../syncer/BambooManager';
 
 //TODO - this class should not use 'WebResource' as it's model, instead it should use a new model that is more generic
-export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource> {
-    constructor(private solutionName: string, private syncer: WebResourceSyncer) {
+export class WebResourcesProvider implements vscode.TreeDataProvider<WebResourceTreeItem> {
+    constructor(private bambooManager: BambooManager) {
     }
 
-    getTreeItem(element: WebResource): vscode.TreeItem {
+    getTreeItem(element: WebResourceTreeItem): vscode.TreeItem {
         return element;
     }
 
 
-    async getChildren(element?: WebResource): Promise<WebResource[]> {
+    async getChildren(element?: WebResourceTreeItem): Promise<WebResourceTreeItem[]> {
         if (element) {
             if (element.pathOnDisk) {
-                return Promise.resolve([new WebResource(element.pathOnDisk, element.id + "idk", true,
+                return Promise.resolve([new WebResourceTreeItem(element.pathOnDisk, element.id + "idk", true,
                     vscode.TreeItemCollapsibleState.Collapsed
                 )]);
 
@@ -26,10 +26,10 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
                 return Promise.resolve([]);
             }
         } else {
-            var webresources = await this.syncer.retreiveWebResourcesInSolution(this.solutionName);
+            var webresources = await this.bambooManager.listWebResourcesInSolution();
 
             var mapped = Promise.all(webresources.map(async r => {
-                var webResource = new WebResource(r.name, r.id, true,
+                var webResource = new WebResourceTreeItem(r.name, r.id, true,
                     vscode.TreeItemCollapsibleState.Collapsed
                 );
 
@@ -48,9 +48,9 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
         }
     }
 
-    private _onDidChangeTreeData: EventEmitter<WebResource | undefined> = new EventEmitter<WebResource | undefined>();
+    private _onDidChangeTreeData: EventEmitter<WebResourceTreeItem | undefined> = new EventEmitter<WebResourceTreeItem | undefined>();
 
-    readonly onDidChangeTreeData: Event<WebResource | undefined> = this._onDidChangeTreeData.event;
+    readonly onDidChangeTreeData: Event<WebResourceTreeItem | undefined> = this._onDidChangeTreeData.event;
 
     refresh(): void {
         this._onDidChangeTreeData.fire(undefined);

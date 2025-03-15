@@ -35,7 +35,7 @@
 				"bamboo.general.publishAfterSync": {
 					"type": "boolean",
 					"default": false,
-					"description": "When syncing a web resource, publish after uploading the contents."
+					"description": "When syncing a WebResource, publish after a successful upload."
 				}
 			}
 		},

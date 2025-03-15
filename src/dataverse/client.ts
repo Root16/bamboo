@@ -1,18 +1,80 @@
-import { PublicClientApplication, Configuration, DeviceCodeRequest } from "@azure/msal-node";
 import fs from "fs/promises";
 import * as path from "path";
 import { BambooManager } from "../classes/syncer/BambooManager";
 import jwt from "jsonwebtoken";
+import { OAuthTokenResponse } from "./IOAuthtokenResponse";
+import { IWebResource } from "./IWebResource";
+import { ISolution } from "./ISolution";
 
 const DATAVERSE_BASE_URL = "https://jyb.crm.dynamics.com";
-const WEB_RESOURCES_API = `${DATAVERSE_BASE_URL}/api/data/v9.1/webresourceset`;
-const SOLUTIONS_API = `${DATAVERSE_BASE_URL}/api/data/v9.1/AddSolutionComponent`;
-const PUBLISH_API = `${DATAVERSE_BASE_URL}/api/data/v9.1/PublishXml`;
+const WEB_RESOURCES_API = `${DATAVERSE_BASE_URL}/api/data/v9.2/webresourceset`;
+const SOLUTION_API = `${DATAVERSE_BASE_URL}/api/data/v9.2/solutions`;
+const SOLUTIONS_API = `${DATAVERSE_BASE_URL}/api/data/v9.2/AddSolutionComponent`;
+const PUBLISH_API = `${DATAVERSE_BASE_URL}/api/data/v9.2/PublishXml`;
 
-/**
- * Uploads a JavaScript file as a Web Resource to Dataverse, adds it to a solution, and publishes it.
- */
-export async function uploadJavaScriptFile(
+async function listWebResourcesInSolution(
+	solutionUniqueName: string,
+	token: string
+): Promise<IWebResource[]> {
+	const solution = await getSolution(solutionUniqueName, token);
+
+	if (solution === null) {
+		console.log(`Can't find solution with name: ${solutionUniqueName}`);
+		return [];
+	}
+
+	const fetchXml = `
+	<fetch>
+		<entity name="solutioncomponent">
+			<attribute name="componenttype" />
+				<link-entity name="webresource" to="objectid" from="webresourceid" alias="webresource" link-type="inner">
+					<attribute name="webresourceid" />
+					<attribute name="name" />
+				</link-entity>
+			<filter>
+				<condition attribute="solutionid" operator="eq" value="${solution.solutionid}" />
+				<condition attribute="componenttype" operator="eq" value="61" />
+			</filter>
+		</entity>
+	</fetch>
+	`.replace(/\s+/g, ' ').trim();
+
+	const solutionComponentUrl = `${DATAVERSE_BASE_URL}/api/data/v9.2/solutioncomponents?fetchXml=${encodeURIComponent(fetchXml)}`;
+
+	try {
+		//@ts-expect-error cause i said so
+		const response = await fetch(solutionComponentUrl, {
+			method: "GET",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+				Accept: "application/json",
+			},
+		});
+
+		if (!response.ok) {
+			throw new Error(`Failed to fetch web resources: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+
+		const mapped = data.value.map((item: any) => {
+			const wr: IWebResource = {
+				id: item["webresource.webresourceid"],
+				name: item["webresource.name"],
+			};
+
+			return wr;
+		});
+
+		return mapped;
+	} catch (error) {
+		console.error("Error fetching web resources:", error);
+		return [];
+	}
+}
+
+async function uploadJavaScriptFile(
 	filePath: string,
 	name: string,
 	solutionName: string,
@@ -52,10 +114,22 @@ export async function uploadJavaScriptFile(
 	}
 }
 
-/**
- * Checks if a Web Resource exists in Dataverse.
- */
-async function getWebResource(name: string, token: string) {
+async function getSolution(uniqueName: string, token: string): Promise<ISolution | null> {
+	//@ts-expect-error cause i said so
+	const response = await fetch(`${SOLUTION_API}?$filter=uniquename eq '${uniqueName}'`, {
+		method: "GET",
+		headers: {
+			Authorization: `Bearer ${token}`,
+			"Content-Type": "application/json",
+			Accept: "application/json",
+		},
+	});
+
+	const data = await response.json();
+	return data.value.length > 0 ? data.value[0] : null;
+}
+
+async function getWebResource(name: string, token: string): Promise<any | null> {
 	//@ts-expect-error cause i said so
 	const response = await fetch(`${WEB_RESOURCES_API}?$filter=name eq '${name}'`, {
 		method: "GET",
@@ -70,9 +144,6 @@ async function getWebResource(name: string, token: string) {
 	return data.value.length > 0 ? data.value[0] : null;
 }
 
-/**
- * Creates a new Web Resource.
- */
 async function createWebResource(name: string, base64Content: string, token: string): Promise<string> {
 	const body = {
 		name: name,
@@ -100,9 +171,6 @@ async function createWebResource(name: string, base64Content: string, token: str
 	return data.webresourceid;
 }
 
-/**
- * Updates an existing Web Resource.
- */
 async function updateWebResource(webResourceId: string, base64Content: string, token: string) {
 	const body = {
 		content: base64Content,
@@ -124,9 +192,6 @@ async function updateWebResource(webResourceId: string, base64Content: string, t
 	}
 }
 
-/**
- * Adds a Web Resource to a solution.
- */
 async function addToSolution(webResourceId: string, solutionName: string, token: string) {
 	const body = {
 		ComponentId: webResourceId,
@@ -151,9 +216,6 @@ async function addToSolution(webResourceId: string, solutionName: string, token:
 	}
 }
 
-/**
- * Publishes a Web Resource.
- */
 async function publishWebResource(webResourceId: string, token: string) {
 	const body = {
 		ParameterXml: `<importexportxml><webresources><webresource>${webResourceId}</webresource></webresources></importexportxml>`,
@@ -173,111 +235,6 @@ async function publishWebResource(webResourceId: string, token: string) {
 	if (!response.ok) {
 		throw new Error(`Failed to publish Web Resource: ${response.statusText}`);
 	}
-}
-
-
-async function getEntities(token: string) {
-	//@ts-expect-error cause i said so
-	var headers = new Headers();
-	headers.append("OData-MaxVersion", "4.0");
-	headers.append("OData-Version", "4.0");
-	headers.append("Accept", "application/json");
-	headers.append("Authorization", "Bearer " + token);
-
-	// var baseUrl = dynamicsUrl
-	var baseUrl = ""
-	var requestUrl = baseUrl + "/api/data/v9.2/entities?$select=name,logicalcollectionname";
-
-	var requestOptions = {
-		method: "GET",
-		headers: headers
-	};
-
-	try {
-		//@ts-expect-error cause i said so
-		const response = await fetch(requestUrl, requestOptions)
-
-		if (!response.ok) {
-			throw new Error('GetSingle Request Not OK: ' + response.statusText);
-		}
-		return response.json();
-	}
-	catch (ex) {
-		console.log(ex);
-	}
-}
-
-async function getSingle(entityName: string, entityId: string, token: string, baseUrl: string) {
-	//@ts-expect-error cause i said so
-	var headers = new Headers();
-	headers.append("OData-MaxVersion", "4.0");
-	headers.append("OData-Version", "4.0");
-	headers.append("Accept", "application/json");
-	headers.append("Authorization", "Bearer " + token);
-
-	var requestUrl = baseUrl + "/api/data/v9.2/" + entityName + "(" + entityId + ")";
-
-	var requestOptions = {
-		method: "GET",
-		headers: headers
-	};
-
-	try {
-		console.log(`Request URL ${requestUrl}`)
-		//@ts-expect-error cause i said so
-		const response = await fetch(requestUrl, requestOptions)
-
-		if (!response.ok) {
-			const foo = response.statusText;
-			const bar = await response.json();
-			throw new Error('GetSingle Request Not OK: ' + response.statusText);
-		}
-		return response.json();
-	}
-	catch (ex) {
-		console.log(ex);
-	}
-}
-
-async function getMultiple(entityName: string, token: string, queryOptions: string) {
-	//@ts-expect-error cause i said so
-	var headers = new Headers();
-	headers.append("OData-MaxVersion", "4.0");
-	headers.append("OData-Version", "4.0");
-	headers.append("odata.include-annotations", "*");
-	headers.append("Accept", "application/json");
-	headers.append("Authorization", "Bearer " + token);
-	headers.append("Prefer", 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"')
-
-	// var baseUrl = dynamicsUrl
-	var baseUrl = ""
-	var requestUrl = baseUrl + "/api/data/v9.2/" + entityName + queryOptions;
-
-	var requestOptions = {
-		method: "GET",
-		headers: headers
-	};
-
-	try {
-		//@ts-expect-error cause i said so
-		const response = await fetch(requestUrl, requestOptions)
-
-		if (!response.ok) {
-			throw new Error('GetMultiple Request Not OK: ' + response.statusText);
-		}
-		return response.json();
-	}
-	catch (ex) {
-		console.log(ex);
-	}
-}
-
-interface OAuthTokenResponse {
-	token_type: string;
-	expires_in: number;
-	ext_expires_in: number;
-	access_token: string;
-	expires_at: number; // Custom field to store expiration time
 }
 
 async function getOAuthToken(
@@ -352,9 +309,8 @@ async function saveCachedToken(token: OAuthTokenResponse): Promise<void> {
 
 
 export {
-	getSingle,
-	getMultiple,
-	getEntities,
 	getOAuthToken,
+	listWebResourcesInSolution,
+	uploadJavaScriptFile,
 	OAuthTokenResponse,
 };

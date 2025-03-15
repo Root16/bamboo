@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { BambooConfig } from './BambooConfig';
 import path from 'path';
-import { getOAuthToken, uploadJavaScriptFile } from '../../dataverse/client';
+import { getOAuthToken, listWebResourcesInSolution, uploadJavaScriptFile } from '../../dataverse/client';
+import { IWebResource } from '../../dataverse/IWebResource';
 
 export class BambooManager {
 	public static workspaceConfigFileName: string = 'bamboo.conf.json';
@@ -187,11 +188,29 @@ export class BambooManager {
 			const response = await uploadJavaScriptFile(
 				normalizedPath,
 				wrMapping.dataverseName,
-				config.solutionName,
+				config.solutionUniqueName,
 				token
 			);
 
 			vscode.window.showInformationMessage(response);
 		}
+	}
+
+	public async listWebResourcesInSolution(): Promise<IWebResource[]> {
+		const config = await this.getConfig();
+
+		if (config === null) {
+			return [];
+		}
+
+		const token = await this.getToken();
+
+		if (token === null) {
+			return [];
+		}
+
+		const wrs = await listWebResourcesInSolution(config.solutionUniqueName, token)
+
+		return wrs;
 	}
 }
