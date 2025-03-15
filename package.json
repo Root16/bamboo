@@ -60,6 +60,11 @@
 				"category": "Bamboo"
 			},
 			{
+				"command": "bamboo.syncAllFiles",
+				"title": "Sync all files with Power Apps",
+				"category": "Bamboo"
+			},
+			{
 				"command": "bamboo.createAndUploadFile",
 				"title": "Create and upload webresource to Power Apps",
 				"category": "Bamboo"

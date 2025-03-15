@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
+import path from "path";
 import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
 import { WebResource } from './models/WebResource';
 import { BambooManager } from './classes/syncer/BambooManager';
 import WebResourceSyncer from './classes/syncer/WebResourceSyncer';
-import { getOAuthToken, getSingle } from './dataverse/client';
+import { getOAuthToken, getSingle, uploadJavaScriptFile } from './dataverse/client';
 
 const SYNCER_EXE_PATH = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/win-x64/publish/WebResource.Syncer.exe";
 const EXTENSION_NAME = "bamboo";
@@ -14,100 +15,101 @@ export async function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	const bambooConfig = await BambooManager.getConfigFile();
+	const bambooConfig = await BambooManager.getConfig();
 
+	//Always test connection on startup
 	const token = await getOAuthToken(
-		bambooConfig.credential.clientId, 
-		bambooConfig.credential.clientSecret, 
+		bambooConfig.credential.clientId,
+		bambooConfig.credential.clientSecret,
 		bambooConfig.credential.tenantId,
 		bambooConfig.credential.baseUrl,
 	);
 
-	const account = await getSingle('accounts', "b3ae0b11-60ea-eb11-bacb-000d3a332312", token, bambooConfig.credential.baseUrl);
-
-	const bar = 10;
-
-	return;
-
-	// const [token, baseUrl] = await getDataverseToken(await BambooManager.getConnectionString());
-
-	// const foo = await getSingle('accounts', "b3ae0b11-60ea-eb11-bacb-000d3a332312", token, baseUrl);
-
-	// console.log(foo);
-
-	let syncer = new WebResourceSyncer(context.extensionPath + SYNCER_EXE_PATH, "");
-
-	//Always test connection on startup
-	let successfulAuthenticate = await syncer.testConnection();
-	if (!successfulAuthenticate) {
-		vscode.window.showErrorMessage("Unable to authenticate with the CRM instance. Please check your connection string.");
+	if (token === null) {
+		vscode.window.showErrorMessage("Unable to authenticate with the CRM instance. Please check your connection details.");
 		return;
 	}
 
-	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
-		const solutionName = await BambooManager.getSolution();
+	const account = await getSingle('accounts', "b3ae0b11-60ea-eb11-bacb-000d3a332312", token, bambooConfig.credential.baseUrl);
 
-		const webResourceProvider = new WebResourcesProvider(solutionName, syncer);
+	// if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
+	// 	const solutionName = await BambooManager.getSolution();
 
-		vscode.window.registerTreeDataProvider(
-			`webresourceTree`,
-			webResourceProvider,
-		);
+	// 	const webResourceProvider = new WebResourcesProvider(solutionName, syncer);
 
-		vscode.commands.registerCommand('bamboo.webresourceTree.refreshEntry', () =>
-			webResourceProvider.refresh()
-		);
-	}
+	// 	vscode.window.registerTreeDataProvider(
+	// 		`webresourceTree`,
+	// 		webResourceProvider,
+	// 	);
 
-	vscode.commands.registerCommand('bamboo.createAndUploadFile', async (resource: vscode.Uri) => {
-		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
-		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
-		}
-		let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+	// 	vscode.commands.registerCommand('bamboo.webresourceTree.refreshEntry', () =>
+	// 		webResourceProvider.refresh()
+	// 	);
+	// }
 
-		let localPath = resource.path.replace(currentWorkspacePath, "");
+	// vscode.commands.registerCommand('bamboo.createAndUploadFile', async (resource: vscode.Uri) => {
+	// 	let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+	// 	if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+	// 		vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
+	// 	}
+	// 	let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
 
-		let possibleRemotePath = await BambooManager.getWRPathInPowerApps(localPath);
-		let remotePath = possibleRemotePath;
+	// 	let localPath = resource.path.replace(currentWorkspacePath, "");
 
-		if (
-			vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.askForName") &&
-			possibleRemotePath === null
-		) {
-			remotePath = localPath;
-			let userRequestedRemotePath = await vscode.window.showInputBox({
-				prompt: `Input the full name of the webresource. Cancel this dialog to use the relative path from ${BambooManager.workspaceConfigFileName} instead.`,
-				placeHolder: "/my-webresources/forms/project.js"
-			});
+	// 	let possibleRemotePath = await BambooManager.getWRPathInPowerApps(localPath);
+	// 	let remotePath = possibleRemotePath;
 
-			if (userRequestedRemotePath !== undefined && userRequestedRemotePath !== "") {
-				userRequestedRemotePath = userRequestedRemotePath[0] === "/" ? userRequestedRemotePath : "/" + userRequestedRemotePath;
-				remotePath = userRequestedRemotePath;
-			}
+	// 	if (
+	// 		vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.askForName") &&
+	// 		possibleRemotePath === null
+	// 	) {
+	// 		remotePath = localPath;
+	// 		let userRequestedRemotePath = await vscode.window.showInputBox({
+	// 			prompt: `Input the full name of the webresource. Cancel this dialog to use the relative path from ${BambooManager.workspaceConfigFileName} instead.`,
+	// 			placeHolder: "/my-webresources/forms/project.js"
+	// 		});
 
-			await BambooManager.saveWebResourceFileMapping(localPath, remotePath);
-		}
-		else if (possibleRemotePath === null) {
-			remotePath = localPath;
-			await BambooManager.saveWebResourceFileMapping(localPath, remotePath);
-		}
+	// 		if (userRequestedRemotePath !== undefined && userRequestedRemotePath !== "") {
+	// 			userRequestedRemotePath = userRequestedRemotePath[0] === "/" ? userRequestedRemotePath : "/" + userRequestedRemotePath;
+	// 			remotePath = userRequestedRemotePath;
+	// 		}
 
-		const solutionName = await BambooManager.getSolution();
+	// 		await BambooManager.saveWebResourceFileMapping(localPath, remotePath);
+	// 	}
+	// 	else if (possibleRemotePath === null) {
+	// 		remotePath = localPath;
+	// 		await BambooManager.saveWebResourceFileMapping(localPath, remotePath);
+	// 	}
 
-		const updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.updateIfExists");
+	// 	const solutionName = await BambooManager.getSolution();
 
-		await syncer.uploadFile(solutionName, resource.fsPath, remotePath!, updateIfExists);
-	});
+	// 	const updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.updateIfExists");
+
+	// 	await syncer.uploadFile(solutionName, resource.fsPath, remotePath!, updateIfExists);
+	// });
 
 	vscode.commands.registerCommand('bamboo.updateFile', async (resource: vscode.Uri) => {
-		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
 			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
 		}
-		let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
 
-		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
+		const token = await getOAuthToken(
+			bambooConfig.credential.clientId,
+			bambooConfig.credential.clientSecret,
+			bambooConfig.credential.tenantId,
+			bambooConfig.credential.baseUrl,
+		);
+
+		//TODO this code shouldnt be everywhere
+		if (token === null) {
+			vscode.window.showErrorMessage("Unable to authenticate with the CRM instance. Please check your connection details.");
+			return;
+		}
+
+		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+
+		const filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
 
 		const solutionName = await BambooManager.getSolution();
 
@@ -117,8 +119,60 @@ export async function activate(context: vscode.ExtensionContext) {
 			throw new Error("File mapping not found in config file! Please either manually add the mapping to the config file, or create the webresource through this tool.");
 		}
 
-		await syncer.uploadFile(solutionName, resource.fsPath, webResourceFileName, true);
+		return;
+
+		// await uploadJavaScriptFile(
+		// 	resource.fsPath,
+		// 	webResourceFileName,
+		// 	solutionName,
+		// 	token
+		// );
+
+		// await syncer.uploadFile(solutionName, resource.fsPath, webResourceFileName, true);
 	});
+
+	vscode.commands.registerCommand('bamboo.syncAllFiles', async () => {
+		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
+		}
+
+		const token = await getOAuthToken(
+			bambooConfig.credential.clientId,
+			bambooConfig.credential.clientSecret,
+			bambooConfig.credential.tenantId,
+			bambooConfig.credential.baseUrl,
+		);
+
+		//TODO this code shouldnt be everywhere
+		if (token === null) {
+			vscode.window.showErrorMessage("Unable to authenticate with the CRM instance. Please check your connection details.");
+			return;
+		}
+
+		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+
+		const solutionName = await BambooManager.getSolution();
+
+		const config = await BambooManager.getConfig();
+
+		for (const wrMapping of config.webResources) {
+			const relativePathOnDisk = currentWorkspacePath + "/" + wrMapping.relativePathOnDisk;
+			let fixedPath = relativePathOnDisk.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
+			const normalizedPath = path.normalize(fixedPath);
+
+			const response = await uploadJavaScriptFile(
+				normalizedPath,
+				wrMapping.dataverseName,
+				solutionName,
+				token
+			);
+
+			vscode.window.showInformationMessage(response);
+		}
+	});
+
+	vscode.window.showInformationMessage(`Bamboo initialized successfully.`);
 }
 
-export function deactivate() { }
+function deactivate() { }

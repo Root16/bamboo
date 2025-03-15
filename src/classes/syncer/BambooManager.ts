@@ -23,7 +23,7 @@ export abstract class BambooManager {
 		}
 	}
 
-	public static async getConfigFile(): Promise<BambooConfig> {
+	public static async getConfig(): Promise<BambooConfig> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
 			throw new Error(this.undefinedWorkspaceExceptionMessage);
@@ -76,45 +76,25 @@ export abstract class BambooManager {
 	}
 
 	public static async getWRPathInPowerApps(pathToFileOnDisk: string): Promise<string | null> {
-		const json: BambooConfig = await this.getConfigFile();
-		if (json.fileMappings.hasOwnProperty(pathToFileOnDisk)) {
-			return json.fileMappings[pathToFileOnDisk];
-		} else {
-			return null;
-		}
+		const json: BambooConfig = await this.getConfig();
+
+		const mapping = json.webResources.find(wr => wr.relativePathOnDisk === pathToFileOnDisk);
+
+		return mapping ? mapping.dataverseName : null;
 	}
 
 	public static async getWRDiskPath(pathToFileInPowerApps: string): Promise<string | null> {
-		const json: BambooConfig = await this.getConfigFile();
+		const json: BambooConfig = await this.getConfig();
 
-		for (let key in json.fileMappings) {
-			if (json.fileMappings.hasOwnProperty(key)) {
-				if (json.fileMappings[key] === pathToFileInPowerApps) {
-					return key;
-				}
-			}
-		}
+		const mapping = json.webResources.find(wr => wr.dataverseName === pathToFileInPowerApps);
 
-		return null;
+		return mapping ? mapping.relativePathOnDisk : null;
 	}
-
-	// public static async getConnectionString(): Promise<string> {
-	// 	const propertyName = 'connectionString';
-
-	// 	const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
-
-	// 	if (json.hasOwnProperty(propertyName)) {
-	// 		return json.connectionString;
-	// 	} else {
-	// 		vscode.window.showErrorMessage(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
-	// 		throw new Error(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
-	// 	}
-	// }
 
 	public static async getSolution(): Promise<string> {
 		const propertyName = 'solutionName';
 
-		const json: BambooConfig = await this.getConfigFile();
+		const json: BambooConfig = await this.getConfig();
 
 		if (json.hasOwnProperty(propertyName)) {
 			return json.solutionName;
@@ -125,20 +105,20 @@ export abstract class BambooManager {
 	}
 
 	public static async saveWebResourceFileMapping(localPath: string, remotePath: string): Promise<void> {
-		let config;
-		try {
-			config = await this.getConfigFile();
-		}
-		catch {
-			vscode.window.showErrorMessage(`Unable to save file mapping. Please make sure ${this.workspaceConfigFileName} exists.`);
-			return;
-		}
+		// let config;
+		// try {
+		// 	config = await this.getConfigFile();
+		// }
+		// catch {
+		// 	vscode.window.showErrorMessage(`Unable to save file mapping. Please make sure ${this.workspaceConfigFileName} exists.`);
+		// 	return;
+		// }
 
-		config = config || {};
-		config.fileMappings = config.fileMappings || {};
-		config.fileMappings[localPath] = remotePath;
+		// config = config || {};
+		// config.fileMappings = config.fileMappings || {};
+		// config.fileMappings[localPath] = remotePath;
 
-		await this.overwriteConfigFile(config);
+		// await this.overwriteConfigFile(config);
 	}
 
 	private static async overwriteConfigFile(configFile: any): Promise<void> {

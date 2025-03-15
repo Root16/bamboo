@@ -1,7 +1,7 @@
 export interface BambooConfig {
     solutionName: string;
     credential: Credential;
-    fileMappings: { [key: string]: string };
+    webResources: WebResourceMapping[];
 }
 
 export interface Credential {
@@ -9,4 +9,9 @@ export interface Credential {
     clientSecret: string;
     tenantId: string;
     baseUrl: string;
+}
+
+export interface WebResourceMapping {
+    dataverseName: string;
+    relativePathOnDisk: string;
 }
