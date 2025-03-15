@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { Event, EventEmitter } from 'vscode';
 import { WebResource } from '../../models/WebResource';
 import WebResourceSyncer from '../syncer/WebResourceSyncer';
-import { WebResourceSyncerConfigurationManager } from '../syncer/WebResourceSyncerConfigurationManager';
+import { BambooManager } from '../syncer/BambooManager';
 
 //TODO - this class should not use 'WebResource' as it's model, instead it should use a new model that is more generic
 export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource> {
@@ -35,7 +35,7 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
 
                 var pathInPAWithoutPublisher = r.name.substring(r.name.indexOf("_") + 1);
 
-                var diskPath = await WebResourceSyncerConfigurationManager.getWRDiskPath(pathInPAWithoutPublisher);
+                var diskPath = await BambooManager.getWRDiskPath(pathInPAWithoutPublisher);
                 if (diskPath !== null) {
                     webResource.pathOnDisk = diskPath;
                 }

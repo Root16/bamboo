@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { WebResourceSyncerConfiguration } from './WebResourceSyncerConfiguration';
+import { BambooConfig } from './BambooConfig';
 import path from 'path';
 
-export abstract class WebResourceSyncerConfigurationManager {
+export abstract class BambooManager {
 	public static workspaceConfigFileName: string = 'bamboo.conf.json';
 	public static workspaceTokenCacheFolderName: string = '.bamboo_tokens';
 	private static undefinedWorkspaceExceptionMessage: string = "Cannot activate Bamboo. Workspace is undefined";
@@ -23,7 +23,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 		}
 	}
 
-	public static async getConfigFileAsJson(): Promise<WebResourceSyncerConfiguration> {
+	public static async getConfigFile(): Promise<BambooConfig> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
 			throw new Error(this.undefinedWorkspaceExceptionMessage);
@@ -34,7 +34,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 		try {
 			const dataAsU8Array = await vscode.workspace.fs.readFile(packageJsonUri);
 			const jsonString = Buffer.from(dataAsU8Array).toString('utf8');
-			const json: WebResourceSyncerConfiguration = JSON.parse(jsonString);
+			const json: BambooConfig = JSON.parse(jsonString);
 			return json;
 		} catch (error) {
 			throw new Error(`Unable to open file ${workspacePath + '/' + this.workspaceConfigFileName}. Please make sure it exists.`);
@@ -66,7 +66,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 
 		const cacheFile = path.join(
 			(
-				await WebResourceSyncerConfigurationManager.getTokenCacheFolderPath()
+				await BambooManager.getTokenCacheFolderPath()
 			).path, "tokenCache.json");
 
 		//TODO
@@ -76,7 +76,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 	}
 
 	public static async getWRPathInPowerApps(pathToFileOnDisk: string): Promise<string | null> {
-		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
+		const json: BambooConfig = await this.getConfigFile();
 		if (json.fileMappings.hasOwnProperty(pathToFileOnDisk)) {
 			return json.fileMappings[pathToFileOnDisk];
 		} else {
@@ -85,7 +85,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 	}
 
 	public static async getWRDiskPath(pathToFileInPowerApps: string): Promise<string | null> {
-		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
+		const json: BambooConfig = await this.getConfigFile();
 
 		for (let key in json.fileMappings) {
 			if (json.fileMappings.hasOwnProperty(key)) {
@@ -98,23 +98,23 @@ export abstract class WebResourceSyncerConfigurationManager {
 		return null;
 	}
 
-	public static async getConnectionString(): Promise<string> {
-		const propertyName = 'connectionString';
+	// public static async getConnectionString(): Promise<string> {
+	// 	const propertyName = 'connectionString';
 
-		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
+	// 	const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
 
-		if (json.hasOwnProperty(propertyName)) {
-			return json.connectionString;
-		} else {
-			vscode.window.showErrorMessage(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
-			throw new Error(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
-		}
-	}
+	// 	if (json.hasOwnProperty(propertyName)) {
+	// 		return json.connectionString;
+	// 	} else {
+	// 		vscode.window.showErrorMessage(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
+	// 		throw new Error(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
+	// 	}
+	// }
 
 	public static async getSolution(): Promise<string> {
 		const propertyName = 'solutionName';
 
-		const json: WebResourceSyncerConfiguration = await this.getConfigFileAsJson();
+		const json: BambooConfig = await this.getConfigFile();
 
 		if (json.hasOwnProperty(propertyName)) {
 			return json.solutionName;
@@ -127,7 +127,7 @@ export abstract class WebResourceSyncerConfigurationManager {
 	public static async saveWebResourceFileMapping(localPath: string, remotePath: string): Promise<void> {
 		let config;
 		try {
-			config = await this.getConfigFileAsJson();
+			config = await this.getConfigFile();
 		}
 		catch {
 			vscode.window.showErrorMessage(`Unable to save file mapping. Please make sure ${this.workspaceConfigFileName} exists.`);

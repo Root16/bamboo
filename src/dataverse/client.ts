@@ -1,9 +1,8 @@
 import { PublicClientApplication, Configuration, DeviceCodeRequest } from "@azure/msal-node";
-import * as fs from "fs";
+import fs from "fs/promises";
 import * as path from "path";
-import { WebResourceSyncerConfigurationManager } from "../classes/syncer/WebResourceSyncerConfigurationManager";
+import { BambooManager } from "../classes/syncer/BambooManager";
 import jwt from "jsonwebtoken";
-
 
 
 async function getEntities(token: string) {
@@ -102,149 +101,89 @@ async function getMultiple(entityName: string, token: string, queryOptions: stri
 	}
 }
 
+interface OAuthTokenResponse {
+	token_type: string;
+	expires_in: number;
+	ext_expires_in: number;
+	access_token: string;
+	expires_at: number; // Custom field to store expiration time
+}
 
-
-async function getDataverseToken(connectionString: string): Promise<[string, string]> {
-	const cacheFile = await WebResourceSyncerConfigurationManager.getTokenCacheFilePath();
-
-	const params = parseConnectionString(connectionString);
-
-	const baseUrl = params.Url;
-
-	const msalConfig: Configuration = {
-		auth: {
-			clientId: params.AppId,
-			authority: "https://login.microsoftonline.com/common",
-		},
-		cache: {
-			cachePlugin: createFileCachePlugin(cacheFile),
-		},
-	};
-
-	const pca = new PublicClientApplication(msalConfig);
-
-	const cachedToken = await getTokenFromCache();
-	if (cachedToken) {
-		console.log("using cached token");
-		return [cachedToken, baseUrl];
+async function getOAuthToken(
+	clientId: string,
+	clientSecret: string,
+	tenantId: string,
+	baseUrl: string
+): Promise<string> {
+	const cachedToken = await loadCachedToken();
+	if (cachedToken && cachedToken.expires_at > Date.now() + 60_000) {
+		console.log("Using cached token.");
+		return cachedToken.access_token;
 	}
 
-	const deviceCodeRequest: DeviceCodeRequest = {
-		scopes: [`${params.Url}/.default`],
-		deviceCodeCallback: (response) => {
-			console.log(`please authenticate at: ${response.verificationUri}`);
-			console.log(`enter this code: ${response.userCode}`);
-		},
-	};
+	console.log("Fetching new token...");
+	const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+	const params = new URLSearchParams({
+		client_id: clientId,
+		client_secret: clientSecret,
+		scope: `${baseUrl}/.default`,
+		grant_type: "client_credentials",
+	});
 
 	try {
-		const authResponse = await pca.acquireTokenByDeviceCode(deviceCodeRequest);
-		if (!authResponse) throw new Error("failed to get token");
+		//@ts-expect-error cause i said so
+		const response = await fetch(tokenUrl, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+			body: params.toString(),
+		});
 
-		console.log("authentication successful");
+		if (!response.ok) {
+			throw new Error(`Failed to fetch token: ${response.status} - ${response.statusText}`);
+		}
 
-		return [authResponse.accessToken, baseUrl];
+		const data: OAuthTokenResponse = await response.json();
+
+		data.expires_at = Date.now() + data.expires_in * 1000;
+
+		await saveCachedToken(data);
+
+		return data.access_token;
 	} catch (error) {
-		console.error("authentication failed:", error);
+		console.error("Error fetching OAuth token:", error);
 		throw error;
 	}
 }
 
-function parseConnectionString(connectionString: string): Record<string, string> {
-	return Object.fromEntries(
-		connectionString
-			.split(";")
-			.map((pair) => pair.split("=").map((s) => s.trim()))
-			.filter(([key, value]) => key && value) as [string, string][]
-	);
-}
+async function loadCachedToken(): Promise<OAuthTokenResponse | null> {
+	const TOKEN_CACHE_PATH = await BambooManager.getTokenCacheFilePath();
 
-async function getTokenFromCache(): Promise<any | null> {
-    const tokenCachePath = await WebResourceSyncerConfigurationManager.getTokenCacheFilePath();
-
-    if (!fs.existsSync(tokenCachePath)) {
-        console.log("Token cache file not found.");
-        return null;
-    }
-
-    const cacheData = JSON.parse(fs.readFileSync(tokenCachePath, "utf8"));
-    
-    const accessTokenEntry = Object.values(cacheData.AccessToken || {})[0] as any;
-    if (!accessTokenEntry || !accessTokenEntry.secret) {
-        console.log("No access token found in cache.");
-        return null;
-    }
-
-    const decodedToken = jwt.decode(accessTokenEntry.secret) as jwt.JwtPayload;
-    if (!decodedToken || !decodedToken.exp) {
-        console.log("Invalid token format.");
-        return null;
-    }
-
-    // Convert expiration time to ISO format
-    accessTokenEntry.expiresOn = new Date(decodedToken.exp * 1000).toISOString();
-
-    return accessTokenEntry;
-}
-
-
-// async function getCachedToken(pca: PublicClientApplication, resourceUrl: string): Promise<string | null> {
-// 	const tokenCache = await WebResourceSyncerConfigurationManager.getTokenCacheFilePath();
-
-// 	if (!fs.existsSync(tokenCache)) return null;
-
-// 	try {
-// 		const cache = JSON.parse(fs.readFileSync(tokenCache, "utf-8"));
-// 		if (cache.expiresOn && new Date(cache.expiresOn) > new Date()) {
-// 			return cache.accessToken;
-// 		}
-// 	} catch (error) {
-// 		console.error("error reading token cache:", error);
-// 	}
-
-// 	return null;
-// }
-
-async function saveTokenToCache(accessToken: string): Promise<void> {
-	const tokenCache = await WebResourceSyncerConfigurationManager.getTokenCacheFilePath();
-
-	const decoded = jwt.decode(accessToken) as { exp?: number };
-
-	if (!decoded || !decoded.exp) {
-		console.error("failed to extract token expiration date");
-		return;
+	try {
+		const fileContent = await fs.readFile(TOKEN_CACHE_PATH,  "utf-8");
+		return JSON.parse(fileContent);
+	} catch {
+		return null;
 	}
-
-	const expiresOn = new Date(decoded.exp * 1000).toISOString();
-
-	const cacheData = {
-		accessToken,
-		expiresOn,
-	};
-
-	fs.writeFileSync(tokenCache, JSON.stringify(cacheData, null, 2));
-
-	console.log("token cached successfully");
 }
 
-function createFileCachePlugin(filePath: string) {
-	return {
-		beforeCacheAccess: async (cacheContext: any) => {
-			if (fs.existsSync(filePath)) {
-				cacheContext.tokenCache.deserialize(fs.readFileSync(filePath, "utf-8"));
-			}
-		},
-		afterCacheAccess: async (cacheContext: any) => {
-			if (cacheContext.cacheHasChanged) {
-				fs.writeFileSync(filePath, cacheContext.tokenCache.serialize());
-			}
-		},
-	};
+
+async function saveCachedToken(token: OAuthTokenResponse): Promise<void> {
+	const TOKEN_CACHE_PATH = await BambooManager.getTokenCacheFilePath();
+
+	try {
+		await fs.writeFile(TOKEN_CACHE_PATH, JSON.stringify(token, null, 2), "utf-8");
+	} catch (error) {
+		console.error("Failed to write token cache:", error);
+	}
 }
+
 
 export {
 	getSingle,
 	getMultiple,
 	getEntities,
-	getDataverseToken,
+	getOAuthToken,
+	OAuthTokenResponse,
 };
