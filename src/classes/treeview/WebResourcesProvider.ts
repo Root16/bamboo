@@ -1,24 +1,24 @@
 import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 import { Event, EventEmitter } from 'vscode';
-import { WebResourceTreeItem } from './WebResource';
+import { ComponentTreeItem } from './WebResource';
 import WebResourceSyncer from '../syncer/WebResourceSyncer';
 import { BambooManager } from '../syncer/BambooManager';
 
 //TODO - this class should not use 'WebResource' as it's model, instead it should use a new model that is more generic
-export class WebResourcesProvider implements vscode.TreeDataProvider<WebResourceTreeItem> {
+export class WebResourcesProvider implements vscode.TreeDataProvider<ComponentTreeItem> {
     constructor(private bambooManager: BambooManager) {
     }
 
-    getTreeItem(element: WebResourceTreeItem): vscode.TreeItem {
+    getTreeItem(element: ComponentTreeItem): vscode.TreeItem {
         return element;
     }
 
 
-    async getChildren(element?: WebResourceTreeItem): Promise<WebResourceTreeItem[]> {
+    async getChildren(element?: ComponentTreeItem): Promise<ComponentTreeItem[]> {
         if (element) {
             if (element.pathOnDisk) {
-                return Promise.resolve([new WebResourceTreeItem(element.pathOnDisk, element.id + "idk", true,
+                return Promise.resolve([new ComponentTreeItem(element.pathOnDisk, element.id + "idk", true,
                     vscode.TreeItemCollapsibleState.Collapsed
                 )]);
 
@@ -29,7 +29,7 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
             var webresources = await this.bambooManager.listWebResourcesInSolution();
 
             var mapped = Promise.all(webresources.map(async r => {
-                var webResource = new WebResourceTreeItem(r.name, r.id, true,
+                var webResource = new ComponentTreeItem(r.name, r.id, true,
                     vscode.TreeItemCollapsibleState.Collapsed
                 );
 
@@ -48,9 +48,9 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<WebResource
         }
     }
 
-    private _onDidChangeTreeData: EventEmitter<WebResourceTreeItem | undefined> = new EventEmitter<WebResourceTreeItem | undefined>();
+    private _onDidChangeTreeData: EventEmitter<ComponentTreeItem | undefined> = new EventEmitter<ComponentTreeItem | undefined>();
 
-    readonly onDidChangeTreeData: Event<WebResourceTreeItem | undefined> = this._onDidChangeTreeData.event;
+    readonly onDidChangeTreeData: Event<ComponentTreeItem | undefined> = this._onDidChangeTreeData.event;
 
     refresh(): void {
         this._onDidChangeTreeData.fire(undefined);

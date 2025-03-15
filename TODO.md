@@ -1,7 +1,8 @@
 ### Todos for v0.3.0
 - [ ] Update to use all extension settings
 - [ ] Sync current file
-- [ ] Sync all files
+- [X] Sync all files
+- [ ] Choice on verbose logging
 - [ ] Remove all old 'Web Resource Syncer' code
 - [ ] File tree view
 - [ ] Progress report + step report

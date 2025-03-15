@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { BambooManager } from './classes/syncer/BambooManager';
 import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
+import { showErrorMessage, showTemporaryMessage } from './log/message';
 
 export async function activate(context: vscode.ExtensionContext) {
 	const bambooManager = BambooManager.getInstance();
@@ -26,11 +27,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		const webResourceProvider = new WebResourcesProvider(bambooManager);
 
 		vscode.window.registerTreeDataProvider(
-			`webresourceTree`,
+			`componentTree`,
 			webResourceProvider,
 		);
 
-		vscode.commands.registerCommand('bamboo.webresourceTree.refreshEntry', () =>
+		vscode.commands.registerCommand('bamboo.componentTree.refreshEntry', () =>
 			webResourceProvider.refresh()
 		);
 	}
@@ -42,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('bamboo.syncAllFiles', async () => {
 		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
+			showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
 		}
 
 		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
@@ -50,7 +51,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		await bambooManager.syncAllFiles(currentWorkspacePath);
 	});
 
-	vscode.window.showInformationMessage(`Bamboo initialized successfully.`);
+	showTemporaryMessage(`Bamboo initialized successfully.`);
 }
 
 function deactivate() { }

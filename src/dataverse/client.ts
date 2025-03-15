@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { OAuthTokenResponse } from "./IOAuthtokenResponse";
 import { IWebResource } from "./IWebResource";
 import { ISolution } from "./ISolution";
+import { showMessageWithProgress, showTemporaryMessage } from "../log/message";
 
 const DATAVERSE_BASE_URL = "https://jyb.crm.dynamics.com";
 const WEB_RESOURCES_API = `${DATAVERSE_BASE_URL}/api/data/v9.2/webresourceset`;
@@ -86,31 +87,35 @@ async function uploadJavaScriptFile(
 		const base64Content = Buffer.from(content).toString("base64");
 
 		// Step 1: Check if the web resource exists
-		console.log("Checking if web resource exists...");
+		showTemporaryMessage(`Uploading web resource ${name}`);
 		const existingResource = await getWebResource(name, token);
 
 		let webResourceId: string;
 		if (existingResource) {
-			console.log(`Updating existing web resource: ${name}`);
+			showTemporaryMessage(`Updating existing web resource: ${name}`);
 			webResourceId = existingResource.webresourceid;
 			await updateWebResource(webResourceId, base64Content, token);
 		} else {
-			console.log(`Creating new web resource: ${name}`);
-			webResourceId = await createWebResource(name, base64Content, token);
+			showTemporaryMessage(`Creating new web resource: ${name}`);
+
+			await createWebResource(name, base64Content, token);
+
+			const existingResource = await getWebResource(name, token);
+			webResourceId = existingResource.webresourceid;
 		}
 
 		// Step 2: Add to Solution
-		console.log(`Adding Web Resource to solution: ${solutionName}`);
+		showTemporaryMessage(`Adding Web Resource to solution: ${solutionName}`);
 		await addToSolution(webResourceId, solutionName, token);
 
 		// Step 3: Publish Web Resource
-		console.log(`Publishing Web Resource: ${name}`);
+		showTemporaryMessage(`Publishing Web Resource: ${name}`);
 		await publishWebResource(webResourceId, token);
 
-		return "Upload completed successfully!";
+		return `Sync of file ${name} completed successfully.`;
 	} catch (error) {
 		console.log(error);
-		return "Error uploading JavaScript file:";
+		return `Error uploading ${name}.`;
 	}
 }
 
@@ -144,7 +149,7 @@ async function getWebResource(name: string, token: string): Promise<any | null> 
 	return data.value.length > 0 ? data.value[0] : null;
 }
 
-async function createWebResource(name: string, base64Content: string, token: string): Promise<string> {
+async function createWebResource(name: string, base64Content: string, token: string): Promise<void> {
 	const body = {
 		name: name,
 		displayname: name,
@@ -166,9 +171,6 @@ async function createWebResource(name: string, base64Content: string, token: str
 	if (!response.ok) {
 		throw new Error(`Failed to create Web Resource: ${response.statusText}`);
 	}
-
-	const data = await response.json();
-	return data.webresourceid;
 }
 
 async function updateWebResource(webResourceId: string, base64Content: string, token: string) {

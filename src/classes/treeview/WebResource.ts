@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
-export class WebResourceTreeItem extends vscode.TreeItem {
+export class ComponentTreeItem extends vscode.TreeItem {
     public pathOnDisk: string = "";
     constructor(
         public readonly pathInPowerApps: string,

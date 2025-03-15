@@ -3,6 +3,7 @@ import { BambooConfig } from './BambooConfig';
 import path from 'path';
 import { getOAuthToken, listWebResourcesInSolution, uploadJavaScriptFile } from '../../dataverse/client';
 import { IWebResource } from '../../dataverse/IWebResource';
+import { showMessage, showTemporaryMessage } from '../../log/message';
 
 export class BambooManager {
 	public static workspaceConfigFileName: string = 'bamboo.conf.json';
@@ -192,7 +193,7 @@ export class BambooManager {
 				token
 			);
 
-			vscode.window.showInformationMessage(response);
+			showTemporaryMessage(response);
 		}
 	}
 

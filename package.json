@@ -42,24 +42,25 @@
 		"views": {
 			"explorer": [
 				{
-					"id": "webresourceTree",
-					"name": "WebResouces in Current Solution"
+					"icon": "resources/bamboo-green.png",
+					"id": "componentTree",
+					"name": "Components in Solution"
 				}
 			]
 		},
 		"commands": [
 			{
 				"command": "bamboo.syncCurrentFile",
-				"title": "Sync current open file in Power Apps",
+				"title": "Sync current open file with Power Apps",
 				"category": "Bamboo"
 			},
 			{
 				"command": "bamboo.syncAllFiles",
-				"title": "Sync all files with Power Apps",
+				"title": "Sync all files with Power Apps.",
 				"category": "Bamboo"
 			},
 			{
-				"command": "bamboo.webresourceTree.refreshEntry",
+				"command": "bamboo.componentTree.refreshEntry",
 				"title": "Refresh",
 				"icon": {
 					"light": "resources/light/refresh.svg",
@@ -71,8 +72,8 @@
 			"explorer/context": [],
 			"view/title": [
 				{
-					"command": "bamboo.webresourceTree.refreshEntry",
-					"when": "view == webresourceTree",
+					"command": "bamboo.componentTree.refreshEntry",
+					"when": "view == componentTree",
 					"group": "navigation"
 				}
 			]
