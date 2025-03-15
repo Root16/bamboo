@@ -3,11 +3,14 @@
 - [ ] Sync current file
 - [X] Sync all files
 - [ ] Choice on verbose logging
-- [ ] Remove all old 'Web Resource Syncer' code
-- [ ] File tree view
+- [X] Remove all old 'Web Resource Syncer' code
+- [X] File tree view for WRs 
 - [ ] Progress report + step report
     - [ ] Sync current file
     - [ ] Sync all files
 - [ ] Test creating a new file
 - [ ] Dont throw exceptions anywhere in extension
-- [ ] Support PCF controls
+- [ ] Support custom controls
+    - [ ] Picker to choose which bundle.js (from file)
+    - [ ] Show in tree view
+- [ ] Update README + docs

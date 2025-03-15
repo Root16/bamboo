@@ -2,10 +2,8 @@ import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 import { Event, EventEmitter } from 'vscode';
 import { ComponentTreeItem } from './WebResource';
-import WebResourceSyncer from '../syncer/WebResourceSyncer';
 import { BambooManager } from '../syncer/BambooManager';
 
-//TODO - this class should not use 'WebResource' as it's model, instead it should use a new model that is more generic
 export class WebResourcesProvider implements vscode.TreeDataProvider<ComponentTreeItem> {
     constructor(private bambooManager: BambooManager) {
     }
@@ -33,9 +31,7 @@ export class WebResourcesProvider implements vscode.TreeDataProvider<ComponentTr
                     vscode.TreeItemCollapsibleState.Collapsed
                 );
 
-                var pathInPAWithoutPublisher = r.name.substring(r.name.indexOf("_") + 1);
-
-                // var diskPath = await BambooManager.getWRDiskPath(pathInPAWithoutPublisher);
+                //TODO: probably dont need this anymore
                 var diskPath = "";
                 if (diskPath !== null) {
                     webResource.pathOnDisk = diskPath;
