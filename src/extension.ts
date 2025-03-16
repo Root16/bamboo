@@ -33,30 +33,32 @@ export async function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
-		const webResourceProvider = new SolutionComponentsProvider(bambooManager);
+	const webResourceProvider = new SolutionComponentsProvider(bambooManager);
 
-		vscode.window.registerTreeDataProvider(
-			`componentTree`,
-			webResourceProvider,
-		);
+	vscode.window.registerTreeDataProvider(
+		`componentTree`,
+		webResourceProvider,
+	);
 
-		vscode.commands.registerCommand('bamboo.componentTree.refreshEntry', () =>
-			webResourceProvider.refresh()
-		);
+	vscode.commands.registerCommand('bamboo.componentTree.refreshEntry', async () =>
+		await webResourceProvider.refresh()
+	);
+
+	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listSolutionComponentsOnStartup")) {
+		await webResourceProvider.refresh();
 	}
 
 	vscode.commands.registerCommand('bamboo.syncCurrentFile', async () => {
 		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
 			showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo.`);
-			return;	
+			return;
 		}
 		const editor = vscode.window.activeTextEditor;
 
 		if (editor === undefined || editor === null) {
 			showErrorMessage(`You are not in the context of the editor.`);
-			return;	
+			return;
 		}
 
 		const filePath = editor!.document.uri.path;
@@ -92,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		if (config === null) {
 			return;
 		}
-		
+
 		const items: vscode.QuickPickItem[] = config.customControls.map(c => {
 			return { label: c.dataverseName, description: c.relativePathOnDiskToSolution };
 		});

@@ -1,10 +1,13 @@
-import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 import { Event, EventEmitter } from 'vscode';
 import { SolutionComponentTreeItem } from './SolutionComponentTreeItem';
 import { BambooManager } from '../syncer/BambooManager';
 
 export class SolutionComponentsProvider implements vscode.TreeDataProvider<SolutionComponentTreeItem> {
+    private webResources: SolutionComponentTreeItem[] = [];
+    private customControls: SolutionComponentTreeItem[] = [];
+    private dataLoaded: boolean = false;
+
     constructor(private bambooManager: BambooManager) {
     }
 
@@ -12,30 +15,20 @@ export class SolutionComponentsProvider implements vscode.TreeDataProvider<Solut
         return element;
     }
 
-
     async getChildren(element?: SolutionComponentTreeItem): Promise<SolutionComponentTreeItem[]> {
         if (element) {
             if (element.pathOnDisk) {
                 return Promise.resolve([new SolutionComponentTreeItem(element.pathOnDisk, element.id + "idk", true,
-                    vscode.TreeItemCollapsibleState.None
-                )]);
-
+                    vscode.TreeItemCollapsibleState.None)]);
             } else {
                 return Promise.resolve([]);
             }
         } else {
-            const webResources = await this.bambooManager.listWebResourcesInSolution();
-            const customControls = await this.bambooManager.listCustomControlsInSolution();
-
-            const mapped = Promise.all([...webResources, ...customControls].map(async r => {
-                const solutionComponent = new SolutionComponentTreeItem(r.name, r.id, true,
-                    vscode.TreeItemCollapsibleState.None
-                );
-
-                return solutionComponent;
-            }));
-
-            return mapped;
+            if (this.dataLoaded) {
+                return Promise.resolve([...this.webResources, ...this.customControls]);
+            } else {
+                return Promise.resolve([]);
+            }
         }
     }
 
@@ -43,7 +36,15 @@ export class SolutionComponentsProvider implements vscode.TreeDataProvider<Solut
 
     readonly onDidChangeTreeData: Event<SolutionComponentTreeItem | undefined> = this._onDidChangeTreeData.event;
 
-    refresh(): void {
+    async refresh(): Promise<void> {
+        const webResources = await this.bambooManager.listWebResourcesInSolution();
+        const customControls = await this.bambooManager.listCustomControlsInSolution();
+
+        this.webResources = webResources.map(r => new SolutionComponentTreeItem(r.name, r.id, true, vscode.TreeItemCollapsibleState.None));
+        this.customControls = customControls.map(r => new SolutionComponentTreeItem(r.name, r.id, true, vscode.TreeItemCollapsibleState.None));
+
+        this.dataLoaded = true;
+
         this._onDidChangeTreeData.fire(undefined);
     }
 }

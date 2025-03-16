@@ -22,20 +22,29 @@
 		"configuration": {
 			"title": "Bamboo",
 			"properties": {
-				"bamboo.createWebResource.updateIfExists": {
-					"type": "boolean",
-					"default": false,
-					"description": "When creating a WebResource, override it's contents if it already exists"
+				"bamboo.general.messageVerbosity": {
+					"type": "string",
+					"enum": [
+						"low",
+						"high"
+					],
+					"default": "low",
+					"description": "Set the verbosity level of messages shown in the UI."
 				},
-				"bamboo.general.listFilesOnStartup": {
+				"bamboo.general.listSolutionComponentsOnStartup": {
 					"type": "boolean",
 					"default": false,
-					"description": "When the extension is loaded, list all files in the currently selected solution in the tree explorer"
+					"description": "When the extension is loaded, list all supported solution components in the currently selected solution in a tree view."
 				},
-				"bamboo.general.publishAfterSync": {
+				"bamboo.webResource.publishAfterSync": {
 					"type": "boolean",
-					"default": false,
-					"description": "When syncing a WebResource, publish after a successful upload."
+					"default": true,
+					"description": "When syncing a web resource, publish after a successful upload."
+				},
+				"bamboo.customControl.publishAfterSync": {
+					"type": "boolean",
+					"default": true,
+					"description": "When syncing a custom control soution, publish after a successful upload."
 				}
 			}
 		},
