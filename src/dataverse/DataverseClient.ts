@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import fs from "fs/promises";
 import * as path from "path";
 import { BambooManager } from "../classes/syncer/BambooManager";
@@ -8,7 +9,7 @@ import { ISolution } from "./ISolution";
 import { showErrorMessage, showMessage, showMessageWithProgress, showTemporaryMessage } from "../log/message";
 import { BambooConfig } from "../classes/syncer/BambooConfig";
 import { ICustomControl } from "./ICustomControl";
-import * as crypto from 'crypto'; 
+import * as crypto from 'crypto';
 
 export class DataverseClient {
 	private webResourcesApi: string;
@@ -31,9 +32,15 @@ export class DataverseClient {
 			await this.uploadSolution(solutionPath, token);
 			showTemporaryMessage(`Uploaded solution successfully: ${path.basename(solutionPath)}`);
 
-			showTemporaryMessage(`Publishing solution: ${path.basename(solutionPath)}`, 3000);
-			await this.publishSolution(solutionName, token);
-			showTemporaryMessage(`Published solution successfully: ${path.basename(solutionPath)}`);
+
+			const publish = vscode.workspace.getConfiguration().get<boolean>(
+				"bamboo.customControl.publishAfterSync");
+
+			if (publish) {
+				showTemporaryMessage(`Publishing solution: ${path.basename(solutionPath)}`, 3000);
+				await this.publishSolution(solutionName, token);
+				showTemporaryMessage(`Published solution successfully: ${path.basename(solutionPath)}`);
+			}
 		} catch (error) {
 			showErrorMessage(`Unable to upload solution: ${solutionName}`);
 		}
@@ -225,7 +232,6 @@ export class DataverseClient {
 			const content = await fs.readFile(normalizedPath, "utf-8");
 			const base64Content = Buffer.from(content).toString("base64");
 
-			// Step 1: Check if the web resource exists
 			showTemporaryMessage(`Uploading web resource ${name}`, 3000);
 			const existingResource = await this.getWebResource(name, token);
 
@@ -243,13 +249,16 @@ export class DataverseClient {
 				webResourceId = existingResource.webresourceid;
 			}
 
-			// Step 2: Add to Solution
 			showTemporaryMessage(`Adding Web Resource to solution: ${solutionName}`, 3000);
 			await this.addToSolution(webResourceId, solutionName, token);
 
-			// Step 3: Publish Web Resource
-			showTemporaryMessage(`Publishing Web Resource: ${name}`, 3000);
-			await this.publishWebResource(webResourceId, token);
+			const publish = vscode.workspace.getConfiguration().get<boolean>(
+				"bamboo.webResource.publishAfterSync");
+
+			if (publish) {
+				showTemporaryMessage(`Publishing Web Resource: ${name}`, 3000);
+				await this.publishWebResource(webResourceId, token);
+			}
 
 			return `Sync of file ${name} completed successfully.`;
 		} catch (error) {

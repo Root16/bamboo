@@ -286,5 +286,7 @@ export class BambooManager {
 			customControl.solutionName, 
 			normalizedPath,
 			token);
+
+		showTemporaryMessage(`Synced control: ${customControl.dataverseName}.`);
 	}
 }
