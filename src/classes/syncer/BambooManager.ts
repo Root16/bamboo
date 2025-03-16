@@ -3,7 +3,7 @@ import { BambooConfig, CredentialType } from './BambooConfig';
 import path from 'path';
 import { IWebResource } from '../../dataverse/IWebResource';
 import { showErrorMessage, showMessage, showTemporaryMessage } from '../../log/message';
-import { DataverseClient } from '../../dataverse/client';
+import { DataverseClient } from '../../dataverse/DataverseClient';
 
 export class BambooManager {
 	public static workspaceConfigFileName: string = 'bamboo.conf.json';
@@ -208,6 +208,25 @@ export class BambooManager {
 
 		return wrs;
 	}
+
+	public async listCustomControlsInSolution(): Promise<IWebResource[]> {
+		const config = await this.getConfig();
+
+		if (config === null) {
+			return [];
+		}
+
+		const token = await this.getToken();
+
+		if (token === null) {
+			return [];
+		}
+
+		const wrs = await this.client.listCustomControlsInSolution(config.solutionUniqueName, token)
+
+		return wrs;
+	}
+
 
 	public async syncCurrentFile(currentWorkspacePath: string, filePath: string): Promise<void> {
 		const config = await this.getConfig();

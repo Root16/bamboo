@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
-export class ComponentTreeItem extends vscode.TreeItem {
+export class SolutionComponentTreeItem extends vscode.TreeItem {
     public pathOnDisk: string = "";
     constructor(
         public readonly pathInPowerApps: string,
@@ -14,15 +14,11 @@ export class ComponentTreeItem extends vscode.TreeItem {
         this.description = ``;
     }
 
-    command = {
-        "title": "Show error",
-        "command": "test.view.showError",
-    };
-
-    // iconPath = {
-    //     light: path.join(__filename, '..', '..', 'resources', 'light', 'dependency.svg'),
-    //     dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dependency.svg')
+    // command = {
+    //     "title": "Show error",
+    //     "command": "test.view.showError",
     // };
+
     iconPath = {
         light: vscode.Uri.file('resources/light/icon.svg'),
         dark: vscode.Uri.file('resources/dark/icon.svg')

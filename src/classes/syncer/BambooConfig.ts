@@ -15,7 +15,6 @@ export interface Credential {
     clientId: string;
     clientSecret: string;
     tenantId: string;
-    baseUrl: string;
 }
 
 export interface WebResourceMapping {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BambooManager } from './classes/syncer/BambooManager';
-import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
+import { SolutionComponentsProvider } from './classes/treeview/SolutionComponentProvider';
 import { showErrorMessage, showTemporaryMessage } from './log/message';
 import { CredentialType } from './classes/syncer/BambooConfig';
 
@@ -34,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
-		const webResourceProvider = new WebResourcesProvider(bambooManager);
+		const webResourceProvider = new SolutionComponentsProvider(bambooManager);
 
 		vscode.window.registerTreeDataProvider(
 			`componentTree`,

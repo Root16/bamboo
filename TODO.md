@@ -12,6 +12,6 @@
 - [ ] Dont throw exceptions anywhere in extension
 - [X] Make dataverseclient a class so not hard code base url
 - [ ] Support custom controls
-    - [ ] Picker to choose which bundle.js (from file)
-    - [ ] Show in tree view
+    - [ ] Picker to choose which solution
+    - [X] Show in tree view
 - [ ] Update README + docs

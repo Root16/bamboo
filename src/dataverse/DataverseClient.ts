@@ -7,6 +7,7 @@ import { IWebResource } from "./IWebResource";
 import { ISolution } from "./ISolution";
 import { showMessageWithProgress, showTemporaryMessage } from "../log/message";
 import { BambooConfig } from "../classes/syncer/BambooConfig";
+import { ICustomControl } from "./ICustomControl";
 
 export class DataverseClient {
 	private webResourcesApi: string;
@@ -32,20 +33,20 @@ export class DataverseClient {
 		}
 
 		const fetchXml = `
-	<fetch>
-		<entity name="solutioncomponent">
-			<attribute name="componenttype" />
-				<link-entity name="webresource" to="objectid" from="webresourceid" alias="webresource" link-type="inner">
-					<attribute name="webresourceid" />
-					<attribute name="name" />
-				</link-entity>
-			<filter>
-				<condition attribute="solutionid" operator="eq" value="${solution.solutionid}" />
-				<condition attribute="componenttype" operator="eq" value="61" />
-			</filter>
-		</entity>
-	</fetch>
-	`.replace(/\s+/g, ' ').trim();
+			<fetch>
+				<entity name="solutioncomponent">
+					<attribute name="componenttype" />
+						<link-entity name="webresource" to="objectid" from="webresourceid" alias="webresource" link-type="inner">
+							<attribute name="webresourceid" />
+							<attribute name="name" />
+						</link-entity>
+					<filter>
+						<condition attribute="solutionid" operator="eq" value="${solution.solutionid}" />
+						<condition attribute="componenttype" operator="eq" value="61" />
+					</filter>
+				</entity>
+			</fetch>
+		`.replace(/\s+/g, ' ').trim();
 
 		const solutionComponentUrl = `${this.config.baseUrl}/api/data/v9.2/solutioncomponents?fetchXml=${encodeURIComponent(fetchXml)}`;
 
@@ -81,6 +82,68 @@ export class DataverseClient {
 			return [];
 		}
 	}
+	async listCustomControlsInSolution(
+		solutionUniqueName: string,
+		token: string
+	): Promise<ICustomControl[]> {
+		const solution = await this.getSolution(solutionUniqueName, token);
+
+		if (solution === null) {
+			console.log(`Can't find solution with name: ${solutionUniqueName}`);
+			return [];
+		}
+
+		const fetchXml = `
+			<fetch>
+				<entity name="solutioncomponent">
+					<attribute name="componenttype" />
+					<link-entity name="customcontrol" to="objectid" from="customcontrolid" alias="customcontrol" link-type="inner">
+						<attribute name="customcontrolid" />
+						<attribute name="name" />
+					</link-entity>
+					<filter>
+						<condition attribute="solutionid" operator="eq" value="${solution.solutionid}" />
+						<condition attribute="componenttype" operator="eq" value="66" />
+					</filter>
+				</entity>
+			</fetch>
+		`.replace(/\s+/g, ' ').trim();
+
+		const solutionComponentUrl = `${this.config.baseUrl}/api/data/v9.2/solutioncomponents?fetchXml=${encodeURIComponent(fetchXml)}`;
+
+		try {
+			//@ts-expect-error cause i said so
+			const response = await fetch(solutionComponentUrl, {
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+					Accept: "application/json",
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch custom controls: ${response.statusText}`);
+			}
+
+			const data = await response.json();
+
+			const mapped = data.value.map((item: any) => {
+				const cc: ICustomControl = {
+					id: item["customcontrol.customcontrolid"],
+					name: item["customcontrol.name"],
+				};
+
+				return cc;
+			});
+
+			return mapped;
+		} catch (error) {
+			console.error("Error fetching custom controls:", error);
+			return [];
+		}
+	}
+
 
 	async uploadJavaScriptFile(
 		filePath: string,
