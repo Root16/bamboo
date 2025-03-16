@@ -1,67 +1,92 @@
 # Bamboo
-Simple webresource management for the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/). Providing Dynamics365 developers the ability to edit and manage their webresources on a per-solution basis - all from within VS Code.
 
+Simple [Web Resource](https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/web-resources) and [Custom Control](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/create-custom-controls-using-pcf) management for the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/). Providing developers the ability to edit and manage their web resources and custom controls on a per-solution basis - all from within VS Code.
+
+## Features
 This extension provides the following features inside VS Code:
 
-- Create or update webresources in PowerApps straight from VS Code.
-  - Assign and customize the webresource name
-  - Duplicate the resource's name from it's path on disk
-- Publish webresourecs automatically
-- List all webresources in a given solution in a VS Code tree view
+- Create or update web resources.
+- Publish web resources automatically.
+- Add web resources to a solution automatically.
+- Manage custom controls (PCF components) through the import + publish of solutions
+- List all web resources and custom controls in a given solution in a VS Code tree view.
 
 ## Getting Started
-- Install the extesion [here](https://marketplace.visualstudio.com/publishers/root16)
-- Add a `bamboo.conf.json` at the root of your project with the following parameters
+
+1. Install the extension [here](https://marketplace.visualstudio.com/publishers/root16).
+2. Add a `bamboo.conf.json` at the **root** of your VS Code workspace.
+    - **Do not check `bamboo.conf.json` into source control.**
+    - ![Example Project Strucutre](./images/project_structure.png)
+3. Populate the json file with the following data:
+
 ```json
 {
-    ...
-    "solutionName": "<your-solution-name>",
-    "connectionString": "AuthType=OAuth;Url=https://<org>.crm.dynamics.com;Username=<username>;ClientId={<client-id>};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=C:\\Temp\\oauth-cache.txt;",
-    ...
+    "baseUrl": "https://<org>.crm.dynamics.com",
+    "solutionUniqueName": "<your-solution-name>",
+    "credential": {
+        "type": "ClientSecret",
+        "clientId": "<your-client-id>",
+        "clientSecret": "<your-client-secret>",
+        "tenantId": "<your-tenant-id>"
+    },
+    "webResources": [
+        {
+            "dataverseName": "new_/forms/account.js",
+            "relativePathOnDisk": "path/to/new_/forms/account.js"
+        },
+        {
+            "dataverseName": "new_/forms/contact.js",
+            "relativePathOnDisk": "path/to/new_/forms/contact.js"
+        }
+    ],
+    "customControls": [
+        {
+            "dataverseName": "new_NEW.ControlOne",
+            "relativePathOnDiskToSolution": "path/to/ControlOneSolution.zip",
+            "solutionName": "ControlOneSolution"
+        },
+        {
+            "dataverseName": "new_NEW.ControlTwo",
+            "relativePathOnDiskToSolution": "path/to/ControlTwoSolution.zip",
+            "solutionName": "ControlTwoSolution"
+        }
+    ]
 }
 ```
-- Open up the folder which holds your webresources in VS Code
 
+4. Reload VS Code
+    - *Everytime a configuration change is made to `bamboo.conf.json` VS Code needs to be re reloaded*
+
+## **Important Notes** 
+- All paths must use the `/` seperator.
+- `baseUrl` must *not* end with a `/`.
+- The [app registration](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory#confidential-client-app-registration) specified must have:
+    - Access to the specified Dataverse environment
+    - The appropiate Security Role necessary to:
+        - Upload solutions
+        - Publish solutions
+        - Upload web resources
+        - Publish web resources
+        - Add components to solutions
+- `relativePathOnDisk` and `relativePathOnDiskToSolution` must *not* start with a `/`.
+- For web resources, `dataverseName` and `relativePathOnDisk` don't *need* to be similar (as shown in the example), this is just encouraged for ease of development
 
 ## Usage
-#### Creating a WebResource
-- Right click on a item in the file tree you would like to create and select the command `Create and upload webresource to Power Apps`
-- Optionally input the name of the WebResource  
 
-#### Updating a WebResource
-- Right click on an item in the file tree you would like to update and select the command `Update webresource in Power Apps`
-- NOTE: this requires a mapping to be saved in `bamboo.conf.json`
+## Extension Settings
 
-## Usage in an Existing Solution
-- If using bamboo against a previously existing solution, as of release `0.2.0` the developer has to manually assign the mappings in `bamboo.conf.json`
-- For example, if the web resource is stored in Power Apps as `new_/my-webresources/forms/account.js`, the developer would define a mapping such as:
-```json
-{
-    ...
-    "fileMappings": {
-        "/path/from/bamboo.conf.json/on/disk/account.js": "/path/in/powerapps/account.js",
-    }
-    ...
-}
-```
-- **Note the '/' prefix on all paths**
-
-## Extension Settings 
-
-| Setting Name      | Description |
-| ----------- | ----------- |
-| bamboo.createWebResource.updateIfExists      | When creating a WebResource, override it's contents if it already exists       |
-| bamboo.createWebResource.askForName   | When creating a WebResource, manually enter the full name (path included) of the WebResource. If set to false, this webresource will be created with a path equal to the relative path on disk from the 'bamboo.conf.json' in the workspace           |
-| bamboo.uploadWebResource.publishIfSuccessful   | When creating or updaing a WebResource, publish the web resource if the write is successful        |
-| bamboo.general.listFilesOnStartup   | When the extension is loaded, list all files in the currently selected solution in the tree explorer        |
+| Setting Name                             | Description |
+|------------------------------------------|-------------|
+| `bamboo.createWebResource.updateIfExists` | When creating a WebResource, override its contents if it already exists. |
 
 ## License
-
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
+
 ## Contact
+- [Open an Issue](https://github.com/Root16/bamboo/issues/new)
+- [Project Link](https://github.com/Root16/bamboo)
 
-[Open an Issue](https://github.com/Root16/bamboo/issues/new)
-
-[Contact Us](https://root16.com/resources/contact-us/)
-
-[Project Link](https://github.com/Root16/bamboo)
+## Contributing
+- This project is intended to benefit the Power Platform community as well as Root16's internal developers. 
+- Contributions are most welcome.
+- *But*, issues, fixes and feature requests are **not** guaranteed.

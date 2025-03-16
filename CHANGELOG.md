@@ -31,3 +31,10 @@
 
 ## [0.2.3]
 - [Fix bug ing publishing web resources](https://github.com/Root16/bamboo/issues/47)
+
+## [0.3.0]
+- Significant refactor of code base
+- Significant changes in behavior + available commands
+- Changes to file tree view
+- Changes to credential authentication + caching
+- Initial support for custom controls 
