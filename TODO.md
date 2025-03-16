@@ -1,15 +1,16 @@
 ### Todos for v0.3.0
 - [ ] Update to use all extension settings
-- [ ] Sync current file
+- [X] Sync current file
 - [X] Sync all files
 - [ ] Choice on verbose logging
 - [X] Remove all old 'Web Resource Syncer' code
 - [X] File tree view for WRs 
 - [ ] Progress report + step report
     - [ ] Sync current file
-    - [ ] Sync all files
+    - [X] Sync all files
 - [ ] Test creating a new file
 - [ ] Dont throw exceptions anywhere in extension
+- [ ] Make dataverseclient a class so not hard code base url
 - [ ] Support custom controls
     - [ ] Picker to choose which bundle.js (from file)
     - [ ] Show in tree view

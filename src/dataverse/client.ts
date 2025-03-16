@@ -87,16 +87,16 @@ async function uploadJavaScriptFile(
 		const base64Content = Buffer.from(content).toString("base64");
 
 		// Step 1: Check if the web resource exists
-		showTemporaryMessage(`Uploading web resource ${name}`);
+		showTemporaryMessage(`Uploading web resource ${name}`, 3000);
 		const existingResource = await getWebResource(name, token);
 
 		let webResourceId: string;
 		if (existingResource) {
-			showTemporaryMessage(`Updating existing web resource: ${name}`);
+			showTemporaryMessage(`Updating existing web resource: ${name}`, 3000);
 			webResourceId = existingResource.webresourceid;
 			await updateWebResource(webResourceId, base64Content, token);
 		} else {
-			showTemporaryMessage(`Creating new web resource: ${name}`);
+			showTemporaryMessage(`Creating new web resource: ${name}`, 3000);
 
 			await createWebResource(name, base64Content, token);
 
@@ -105,11 +105,11 @@ async function uploadJavaScriptFile(
 		}
 
 		// Step 2: Add to Solution
-		showTemporaryMessage(`Adding Web Resource to solution: ${solutionName}`);
+		showTemporaryMessage(`Adding Web Resource to solution: ${solutionName}`, 3000);
 		await addToSolution(webResourceId, solutionName, token);
 
 		// Step 3: Publish Web Resource
-		showTemporaryMessage(`Publishing Web Resource: ${name}`);
+		showTemporaryMessage(`Publishing Web Resource: ${name}`, 3000);
 		await publishWebResource(webResourceId, token);
 
 		return `Sync of file ${name} completed successfully.`;

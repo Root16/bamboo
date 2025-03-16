@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { BambooConfig } from './BambooConfig';
+import { BambooConfig, CredentialType } from './BambooConfig';
 import path from 'path';
 import { getOAuthToken, listWebResourcesInSolution, uploadJavaScriptFile } from '../../dataverse/client';
 import { IWebResource } from '../../dataverse/IWebResource';
-import { showMessage, showTemporaryMessage } from '../../log/message';
+import { showErrorMessage, showMessage, showTemporaryMessage } from '../../log/message';
 
 export class BambooManager {
 	public static workspaceConfigFileName: string = 'bamboo.conf.json';
@@ -58,12 +58,30 @@ export class BambooManager {
 		try {
 			const dataAsU8Array = await vscode.workspace.fs.readFile(packageJsonUri);
 			const jsonString = Buffer.from(dataAsU8Array).toString('utf8');
-			const json: BambooConfig = JSON.parse(jsonString);
+			const json: BambooConfig = this.parseBambooConfig(jsonString);
 			return json;
 		} catch (error) {
 			throw new Error(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
 		}
 	}
+	private parseBambooConfig(jsonString: string): BambooConfig {
+		const rawData = JSON.parse(jsonString);
+
+		const credentialTypeMap: Record<string, CredentialType> = {
+			ClientSecret: CredentialType.ClientSecret,
+			OAuth: CredentialType.OAuth,
+		};
+
+		return {
+			solutionUniqueName: rawData.solutionUniqueName,
+			webResources: rawData.webResources,
+			credential: {
+				...rawData.credential,
+				type: credentialTypeMap[rawData.credential.type] ?? CredentialType.ClientSecret,
+			}
+		};
+	}
+
 
 	public static async getTokenCacheFolderPath(): Promise<vscode.Uri> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
@@ -175,16 +193,16 @@ export class BambooManager {
 			return;
 		}
 
+		const token = await this.getToken();
+
+		if (token === null) {
+			return;
+		}
+
 		for (const wrMapping of config.webResources) {
 			const relativePathOnDisk = currentWorkspacePath + "/" + wrMapping.relativePathOnDisk;
 			let fixedPath = relativePathOnDisk.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
 			const normalizedPath = path.normalize(fixedPath);
-
-			const token = await this.getToken();
-
-			if (token === null) {
-				return;
-			}
 
 			const response = await uploadJavaScriptFile(
 				normalizedPath,
@@ -213,5 +231,43 @@ export class BambooManager {
 		const wrs = await listWebResourcesInSolution(config.solutionUniqueName, token)
 
 		return wrs;
+	}
+
+	public async syncCurrentFile(currentWorkspacePath: string, filePath: string): Promise<void> {
+		const config = await this.getConfig();
+
+		if (!config) {
+			return;
+		}
+
+		const token = await this.getToken();
+
+		if (token === null) {
+			return;
+		}
+
+		const relativePathOnDisk = filePath.replace(currentWorkspacePath, "").substring(1);
+
+		const matchingFiles = config.webResources.filter(w => w.relativePathOnDisk === relativePathOnDisk);
+
+		if (matchingFiles.length !== 1) {
+			showErrorMessage(`There are more than one or no files matching the relative path: ${relativePathOnDisk}.`);
+			return;
+		}
+
+		const matchingFile = matchingFiles[0];
+
+		const fullPath = currentWorkspacePath + "/" + matchingFile.relativePathOnDisk;
+		const fixedPath = fullPath.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
+		const normalizedPath = path.normalize(fixedPath);
+
+		const response = await uploadJavaScriptFile(
+			normalizedPath,
+			matchingFile.dataverseName,
+			config.solutionUniqueName,
+			token
+		);
+
+		showTemporaryMessage(response);
 	}
 }
