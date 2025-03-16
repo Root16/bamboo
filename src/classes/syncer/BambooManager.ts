@@ -282,11 +282,15 @@ export class BambooManager {
 		const fixedPath = fullPath.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
 		const normalizedPath = path.normalize(fixedPath);
 
-		await this.client.syncSolution(
+		const [success, errorMessage] = await this.client.syncSolution(
 			customControl.solutionName, 
 			normalizedPath,
 			token);
 
-		showTemporaryMessage(`Synced control: ${customControl.dataverseName}.`);
+		if (success) {
+			showTemporaryMessage(`Synced control: ${customControl.dataverseName}.`);
+		} else {
+			showErrorMessage(errorMessage!);
+		}
 	}
 }

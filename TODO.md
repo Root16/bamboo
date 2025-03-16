@@ -3,6 +3,8 @@
 - [X] Sync current file
 - [X] Sync all files
 - [ ] Choice on verbose logging
+    - [ ] Unified logging - chose to show to user or not
+    - [ ] Show mesasge while operationg is on-going
 - [X] Remove all old 'Web Resource Syncer' code
 - [X] File tree view for WRs 
 - [X] Fix tests 

@@ -26,79 +26,32 @@ export class DataverseClient {
 		this.importSolutionApi = `${this.config.baseUrl}/api/data/v9.0/ImportSolution`;
 	}
 
-	async syncSolution(solutionName: string, solutionPath: string, token: string): Promise<void> {
+	public async syncSolution(solutionName: string, solutionPath: string, token: string): Promise<[boolean, string | null]> {
 		try {
 			showTemporaryMessage(`Uploading solution: ${path.basename(solutionPath)}`, 3000);
-			await this.uploadSolution(solutionPath, token);
-			showTemporaryMessage(`Uploaded solution successfully: ${path.basename(solutionPath)}`);
+			const [uploadSuccess, uploadErrorMessage] = await this.uploadSolution(solutionPath, token);
 
+			if (!uploadSuccess) [uploadSuccess, uploadErrorMessage];
+			showTemporaryMessage(`Uploaded solution successfully: ${path.basename(solutionPath)}`);
 
 			const publish = vscode.workspace.getConfiguration().get<boolean>(
 				"bamboo.customControl.publishAfterSync");
 
 			if (publish) {
 				showTemporaryMessage(`Publishing solution: ${path.basename(solutionPath)}`, 3000);
-				await this.publishSolution(solutionName, token);
+				const [publishSuccess, publishErrorMessage] = await this.publishSolution(solutionName, token);
+
+				if (!publishSuccess) [publishSuccess, publishErrorMessage];
 				showTemporaryMessage(`Published solution successfully: ${path.basename(solutionPath)}`);
 			}
+
+			return [true, null];
 		} catch (error) {
-			showErrorMessage(`Unable to upload solution: ${solutionName}`);
+			return [false, `Unable to upload solution: ${solutionName}`];
 		}
 	}
 
-	async uploadSolution(solutionPath: string, token: string): Promise<void> {
-		const fileBuffer = await fs.readFile(solutionPath);
-		const base64Content = fileBuffer.toString('base64');
-		const importJobId = crypto.randomUUID();
-
-		const body = {
-			ImportJobId: importJobId,
-			OverwriteUnmanagedCustomizations: true,
-			PublishWorkflows: true,
-			CustomizationFile: base64Content,
-		};
-
-		//@ts-expect-error cause i said so
-		const response = await fetch(this.importSolutionApi, {
-			method: "POST",
-			headers: {
-				Authorization: `Bearer ${token}`,
-				"Content-Type": "application/json",
-				Accept: "application/json",
-			},
-			body: JSON.stringify(body),
-		});
-
-		if (!response.ok) {
-			const body = await response.json();
-			console.log(body);
-			throw new Error(`Failed to upload solution: ${response.statusText}`);
-		}
-	}
-
-	async publishSolution(solutionName: string, token: string): Promise<void> {
-		const body = {
-			ParameterXml: `<importexportxml><solutions><solution>${solutionName}</solution></solutions></importexportxml>`,
-		};
-
-		//@ts-expect-error cause i said so
-		const response = await fetch(this.publishApi, {
-			method: "POST",
-			headers: {
-				Authorization: `Bearer ${token}`,
-				"Content-Type": "application/json",
-				Accept: "application/json",
-			},
-			body: JSON.stringify(body),
-		});
-
-		if (!response.ok) {
-			throw new Error(`Failed to publish solution: ${response.statusText}`);
-		}
-	}
-
-
-	async listWebResourcesInSolution(
+	public async listWebResourcesInSolution(
 		solutionUniqueName: string,
 		token: string
 	): Promise<IWebResource[]> {
@@ -159,7 +112,8 @@ export class DataverseClient {
 			return [];
 		}
 	}
-	async listCustomControlsInSolution(
+
+	public async listCustomControlsInSolution(
 		solutionUniqueName: string,
 		token: string
 	): Promise<ICustomControl[]> {
@@ -221,7 +175,7 @@ export class DataverseClient {
 		}
 	}
 
-	async uploadJavaScriptFile(
+	public async uploadJavaScriptFile(
 		filePath: string,
 		name: string,
 		solutionName: string,
@@ -267,7 +221,64 @@ export class DataverseClient {
 		}
 	}
 
-	async getSolution(uniqueName: string, token: string): Promise<ISolution | null> {
+	private async uploadSolution(solutionPath: string, token: string): Promise<[boolean, string | null]> {
+		const fileBuffer = await fs.readFile(solutionPath);
+		const base64Content = fileBuffer.toString('base64');
+		const importJobId = crypto.randomUUID();
+
+		const body = {
+			ImportJobId: importJobId,
+			OverwriteUnmanagedCustomizations: true,
+			PublishWorkflows: true,
+			CustomizationFile: base64Content,
+		};
+
+		//@ts-expect-error cause i said so
+		const response = await fetch(this.importSolutionApi, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+				Accept: "application/json",
+			},
+			body: JSON.stringify(body),
+		});
+
+		if (!response.ok) {
+			const body = await response.json();
+			console.log(body);
+			return [false, `Failed to upload solution: ${response.statusText}`];
+		}
+
+		return [true, null]
+	}
+
+	private async publishSolution(solutionName: string, token: string): Promise<[boolean, string | null]> {
+		const body = {
+			ParameterXml: `<importexportxml><solutions><solution>${solutionName}</solution></solutions></importexportxml>`,
+		};
+
+		//@ts-expect-error cause i said so
+		const response = await fetch(this.publishApi, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+				Accept: "application/json",
+			},
+			body: JSON.stringify(body),
+		});
+
+		if (!response.ok) {
+			const data = response.json();
+			console.log(data);
+			return [false, `Failed to publish solution: ${response.statusText}`];
+		}
+
+		return [true, null];
+	}
+
+	private async getSolution(uniqueName: string, token: string): Promise<ISolution | null> {
 		//@ts-expect-error cause i said so
 		const response = await fetch(`${this.solutionApi}?$filter=uniquename eq '${uniqueName}'`, {
 			method: "GET",
@@ -282,7 +293,7 @@ export class DataverseClient {
 		return data.value.length > 0 ? data.value[0] : null;
 	}
 
-	async getWebResource(name: string, token: string): Promise<any | null> {
+	private async getWebResource(name: string, token: string): Promise<any | null> {
 		//@ts-expect-error cause i said so
 		const response = await fetch(`${this.webResourcesApi}?$filter=name eq '${name}'`, {
 			method: "GET",
@@ -297,7 +308,7 @@ export class DataverseClient {
 		return data.value.length > 0 ? data.value[0] : null;
 	}
 
-	async createWebResource(name: string, base64Content: string, token: string): Promise<void> {
+	private async createWebResource(name: string, base64Content: string, token: string): Promise<void> {
 		const body = {
 			name: name,
 			displayname: name,
@@ -321,7 +332,7 @@ export class DataverseClient {
 		}
 	}
 
-	async updateWebResource(webResourceId: string, base64Content: string, token: string) {
+	private async updateWebResource(webResourceId: string, base64Content: string, token: string) {
 		const body = {
 			content: base64Content,
 		};
@@ -342,7 +353,7 @@ export class DataverseClient {
 		}
 	}
 
-	async addToSolution(webResourceId: string, solutionName: string, token: string) {
+	private async addToSolution(webResourceId: string, solutionName: string, token: string) {
 		const body = {
 			ComponentId: webResourceId,
 			ComponentType: 61, // Web Resource
@@ -366,7 +377,7 @@ export class DataverseClient {
 		}
 	}
 
-	async publishWebResource(webResourceId: string, token: string) {
+	private async publishWebResource(webResourceId: string, token: string) {
 		const body = {
 			ParameterXml: `<importexportxml><webresources><webresource>${webResourceId}</webresource></webresources></importexportxml>`,
 		};
@@ -387,7 +398,7 @@ export class DataverseClient {
 		}
 	}
 
-	async getOAuthToken(): Promise<string | null> {
+	public async getOAuthToken(): Promise<string | null> {
 		const cachedToken = await this.loadCachedToken();
 		if (cachedToken && cachedToken.expires_at > Date.now() + 60_000) {
 			console.log("Using cached token.");
@@ -430,7 +441,7 @@ export class DataverseClient {
 		}
 	}
 
-	async loadCachedToken(): Promise<OAuthTokenResponse | null> {
+	private async loadCachedToken(): Promise<OAuthTokenResponse | null> {
 		const tokenCachePath = await BambooManager.getTokenCacheFilePath();
 
 		try {
@@ -441,8 +452,7 @@ export class DataverseClient {
 		}
 	}
 
-
-	async saveCachedToken(token: OAuthTokenResponse): Promise<void> {
+	private async saveCachedToken(token: OAuthTokenResponse): Promise<void> {
 		const tokenCachePath = await BambooManager.getTokenCacheFilePath();
 
 		try {
@@ -451,5 +461,4 @@ export class DataverseClient {
 			console.error("Failed to write token cache:", error);
 		}
 	}
-
 }
