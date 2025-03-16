@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { BambooConfig, CredentialType } from './BambooConfig';
+import { BambooConfig, CredentialType, CustomControlMapping } from './BambooConfig';
 import path from 'path';
 import { IWebResource } from '../../dataverse/IWebResource';
 import { showErrorMessage, showMessage, showTemporaryMessage } from '../../log/message';
@@ -104,6 +104,7 @@ export class BambooManager {
 			baseUrl: rawData.baseUrl,
 			solutionUniqueName: rawData.solutionUniqueName,
 			webResources: rawData.webResources,
+			customControls: rawData.customControls,
 			credential: {
 				...rawData.credential,
 				type: credentialTypeMap[rawData.credential.type] ?? CredentialType.ClientSecret,
@@ -227,7 +228,6 @@ export class BambooManager {
 		return wrs;
 	}
 
-
 	public async syncCurrentFile(currentWorkspacePath: string, filePath: string): Promise<void> {
 		const config = await this.getConfig();
 
@@ -264,5 +264,27 @@ export class BambooManager {
 		);
 
 		showTemporaryMessage(response);
+	}
+	public async syncCustomControl(currentWorkspacePath: string, customControl: CustomControlMapping): Promise<void> {
+		const config = await this.getConfig();
+
+		if (!config) {
+			return;
+		}
+
+		const token = await this.getToken();
+
+		if (token === null) {
+			return;
+		}
+
+		const fullPath = currentWorkspacePath + "/" + customControl.relativePathOnDiskToSolution;
+		const fixedPath = fullPath.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
+		const normalizedPath = path.normalize(fixedPath);
+
+		await this.client.syncSolution(
+			customControl.solutionName, 
+			normalizedPath,
+			token);
 	}
 }

@@ -60,6 +60,11 @@
 				"category": "Bamboo"
 			},
 			{
+				"command": "bamboo.syncCustomControl",
+				"title": "Sync a Custom Control.",
+				"category": "Bamboo"
+			},
+			{
 				"command": "bamboo.componentTree.refreshEntry",
 				"title": "Refresh",
 				"icon": {

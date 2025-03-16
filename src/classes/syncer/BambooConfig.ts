@@ -3,6 +3,7 @@ export interface BambooConfig {
     solutionUniqueName: string;
     credential: Credential;
     webResources: WebResourceMapping[];
+    customControls: CustomControlMapping[];
 }
 
 export enum CredentialType {
@@ -20,4 +21,10 @@ export interface Credential {
 export interface WebResourceMapping {
     dataverseName: string;
     relativePathOnDisk: string;
+}
+
+export interface CustomControlMapping {
+    dataverseName: string;
+    relativePathOnDiskToSolution: string;
+    solutionName: string;
 }

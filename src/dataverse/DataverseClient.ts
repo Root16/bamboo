@@ -5,22 +5,92 @@ import jwt from "jsonwebtoken";
 import { OAuthTokenResponse } from "./IOAuthtokenResponse";
 import { IWebResource } from "./IWebResource";
 import { ISolution } from "./ISolution";
-import { showMessageWithProgress, showTemporaryMessage } from "../log/message";
+import { showErrorMessage, showMessage, showMessageWithProgress, showTemporaryMessage } from "../log/message";
 import { BambooConfig } from "../classes/syncer/BambooConfig";
 import { ICustomControl } from "./ICustomControl";
+import * as crypto from 'crypto'; 
 
 export class DataverseClient {
 	private webResourcesApi: string;
 	private solutionApi: string;
-	private solutionsApi: string;
+	private addSolutionComponentApi: string;
 	private publishApi: string;
+	private importSolutionApi: string;
 
 	constructor(private config: BambooConfig) {
 		this.webResourcesApi = `${this.config.baseUrl}/api/data/v9.2/webresourceset`;
 		this.solutionApi = `${this.config.baseUrl}/api/data/v9.2/solutions`;
-		this.solutionsApi = `${this.config.baseUrl}/api/data/v9.2/AddSolutionComponent`;
+		this.addSolutionComponentApi = `${this.config.baseUrl}/api/data/v9.2/AddSolutionComponent`;
 		this.publishApi = `${this.config.baseUrl}/api/data/v9.2/PublishXml`;
+		this.importSolutionApi = `${this.config.baseUrl}/api/data/v9.0/ImportSolution`;
 	}
+
+	async syncSolution(solutionName: string, solutionPath: string, token: string): Promise<void> {
+		try {
+			showTemporaryMessage(`Uploading solution: ${path.basename(solutionPath)}`, 3000);
+			await this.uploadSolution(solutionPath, token);
+			showTemporaryMessage(`Uploaded solution successfully: ${path.basename(solutionPath)}`);
+
+			showTemporaryMessage(`Publishing solution: ${path.basename(solutionPath)}`, 3000);
+			await this.publishSolution(solutionName, token);
+			showTemporaryMessage(`Published solution successfully: ${path.basename(solutionPath)}`);
+		} catch (error) {
+			showErrorMessage(`Unable to upload solution: ${solutionName}`);
+		}
+	}
+
+	async uploadSolution(solutionPath: string, token: string): Promise<void> {
+		const fileBuffer = await fs.readFile(solutionPath);
+		const base64Content = fileBuffer.toString('base64');
+		const importJobId = crypto.randomUUID();
+
+		const body = {
+			ImportJobId: importJobId,
+			OverwriteUnmanagedCustomizations: true,
+			PublishWorkflows: true,
+			CustomizationFile: base64Content,
+		};
+
+		//@ts-expect-error cause i said so
+		const response = await fetch(this.importSolutionApi, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+				Accept: "application/json",
+			},
+			body: JSON.stringify(body),
+		});
+
+		if (!response.ok) {
+			const body = await response.json();
+			console.log(body);
+			throw new Error(`Failed to upload solution: ${response.statusText}`);
+		}
+	}
+
+	async publishSolution(solutionName: string, token: string): Promise<void> {
+		const body = {
+			ParameterXml: `<importexportxml><solutions><solution>${solutionName}</solution></solutions></importexportxml>`,
+		};
+
+		//@ts-expect-error cause i said so
+		const response = await fetch(this.publishApi, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+				Accept: "application/json",
+			},
+			body: JSON.stringify(body),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Failed to publish solution: ${response.statusText}`);
+		}
+	}
+
+
 	async listWebResourcesInSolution(
 		solutionUniqueName: string,
 		token: string
@@ -143,7 +213,6 @@ export class DataverseClient {
 			return [];
 		}
 	}
-
 
 	async uploadJavaScriptFile(
 		filePath: string,
@@ -273,7 +342,7 @@ export class DataverseClient {
 		};
 
 		//@ts-expect-error cause i said so
-		const response = await fetch(this.solutionsApi, {
+		const response = await fetch(this.addSolutionComponentApi, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${token}`,
