@@ -37,7 +37,8 @@ This extension provides the following features inside VS Code:
         {
             "dataverseName": "new_/forms/contact.js",
             "relativePathOnDisk": "path/to/new_/forms/contact.js"
-        }
+        },
+        ...
     ],
     "customControls": [
         {
@@ -49,7 +50,8 @@ This extension provides the following features inside VS Code:
             "dataverseName": "new_NEW.ControlTwo",
             "relativePathOnDiskToSolution": "path/to/ControlTwoSolution.zip",
             "solutionName": "ControlTwoSolution"
-        }
+        },
+        ...
     ]
 }
 ```
@@ -73,17 +75,39 @@ This extension provides the following features inside VS Code:
 
 ## Usage
 
+| Command | Title 
+|---------|-------|
+| `bamboo.syncCurrentFile` | Sync current file. (Must be present on conf.) |  
+| `bamboo.syncAllFiles` | Sync all files. (Each file present in the conf.) | 
+| `bamboo.syncCustomControl` | Sync a Custom Control. (Opens up a choice dropdown for each control specified in the conf.) | 
+
+- All command can be run in the command pallette
+![Command Pallette](./images/command_palette.png)
+
+
 ## Token Refresh + Cache
+- Bamboo can use the previously cached token to speed up initial load times.
+- Add the file: `<vscode-workspace>/bamboo_tokens/tokenCache.json` and then restart VS Code.
 
 ## Extension Settings
 
-| Setting Name                             | Description |
-|------------------------------------------|-------------|
-| `bamboo.createWebResource.updateIfExists` | When creating a WebResource, override its contents if it already exists. |
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `bamboo.general.messageVerbosity` | `string` | `"low"` | Set the verbosity level of how many messages are displayed. |
+| `bamboo.general.listSolutionComponentsOnStartup` | `boolean` | `false` | When the extension is loaded, list all supported solution components in the currently selected solution in a tree view. |
+| `bamboo.webResource.publishAfterSync` | `boolean` | `true` | When syncing a web resource, publish after a successful upload. |
+| `bamboo.customControl.publishAfterSync` | `boolean` | `true` | When syncing a custom control solution, publish after a successful upload. |
+
 
 ## Feature List
 
-- [ ] Foo
+- [X] Upload / create web resources
+- [X] List Web Resources in tree view 
+- [X] List Custom Controls in tree view 
+- [X] Upload Custom Controls via Solution Import 
+- [ ] Upload Custom Controls via PAC or individual import 
+- [ ] Manage upload / sync from context of tree view
+- [ ] Sync data from Power Apps to local files
 
 ## License
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
