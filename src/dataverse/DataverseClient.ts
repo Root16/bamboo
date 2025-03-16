@@ -153,7 +153,7 @@ export class DataverseClient {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to fetch custom controls: ${response.statusText}`);
+				return [false, `Failed to fetch custom controls: ${response.statusText}`];
 			}
 
 			const data = await response.json();
@@ -178,7 +178,7 @@ export class DataverseClient {
 		name: string,
 		solutionName: string,
 		token: string
-	) {
+	): Promise<[boolean, string | null]> {
 		try {
 			const normalizedPath = path.normalize(filePath);
 			const content = await fs.readFile(normalizedPath, "utf-8");
@@ -191,31 +191,36 @@ export class DataverseClient {
 			if (existingResource) {
 				showTemporaryMessage(`Updating existing web resource: ${name}`, 3000);
 				webResourceId = existingResource.webresourceid;
-				await this.updateWebResource(webResourceId, base64Content, token);
+				const [updateSuccess, updateErrorMessage] = await this.updateWebResource(webResourceId, base64Content, token);
+				if (!updateSuccess) return [updateSuccess, updateErrorMessage];
 			} else {
 				showTemporaryMessage(`Creating new web resource: ${name}`, 3000);
 
-				await this.createWebResource(name, base64Content, token);
+				const [createSuccess, createErrorMessage] = await this.createWebResource(name, base64Content, token);
+
+				if (!createSuccess) return [createSuccess, createErrorMessage];
 
 				const existingResource = await this.getWebResource(name, token);
 				webResourceId = existingResource.webresourceid;
 			}
 
 			showTemporaryMessage(`Adding Web Resource to solution: ${solutionName}`, 3000);
-			await this.addToSolution(webResourceId, solutionName, token);
+			const [addSuccess, addErrorMessage] = await this.addToSolution(webResourceId, solutionName, token);
+			if (!addSuccess) return [addSuccess, addErrorMessage];
 
 			const publish = vscode.workspace.getConfiguration().get<boolean>(
 				"bamboo.webResource.publishAfterSync");
 
 			if (publish) {
 				showTemporaryMessage(`Publishing Web Resource: ${name}`, 3000);
-				await this.publishWebResource(webResourceId, token);
+				const [publishSuccess, publishErrorMessage] = await this.publishWebResource(webResourceId, token);
+				if (!publishSuccess) return [publishSuccess, publishErrorMessage];
 			}
 
-			return `Sync of file ${name} completed successfully.`;
+			return [true, null];
 		} catch (error) {
 			console.log(error);
-			return `Error uploading ${name}.`;
+			return [false, `Error uploading ${name}.`];
 		}
 	}
 
@@ -306,7 +311,7 @@ export class DataverseClient {
 		return data.value.length > 0 ? data.value[0] : null;
 	}
 
-	private async createWebResource(name: string, base64Content: string, token: string): Promise<void> {
+	private async createWebResource(name: string, base64Content: string, token: string): Promise<[boolean, string | null]> {
 		const body = {
 			name: name,
 			displayname: name,
@@ -326,11 +331,15 @@ export class DataverseClient {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Failed to create Web Resource: ${response.statusText}`);
+			const data = await response.json();
+			console.log(data);
+			return [false, `Failed to create Web Resource: ${response.statusText}`];
 		}
+
+		return [true, null];
 	}
 
-	private async updateWebResource(webResourceId: string, base64Content: string, token: string) {
+	private async updateWebResource(webResourceId: string, base64Content: string, token: string): Promise<[boolean, string | null]> {
 		const body = {
 			content: base64Content,
 		};
@@ -347,11 +356,15 @@ export class DataverseClient {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Failed to update Web Resource: ${response.statusText}`);
+			const data = await response.json();
+			console.log(data);
+			return [false, `Failed to update Web Resource: ${response.statusText}`];
 		}
+
+		return [true, null];
 	}
 
-	private async addToSolution(webResourceId: string, solutionName: string, token: string) {
+	private async addToSolution(webResourceId: string, solutionName: string, token: string): Promise<[boolean, string | null]> {
 		const body = {
 			ComponentId: webResourceId,
 			ComponentType: 61, // Web Resource
@@ -371,11 +384,15 @@ export class DataverseClient {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Failed to add Web Resource to solution: ${response.statusText}`);
+			const data = await response.json();
+			console.log(data);
+			return [false, `Failed to add Web Resource to solution: ${response.statusText}`];
 		}
+
+		return [true, null];
 	}
 
-	private async publishWebResource(webResourceId: string, token: string) {
+	private async publishWebResource(webResourceId: string, token: string): Promise<[boolean, string | null]> {
 		const body = {
 			ParameterXml: `<importexportxml><webresources><webresource>${webResourceId}</webresource></webresources></importexportxml>`,
 		};
@@ -392,8 +409,12 @@ export class DataverseClient {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Failed to publish Web Resource: ${response.statusText}`);
+			const data = await response.json();
+			console.log(data);
+			return [false, `Failed to publish Web Resource: ${response.statusText}`];
 		}
+
+		return [true, null];
 	}
 
 	public async getOAuthToken(): Promise<string | null> {
@@ -423,7 +444,8 @@ export class DataverseClient {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to fetch token: ${response.status} - ${response.statusText}`);
+				showErrorMessage(`Failed to fetch token: ${response.status} - ${response.statusText}`);
+				return null;
 			}
 
 			const data: OAuthTokenResponse = await response.json();
@@ -441,6 +463,8 @@ export class DataverseClient {
 
 	private async loadCachedToken(): Promise<OAuthTokenResponse | null> {
 		const tokenCachePath = await BambooManager.getTokenCacheFilePath();
+
+		if (tokenCachePath === null) return null;
 
 		try {
 			const fileContent = await fs.readFile(tokenCachePath, "utf-8");

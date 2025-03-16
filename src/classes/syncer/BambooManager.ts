@@ -19,7 +19,7 @@ export class BambooManager {
 	private static instance: BambooManager;
 
 	private constructor(private client: DataverseClient) {
-		
+
 	}
 
 	static async getInstance(): Promise<BambooManager | null> {
@@ -70,7 +70,8 @@ export class BambooManager {
 			const json: BambooConfig = BambooManager.parseBambooConfig(jsonString);
 			return json;
 		} catch (error) {
-			throw new Error(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
+			showErrorMessage(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
+			return null;
 		}
 	}
 	public static async getConfig(): Promise<BambooConfig | null> {
@@ -88,7 +89,8 @@ export class BambooManager {
 			const json: BambooConfig = BambooManager.parseBambooConfig(jsonString);
 			return json;
 		} catch (error) {
-			throw new Error(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
+			showErrorMessage(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
+			return null;
 		}
 	}
 
@@ -113,10 +115,11 @@ export class BambooManager {
 	}
 
 
-	public static async getTokenCacheFolderPath(): Promise<vscode.Uri> {
+	public static async getTokenCacheFolderPath(): Promise<vscode.Uri | null> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			throw new Error(BambooManager.ExceptionMessages.UndefinedWorkspace);
+			showErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace);
+			return null;
 		}
 
 		const workspacePath = currentWorkspaceFolders![0].uri.path;
@@ -126,17 +129,22 @@ export class BambooManager {
 		return tokenCacheFolder;
 	}
 
-	public static async getTokenCacheFilePath(): Promise<string> {
+	public static async getTokenCacheFilePath(): Promise<string | null> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			throw new Error(BambooManager.ExceptionMessages.UndefinedWorkspace);
+			showErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace);
+			return null;
 		}
 
 		const workspacePath = currentWorkspaceFolders![0].uri.path;
 
+		const tokenFileFolderPath = await BambooManager.getTokenCacheFolderPath()
+
+		if(tokenFileFolderPath === null) return null;
+
 		const cacheFile = path.join(
 			(
-				await BambooManager.getTokenCacheFolderPath()
+				tokenFileFolderPath
 			).path, "tokenCache.json");
 
 		//TODO
@@ -181,14 +189,19 @@ export class BambooManager {
 			let fixedPath = relativePathOnDisk.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
 			const normalizedPath = path.normalize(fixedPath);
 
-			const response = await this.client.uploadJavaScriptFile(
+			const [success, errorMessage] = await this.client.uploadJavaScriptFile(
 				normalizedPath,
 				wrMapping.dataverseName,
 				config.solutionUniqueName,
 				token
 			);
 
-			showTemporaryMessage(response);
+			if (!success) {
+				showErrorMessage(errorMessage!);
+				return;
+			}
+
+			showTemporaryMessage(`${wrMapping.dataverseName} synced successfully.`);
 		}
 	}
 
@@ -266,14 +279,19 @@ export class BambooManager {
 		const fixedPath = fullPath.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
 		const normalizedPath = path.normalize(fixedPath);
 
-		const response = await this.client.uploadJavaScriptFile(
+		const [success, errorMessage] = await this.client.uploadJavaScriptFile(
 			normalizedPath,
 			matchingFile.dataverseName,
 			config.solutionUniqueName,
 			token
 		);
 
-		showTemporaryMessage(response);
+		if (!success) {
+			showErrorMessage(errorMessage!);
+			return;
+		}
+
+		showTemporaryMessage(`${matchingFile.dataverseName} synced successfully.`);
 	}
 	public async syncCustomControl(currentWorkspacePath: string, customControl: CustomControlMapping): Promise<void> {
 		const config = await this.getConfig();
@@ -293,7 +311,7 @@ export class BambooManager {
 		const normalizedPath = path.normalize(fixedPath);
 
 		const [success, errorMessage] = await this.client.syncSolution(
-			customControl.solutionName, 
+			customControl.solutionName,
 			normalizedPath,
 			token);
 

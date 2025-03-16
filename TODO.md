@@ -11,7 +11,7 @@
 - [X] Progress report + step report
     - [X] Sync current file
     - [X] Sync all files
-- [ ] Dont throw exceptions anywhere in extension
+- [X] Dont throw exceptions anywhere in extension
 - [X] Make dataverseclient a class so not hard code base url
 - [X] Support custom controls
     - [X] Picker to choose which solution
