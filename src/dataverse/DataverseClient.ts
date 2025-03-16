@@ -116,12 +116,11 @@ export class DataverseClient {
 	public async listCustomControlsInSolution(
 		solutionUniqueName: string,
 		token: string
-	): Promise<ICustomControl[]> {
+	): Promise<[boolean, string | null, ICustomControl[]]> {
 		const solution = await this.getSolution(solutionUniqueName, token);
 
 		if (solution === null) {
-			console.log(`Can't find solution with name: ${solutionUniqueName}`);
-			return [];
+			return [false, `Can't find solution with name: ${solutionUniqueName}`, []];
 		}
 
 		const fetchXml = `
@@ -168,10 +167,9 @@ export class DataverseClient {
 				return cc;
 			});
 
-			return mapped;
+			return [true, null, mapped];
 		} catch (error) {
-			console.error("Error fetching custom controls:", error);
-			return [];
+			return [false, `Error fetching custom controls:, ${error}`, []]
 		}
 	}
 

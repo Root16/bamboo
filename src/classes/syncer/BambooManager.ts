@@ -228,9 +228,14 @@ export class BambooManager {
 			return [];
 		}
 
-		const wrs = await this.client.listCustomControlsInSolution(config.solutionUniqueName, token)
+		const [success, errorMessage, ctrls] = await this.client.listCustomControlsInSolution(config.solutionUniqueName, token)
 
-		return wrs;
+		if (!success) {
+			showErrorMessage(errorMessage!);
+			return [];
+		}
+
+		return ctrls;
 	}
 
 	public async syncCurrentFile(currentWorkspacePath: string, filePath: string): Promise<void> {
