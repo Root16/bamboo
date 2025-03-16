@@ -5,10 +5,10 @@
 - [ ] Choice on verbose logging
 - [X] Remove all old 'Web Resource Syncer' code
 - [X] File tree view for WRs 
-- [ ] Progress report + step report
-    - [ ] Sync current file
+- [X] Fix tests 
+- [X] Progress report + step report
+    - [X] Sync current file
     - [X] Sync all files
-- [ ] Test creating a new file
 - [ ] Dont throw exceptions anywhere in extension
 - [ ] Make dataverseclient a class so not hard code base url
 - [ ] Support custom controls

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { BambooConfig, CredentialType } from './BambooConfig';
 import path from 'path';
-import { getOAuthToken, listWebResourcesInSolution, uploadJavaScriptFile } from '../../dataverse/client';
 import { IWebResource } from '../../dataverse/IWebResource';
 import { showErrorMessage, showMessage, showTemporaryMessage } from '../../log/message';
+import { DataverseClient } from '../../dataverse/client';
 
 export class BambooManager {
 	public static workspaceConfigFileName: string = 'bamboo.conf.json';
@@ -18,12 +18,17 @@ export class BambooManager {
 
 	private static instance: BambooManager;
 
-	private constructor() {
+	private constructor(private client: DataverseClient) {
+		
 	}
 
-	static getInstance(): BambooManager {
+	static async getInstance(): Promise<BambooManager> {
 		if (!BambooManager.instance) {
-			BambooManager.instance = new BambooManager();
+			const config = await BambooManager.getConfig();
+
+			const client = new DataverseClient("foo")
+
+			BambooManager.instance = new BambooManager(client);
 		}
 		return BambooManager.instance;
 	}
@@ -58,13 +63,31 @@ export class BambooManager {
 		try {
 			const dataAsU8Array = await vscode.workspace.fs.readFile(packageJsonUri);
 			const jsonString = Buffer.from(dataAsU8Array).toString('utf8');
-			const json: BambooConfig = this.parseBambooConfig(jsonString);
+			const json: BambooConfig = BambooManager.parseBambooConfig(jsonString);
 			return json;
 		} catch (error) {
 			throw new Error(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
 		}
 	}
-	private parseBambooConfig(jsonString: string): BambooConfig {
+	public static async getConfig(): Promise<BambooConfig | null> {
+		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			vscode.window.showErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace);
+			return null;
+		}
+
+		const workspacePath = currentWorkspaceFolders![0].uri.path;
+		const packageJsonUri = vscode.Uri.file(workspacePath + '/' + BambooManager.workspaceConfigFileName);
+		try {
+			const dataAsU8Array = await vscode.workspace.fs.readFile(packageJsonUri);
+			const jsonString = Buffer.from(dataAsU8Array).toString('utf8');
+			const json: BambooConfig = BambooManager.parseBambooConfig(jsonString);
+			return json;
+		} catch (error) {
+			throw new Error(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
+		}
+	}
+	private static parseBambooConfig(jsonString: string): BambooConfig {
 		const rawData = JSON.parse(jsonString);
 
 		const credentialTypeMap: Record<string, CredentialType> = {
@@ -172,7 +195,7 @@ export class BambooManager {
 			return null;
 		}
 
-		const token = await getOAuthToken(
+		const token = await this.client.getOAuthToken(
 			bambooConfig.credential.clientId,
 			bambooConfig.credential.clientSecret,
 			bambooConfig.credential.tenantId,
@@ -204,7 +227,7 @@ export class BambooManager {
 			let fixedPath = relativePathOnDisk.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
 			const normalizedPath = path.normalize(fixedPath);
 
-			const response = await uploadJavaScriptFile(
+			const response = await this.client.uploadJavaScriptFile(
 				normalizedPath,
 				wrMapping.dataverseName,
 				config.solutionUniqueName,
@@ -228,7 +251,7 @@ export class BambooManager {
 			return [];
 		}
 
-		const wrs = await listWebResourcesInSolution(config.solutionUniqueName, token)
+		const wrs = await this.client.listWebResourcesInSolution(config.solutionUniqueName, token)
 
 		return wrs;
 	}
@@ -261,7 +284,7 @@ export class BambooManager {
 		const fixedPath = fullPath.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
 		const normalizedPath = path.normalize(fixedPath);
 
-		const response = await uploadJavaScriptFile(
+		const response = await this.client.uploadJavaScriptFile(
 			normalizedPath,
 			matchingFile.dataverseName,
 			config.solutionUniqueName,

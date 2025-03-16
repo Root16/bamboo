@@ -51,12 +51,12 @@
 		"commands": [
 			{
 				"command": "bamboo.syncCurrentFile",
-				"title": "Sync current open file with Power Apps",
+				"title": "Sync current file.",
 				"category": "Bamboo"
 			},
 			{
 				"command": "bamboo.syncAllFiles",
-				"title": "Sync all files with Power Apps.",
+				"title": "Sync all files.",
 				"category": "Bamboo"
 			},
 			{
