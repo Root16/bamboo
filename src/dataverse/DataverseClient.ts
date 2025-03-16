@@ -2,11 +2,10 @@ import * as vscode from 'vscode';
 import fs from "fs/promises";
 import * as path from "path";
 import { BambooManager } from "../classes/syncer/BambooManager";
-import jwt from "jsonwebtoken";
 import { OAuthTokenResponse } from "./IOAuthtokenResponse";
 import { IWebResource } from "./IWebResource";
 import { ISolution } from "./ISolution";
-import { showErrorMessage, showMessage, showMessageWithProgress, showTemporaryMessage } from "../log/message";
+import { logErrorMessage, showTemporaryMessage, VerboseSetting } from "../log/message";
 import { BambooConfig } from "../classes/syncer/BambooConfig";
 import { ICustomControl } from "./ICustomControl";
 import * as crypto from 'crypto';
@@ -444,7 +443,7 @@ export class DataverseClient {
 			});
 
 			if (!response.ok) {
-				showErrorMessage(`Failed to fetch token: ${response.status} - ${response.statusText}`);
+				logErrorMessage(`Failed to fetch token: ${response.status} - ${response.statusText}`, VerboseSetting.Low);
 				return null;
 			}
 
@@ -454,7 +453,7 @@ export class DataverseClient {
 
 			const [saveSuccess, saveError] = await this.saveCachedToken(data);
 
-			if (!saveSuccess) showErrorMessage(saveError!);
+			if (!saveSuccess) logErrorMessage(saveError!, VerboseSetting.High);
 
 			return data.access_token;
 		} catch (error) {

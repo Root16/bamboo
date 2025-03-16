@@ -29,7 +29,7 @@
 						"high"
 					],
 					"default": "low",
-					"description": "Set the verbosity level of messages shown in the UI."
+					"description": "Set the verbosity level of how many messages are diaplayed."
 				},
 				"bamboo.general.listSolutionComponentsOnStartup": {
 					"type": "boolean",

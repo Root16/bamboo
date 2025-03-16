@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { BambooConfig, CredentialType, CustomControlMapping } from './BambooConfig';
 import path from 'path';
 import { IWebResource } from '../../dataverse/IWebResource';
-import { showErrorMessage, showMessage, showTemporaryMessage } from '../../log/message';
+import { logErrorMessage, logMessage, showTemporaryMessage, VerboseSetting } from '../../log/message';
 import { DataverseClient } from '../../dataverse/DataverseClient';
 
 export class BambooManager {
@@ -40,7 +40,7 @@ export class BambooManager {
 	public async currentWorkspaceHasConfigFile(): Promise<boolean> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			vscode.window.showErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace);
+			logErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace, VerboseSetting.High);
 			return false;
 		}
 
@@ -50,7 +50,7 @@ export class BambooManager {
 			await vscode.workspace.fs.stat(vscode.Uri.file(workspacePath + '/' + BambooManager.workspaceConfigFileName));
 			return true;
 		} catch (error) {
-			vscode.window.showErrorMessage(BambooManager.ExceptionMessages.NoBambooConfig);
+			logErrorMessage(BambooManager.ExceptionMessages.NoBambooConfig, VerboseSetting.High);
 			return false;
 		}
 	}
@@ -70,7 +70,10 @@ export class BambooManager {
 			const json: BambooConfig = BambooManager.parseBambooConfig(jsonString);
 			return json;
 		} catch (error) {
-			showErrorMessage(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
+			logErrorMessage(
+				`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`,
+				VerboseSetting.High
+			);
 			return null;
 		}
 	}
@@ -89,7 +92,10 @@ export class BambooManager {
 			const json: BambooConfig = BambooManager.parseBambooConfig(jsonString);
 			return json;
 		} catch (error) {
-			showErrorMessage(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
+			logErrorMessage(
+				`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`,
+				VerboseSetting.High
+			);
 			return null;
 		}
 	}
@@ -118,7 +124,7 @@ export class BambooManager {
 	public static async getTokenCacheFolderPath(): Promise<vscode.Uri | null> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			showErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace);
+			logErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace, VerboseSetting.High);
 			return null;
 		}
 
@@ -132,7 +138,7 @@ export class BambooManager {
 	public static async getTokenCacheFilePath(): Promise<string | null> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			showErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace);
+			logErrorMessage(BambooManager.ExceptionMessages.UndefinedWorkspace, VerboseSetting.High);
 			return null;
 		}
 
@@ -140,7 +146,7 @@ export class BambooManager {
 
 		const tokenFileFolderPath = await BambooManager.getTokenCacheFolderPath()
 
-		if(tokenFileFolderPath === null) return null;
+		if (tokenFileFolderPath === null) return null;
 
 		const cacheFile = path.join(
 			(
@@ -158,14 +164,14 @@ export class BambooManager {
 		const bambooConfig = await this.getConfig();
 
 		if (bambooConfig === null) {
-			vscode.window.showErrorMessage(BambooManager.ExceptionMessages.CantFindBambooConfig);
+			logErrorMessage(BambooManager.ExceptionMessages.CantFindBambooConfig, VerboseSetting.High);
 			return null;
 		}
 
 		const token = await this.client.getOAuthToken();
 
 		if (token === null) {
-			vscode.window.showErrorMessage(BambooManager.ExceptionMessages.UnableToAuthenticateToD365);
+			logErrorMessage(BambooManager.ExceptionMessages.UnableToAuthenticateToD365, VerboseSetting.High);
 			return null;
 		}
 
@@ -197,7 +203,7 @@ export class BambooManager {
 			);
 
 			if (!success) {
-				showErrorMessage(errorMessage!);
+				logErrorMessage(errorMessage!, VerboseSetting.Low);
 				return;
 			}
 
@@ -221,7 +227,7 @@ export class BambooManager {
 		const [success, errorMessage, wrs] = await this.client.listWebResourcesInSolution(config.solutionUniqueName, token)
 
 		if (!success) {
-			showErrorMessage(errorMessage!);
+			logErrorMessage(errorMessage!, VerboseSetting.Low);
 			return [];
 		}
 
@@ -244,7 +250,7 @@ export class BambooManager {
 		const [success, errorMessage, ctrls] = await this.client.listCustomControlsInSolution(config.solutionUniqueName, token)
 
 		if (!success) {
-			showErrorMessage(errorMessage!);
+			logErrorMessage(errorMessage!, VerboseSetting.Low);
 			return [];
 		}
 
@@ -269,7 +275,10 @@ export class BambooManager {
 		const matchingFiles = config.webResources.filter(w => w.relativePathOnDisk === relativePathOnDisk);
 
 		if (matchingFiles.length !== 1) {
-			showErrorMessage(`There are more than one or no files matching the relative path: ${relativePathOnDisk}.`);
+			logErrorMessage(
+				`There are more than one or no files matching the relative path: ${relativePathOnDisk}.`,
+				VerboseSetting.Low
+			);
 			return;
 		}
 
@@ -287,7 +296,7 @@ export class BambooManager {
 		);
 
 		if (!success) {
-			showErrorMessage(errorMessage!);
+			logErrorMessage(errorMessage!, VerboseSetting.Low);
 			return;
 		}
 
@@ -318,7 +327,7 @@ export class BambooManager {
 		if (success) {
 			showTemporaryMessage(`Synced control: ${customControl.dataverseName}.`);
 		} else {
-			showErrorMessage(errorMessage!);
+			logErrorMessage(errorMessage!, VerboseSetting.Low);
 		}
 	}
 }

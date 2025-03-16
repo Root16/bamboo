@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BambooManager } from './classes/syncer/BambooManager';
 import { SolutionComponentsProvider } from './classes/treeview/SolutionComponentProvider';
-import { showErrorMessage, showTemporaryMessage } from './log/message';
+import { logErrorMessage, showTemporaryMessage, VerboseSetting } from './log/message';
 import { CredentialType } from './classes/syncer/BambooConfig';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -22,7 +22,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	if (bambooConfig.credential.type !== CredentialType.ClientSecret) {
-		showErrorMessage(`Bamboo doesn't support credential type: ${bambooConfig.credential.type}`);
+		logErrorMessage(`Bamboo doesn't support credential type: ${bambooConfig.credential.type}`, VerboseSetting.Low);
 		return;
 	}
 
@@ -51,13 +51,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('bamboo.syncCurrentFile', async () => {
 		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo.`);
+			logErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo.`, VerboseSetting.High);
 			return;
 		}
 		const editor = vscode.window.activeTextEditor;
 
 		if (editor === undefined || editor === null) {
-			showErrorMessage(`You are not in the context of the editor.`);
+			logErrorMessage(`You are not in the context of the editor.`, VerboseSetting.High);
 			return;
 		}
 
@@ -71,7 +71,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('bamboo.syncAllFiles', async () => {
 		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
+			logErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`, VerboseSetting.High);
 			return;
 		}
 
@@ -83,7 +83,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('bamboo.syncCustomControl', async () => {
 		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
+			logErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`, VerboseSetting.High);
 			return;
 		}
 

@@ -81,6 +81,10 @@ This extension provides the following features inside VS Code:
 |------------------------------------------|-------------|
 | `bamboo.createWebResource.updateIfExists` | When creating a WebResource, override its contents if it already exists. |
 
+## Feature List
+
+- [ ] Foo
+
 ## License
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
 
