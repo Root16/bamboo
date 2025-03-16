@@ -22,11 +22,15 @@ export class BambooManager {
 		
 	}
 
-	static async getInstance(): Promise<BambooManager> {
+	static async getInstance(): Promise<BambooManager | null> {
 		if (!BambooManager.instance) {
 			const config = await BambooManager.getConfig();
 
-			const client = new DataverseClient("foo")
+			if (config === null) {
+				return null;
+			}
+
+			const client = new DataverseClient(config);
 
 			BambooManager.instance = new BambooManager(client);
 		}
@@ -87,6 +91,7 @@ export class BambooManager {
 			throw new Error(`Unable to open file ${workspacePath + '/' + BambooManager.workspaceConfigFileName}. Please make sure it exists.`);
 		}
 	}
+
 	private static parseBambooConfig(jsonString: string): BambooConfig {
 		const rawData = JSON.parse(jsonString);
 
@@ -96,6 +101,7 @@ export class BambooManager {
 		};
 
 		return {
+			baseUrl: rawData.baseUrl,
 			solutionUniqueName: rawData.solutionUniqueName,
 			webResources: rawData.webResources,
 			credential: {
@@ -127,8 +133,6 @@ export class BambooManager {
 
 		const workspacePath = currentWorkspaceFolders![0].uri.path;
 
-		const tokenCacheFolder = vscode.Uri.file(workspacePath + '/' + this.workspaceTokenCacheFolderName);
-
 		const cacheFile = path.join(
 			(
 				await BambooManager.getTokenCacheFolderPath()
@@ -140,52 +144,6 @@ export class BambooManager {
 		return normalizedPath;
 	}
 
-	// public static async getWRPathInPowerApps(pathToFileOnDisk: string): Promise<string | null> {
-	// 	const json: BambooConfig = await this.getConfig();
-
-	// 	const mapping = json.webResources.find(wr => wr.relativePathOnDisk === pathToFileOnDisk);
-
-	// 	return mapping ? mapping.dataverseName : null;
-	// }
-
-	// public static async getWRDiskPath(pathToFileInPowerApps: string): Promise<string | null> {
-	// 	const json: BambooConfig = await this.getConfig();
-
-	// 	const mapping = json.webResources.find(wr => wr.dataverseName === pathToFileInPowerApps);
-
-	// 	return mapping ? mapping.relativePathOnDisk : null;
-	// }
-
-	// public static async getSolution(): Promise<string> {
-	// 	const propertyName = 'solutionName';
-
-	// 	const json: BambooConfig = await this.getConfig();
-
-	// 	if (json.hasOwnProperty(propertyName)) {
-	// 		return json.solutionName;
-	// 	} else {
-	// 		vscode.window.showErrorMessage(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
-	// 		throw new Error(`No property named ${propertyName} in ${this.workspaceConfigFileName}`);
-	// 	}
-	// }
-
-	public static async saveWebResourceFileMapping(localPath: string, remotePath: string): Promise<void> {
-		// let config;
-		// try {
-		// 	config = await this.getConfigFile();
-		// }
-		// catch {
-		// 	vscode.window.showErrorMessage(`Unable to save file mapping. Please make sure ${this.workspaceConfigFileName} exists.`);
-		// 	return;
-		// }
-
-		// config = config || {};
-		// config.fileMappings = config.fileMappings || {};
-		// config.fileMappings[localPath] = remotePath;
-
-		// await this.overwriteConfigFile(config);
-	}
-
 
 	public async getToken(): Promise<string | null> {
 		const bambooConfig = await this.getConfig();
@@ -195,15 +153,10 @@ export class BambooManager {
 			return null;
 		}
 
-		const token = await this.client.getOAuthToken(
-			bambooConfig.credential.clientId,
-			bambooConfig.credential.clientSecret,
-			bambooConfig.credential.tenantId,
-			bambooConfig.credential.baseUrl,
-		);
+		const token = await this.client.getOAuthToken();
 
 		if (token === null) {
-			vscode.window.showErrorMessage(BambooManager.ExceptionMessages.CantFindBambooConfig);
+			vscode.window.showErrorMessage(BambooManager.ExceptionMessages.UnableToAuthenticateToD365);
 			return null;
 		}
 

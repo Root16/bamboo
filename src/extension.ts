@@ -7,6 +7,10 @@ import { CredentialType } from './classes/syncer/BambooConfig';
 export async function activate(context: vscode.ExtensionContext) {
 	const bambooManager = await BambooManager.getInstance();
 
+	if (bambooManager === null) {
+		return;
+	}
+
 	if (! await bambooManager.currentWorkspaceHasConfigFile()) {
 		return;
 	}

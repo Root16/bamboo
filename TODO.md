@@ -10,7 +10,7 @@
     - [X] Sync current file
     - [X] Sync all files
 - [ ] Dont throw exceptions anywhere in extension
-- [ ] Make dataverseclient a class so not hard code base url
+- [X] Make dataverseclient a class so not hard code base url
 - [ ] Support custom controls
     - [ ] Picker to choose which bundle.js (from file)
     - [ ] Show in tree view

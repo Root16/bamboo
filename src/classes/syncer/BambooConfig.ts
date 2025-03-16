@@ -1,4 +1,5 @@
 export interface BambooConfig {
+    baseUrl: string;
     solutionUniqueName: string;
     credential: Credential;
     webResources: WebResourceMapping[];

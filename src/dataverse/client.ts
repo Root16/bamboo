@@ -6,18 +6,19 @@ import { OAuthTokenResponse } from "./IOAuthtokenResponse";
 import { IWebResource } from "./IWebResource";
 import { ISolution } from "./ISolution";
 import { showMessageWithProgress, showTemporaryMessage } from "../log/message";
+import { BambooConfig } from "../classes/syncer/BambooConfig";
 
 export class DataverseClient {
-	private WEB_RESOURCES_API: string;
-	private SOLUTION_API: string;
-	private SOLUTIONS_API: string;
-	private PUBLISH_API: string;
+	private webResourcesApi: string;
+	private solutionApi: string;
+	private solutionsApi: string;
+	private publishApi: string;
 
-	constructor(private baseUrl: string) {
-		this.WEB_RESOURCES_API = `${baseUrl}/api/data/v9.2/webresourceset`;
-		this.SOLUTION_API = `${baseUrl}/api/data/v9.2/solutions`;
-		this.SOLUTIONS_API = `${baseUrl}/api/data/v9.2/AddSolutionComponent`;
-		this.PUBLISH_API = `${baseUrl}/api/data/v9.2/PublishXml`;
+	constructor(private config: BambooConfig) {
+		this.webResourcesApi = `${this.config.baseUrl}/api/data/v9.2/webresourceset`;
+		this.solutionApi = `${this.config.baseUrl}/api/data/v9.2/solutions`;
+		this.solutionsApi = `${this.config.baseUrl}/api/data/v9.2/AddSolutionComponent`;
+		this.publishApi = `${this.config.baseUrl}/api/data/v9.2/PublishXml`;
 	}
 	async listWebResourcesInSolution(
 		solutionUniqueName: string,
@@ -46,7 +47,7 @@ export class DataverseClient {
 	</fetch>
 	`.replace(/\s+/g, ' ').trim();
 
-		const solutionComponentUrl = `${this.baseUrl}/api/data/v9.2/solutioncomponents?fetchXml=${encodeURIComponent(fetchXml)}`;
+		const solutionComponentUrl = `${this.config.baseUrl}/api/data/v9.2/solutioncomponents?fetchXml=${encodeURIComponent(fetchXml)}`;
 
 		try {
 			//@ts-expect-error cause i said so
@@ -127,7 +128,7 @@ export class DataverseClient {
 
 	async getSolution(uniqueName: string, token: string): Promise<ISolution | null> {
 		//@ts-expect-error cause i said so
-		const response = await fetch(`${this.SOLUTION_API}?$filter=uniquename eq '${uniqueName}'`, {
+		const response = await fetch(`${this.solutionApi}?$filter=uniquename eq '${uniqueName}'`, {
 			method: "GET",
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -142,7 +143,7 @@ export class DataverseClient {
 
 	async getWebResource(name: string, token: string): Promise<any | null> {
 		//@ts-expect-error cause i said so
-		const response = await fetch(`${this.WEB_RESOURCES_API}?$filter=name eq '${name}'`, {
+		const response = await fetch(`${this.webResourcesApi}?$filter=name eq '${name}'`, {
 			method: "GET",
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -164,7 +165,7 @@ export class DataverseClient {
 		};
 
 		//@ts-expect-error cause i said so
-		const response = await fetch(this.WEB_RESOURCES_API, {
+		const response = await fetch(this.webResourcesApi, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -185,7 +186,7 @@ export class DataverseClient {
 		};
 
 		//@ts-expect-error cause i said so
-		const response = await fetch(`${this.WEB_RESOURCES_API}(${webResourceId})`, {
+		const response = await fetch(`${this.webResourcesApi}(${webResourceId})`, {
 			method: "PATCH",
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -209,7 +210,7 @@ export class DataverseClient {
 		};
 
 		//@ts-expect-error cause i said so
-		const response = await fetch(this.SOLUTIONS_API, {
+		const response = await fetch(this.solutionsApi, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -230,7 +231,7 @@ export class DataverseClient {
 		};
 
 		//@ts-expect-error cause i said so
-		const response = await fetch(this.PUBLISH_API, {
+		const response = await fetch(this.publishApi, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -245,12 +246,7 @@ export class DataverseClient {
 		}
 	}
 
-	async getOAuthToken(
-		clientId: string,
-		clientSecret: string,
-		tenantId: string,
-		baseUrl: string
-	): Promise<string | null> {
+	async getOAuthToken(): Promise<string | null> {
 		const cachedToken = await this.loadCachedToken();
 		if (cachedToken && cachedToken.expires_at > Date.now() + 60_000) {
 			console.log("Using cached token.");
@@ -258,11 +254,11 @@ export class DataverseClient {
 		}
 
 		console.log("Fetching new token...");
-		const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+		const tokenUrl = `https://login.microsoftonline.com/${this.config.credential.tenantId}/oauth2/v2.0/token`;
 		const params = new URLSearchParams({
-			client_id: clientId,
-			client_secret: clientSecret,
-			scope: `${baseUrl}/.default`,
+			client_id: this.config.credential.clientId,
+			client_secret: this.config.credential.clientSecret,
+			scope: `${this.config.baseUrl}/.default`,
 			grant_type: "client_credentials",
 		});
 
