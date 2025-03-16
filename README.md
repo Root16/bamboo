@@ -73,6 +73,8 @@ This extension provides the following features inside VS Code:
 
 ## Usage
 
+## Token Refresh + Cache
+
 ## Extension Settings
 
 | Setting Name                             | Description |

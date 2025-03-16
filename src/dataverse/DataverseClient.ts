@@ -153,7 +153,7 @@ export class DataverseClient {
 			});
 
 			if (!response.ok) {
-				return [false, `Failed to fetch custom controls: ${response.statusText}`];
+				return [false, `Failed to fetch custom controls: ${response.statusText}`, []];
 			}
 
 			const data = await response.json();
@@ -452,11 +452,13 @@ export class DataverseClient {
 
 			data.expires_at = Date.now() + data.expires_in * 1000;
 
-			await this.saveCachedToken(data);
+			const [saveSuccess, saveError] = await this.saveCachedToken(data);
+
+			if (!saveSuccess) showErrorMessage(saveError!);
 
 			return data.access_token;
 		} catch (error) {
-			console.error("Error fetching OAuth token:", error);
+			console.log("Error fetching OAuth token:", error);
 			return null;
 		}
 	}
@@ -474,13 +476,17 @@ export class DataverseClient {
 		}
 	}
 
-	private async saveCachedToken(token: OAuthTokenResponse): Promise<void> {
+	private async saveCachedToken(token: OAuthTokenResponse): Promise<[boolean, string | null]> {
 		const tokenCachePath = await BambooManager.getTokenCacheFilePath();
+
+		if (tokenCachePath === null) return [false, `Token cache path not found.`];
 
 		try {
 			await fs.writeFile(tokenCachePath, JSON.stringify(token, null, 2), "utf-8");
+			return [true, null];
 		} catch (error) {
-			console.error("Failed to write token cache:", error);
+			console.log(error);
+			return [false, `Failed to write token cache: ${error}`];
 		}
 	}
 }
