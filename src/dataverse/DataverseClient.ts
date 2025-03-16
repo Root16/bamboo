@@ -54,12 +54,11 @@ export class DataverseClient {
 	public async listWebResourcesInSolution(
 		solutionUniqueName: string,
 		token: string
-	): Promise<IWebResource[]> {
+	): Promise<[boolean, string | null, IWebResource[]]> {
 		const solution = await this.getSolution(solutionUniqueName, token);
 
 		if (solution === null) {
-			console.log(`Can't find solution with name: ${solutionUniqueName}`);
-			return [];
+			return [false, `Can't find solution with name: ${solutionUniqueName}`, []];
 		}
 
 		const fetchXml = `
@@ -92,7 +91,9 @@ export class DataverseClient {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to fetch web resources: ${response.statusText}`);
+				const data = await response.json();
+				console.log(data);
+				return [false, `Failed to fetch web resources: ${response.statusText}`, []]
 			}
 
 			const data = await response.json();
@@ -106,10 +107,9 @@ export class DataverseClient {
 				return wr;
 			});
 
-			return mapped;
+			return [true, null, mapped];
 		} catch (error) {
-			console.error("Error fetching web resources:", error);
-			return [];
+			return [false, `Error fetching web resources:, ${error}`, []]
 		}
 	}
 

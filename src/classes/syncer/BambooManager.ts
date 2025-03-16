@@ -205,7 +205,12 @@ export class BambooManager {
 			return [];
 		}
 
-		const wrs = await this.client.listWebResourcesInSolution(config.solutionUniqueName, token)
+		const [success, errorMessage, wrs] = await this.client.listWebResourcesInSolution(config.solutionUniqueName, token)
+
+		if (!success) {
+			showErrorMessage(errorMessage!);
+			return [];
+		}
 
 		return wrs;
 	}
