@@ -5,7 +5,7 @@ import { BambooManager } from "../classes/syncer/BambooManager";
 import { OAuthTokenResponse } from "./IOAuthtokenResponse";
 import { IWebResource } from "./IWebResource";
 import { ISolution } from "./ISolution";
-import { logErrorMessage, showTemporaryMessage, VerboseSetting } from "../log/message";
+import { logErrorMessage, logMessage, logMessageWithProgress, logTemporaryMessage, VerboseSetting } from "../log/message";
 import { BambooConfig } from "../classes/syncer/BambooConfig";
 import { ICustomControl } from "./ICustomControl";
 import * as crypto from 'crypto';
@@ -27,21 +27,24 @@ export class DataverseClient {
 
 	public async syncSolution(solutionName: string, solutionPath: string, token: string): Promise<[boolean, string | null]> {
 		try {
-			showTemporaryMessage(`Uploading solution: ${path.basename(solutionPath)}`, 3000);
-			const [uploadSuccess, uploadErrorMessage] = await this.uploadSolution(solutionPath, token);
+			const [uploadSuccess, uploadErrorMessage] = await logMessageWithProgress(`Uploading solution: ${path.basename(solutionPath)}`, () => {
+				return this.uploadSolution(solutionPath, token);
+			});
 
 			if (!uploadSuccess) [uploadSuccess, uploadErrorMessage];
-			showTemporaryMessage(`Uploaded solution successfully: ${path.basename(solutionPath)}`);
+
+			logTemporaryMessage(`Uploaded solution successfully: ${path.basename(solutionPath)}`, VerboseSetting.High);
 
 			const publish = vscode.workspace.getConfiguration().get<boolean>(
 				"bamboo.customControl.publishAfterSync");
 
 			if (publish) {
-				showTemporaryMessage(`Publishing solution: ${path.basename(solutionPath)}`, 3000);
-				const [publishSuccess, publishErrorMessage] = await this.publishSolution(solutionName, token);
+				const [publishSuccess, publishErrorMessage] = await logMessageWithProgress(`Publishing solution: ${path.basename(solutionPath)}`, () => {
+					return this.publishSolution(solutionName, token);
+				});
 
 				if (!publishSuccess) [publishSuccess, publishErrorMessage];
-				showTemporaryMessage(`Published solution successfully: ${path.basename(solutionPath)}`);
+				logTemporaryMessage(`Published solution successfully: ${path.basename(solutionPath)}`, VerboseSetting.High);
 			}
 
 			return [true, null];
@@ -183,19 +186,23 @@ export class DataverseClient {
 			const content = await fs.readFile(normalizedPath, "utf-8");
 			const base64Content = Buffer.from(content).toString("base64");
 
-			showTemporaryMessage(`Uploading web resource ${name}`, 3000);
-			const existingResource = await this.getWebResource(name, token);
+			const existingResource = await logMessageWithProgress(`Uploading web resource ${name}`, () => {
+				return this.getWebResource(name, token);
+			});
 
 			let webResourceId: string;
 			if (existingResource) {
-				showTemporaryMessage(`Updating existing web resource: ${name}`, 3000);
 				webResourceId = existingResource.webresourceid;
-				const [updateSuccess, updateErrorMessage] = await this.updateWebResource(webResourceId, base64Content, token);
+
+				const [updateSuccess, updateErrorMessage] = await logMessageWithProgress(`Updating existing web resource: ${name}`, () => {
+					return this.updateWebResource(webResourceId, base64Content, token);
+				});
+
 				if (!updateSuccess) return [updateSuccess, updateErrorMessage];
 			} else {
-				showTemporaryMessage(`Creating new web resource: ${name}`, 3000);
-
-				const [createSuccess, createErrorMessage] = await this.createWebResource(name, base64Content, token);
+				const [createSuccess, createErrorMessage] = await logMessageWithProgress(`Creating new web resource: ${name}`, () => {
+					return this.createWebResource(name, base64Content, token);
+				});
 
 				if (!createSuccess) return [createSuccess, createErrorMessage];
 
@@ -203,16 +210,20 @@ export class DataverseClient {
 				webResourceId = existingResource.webresourceid;
 			}
 
-			showTemporaryMessage(`Adding Web Resource to solution: ${solutionName}`, 3000);
-			const [addSuccess, addErrorMessage] = await this.addToSolution(webResourceId, solutionName, token);
+			const [addSuccess, addErrorMessage] = await logMessageWithProgress(`Adding Web Resource to solution: ${solutionName}`, () => {
+				return this.addToSolution(webResourceId, solutionName, token);
+			});
+			 
 			if (!addSuccess) return [addSuccess, addErrorMessage];
 
 			const publish = vscode.workspace.getConfiguration().get<boolean>(
 				"bamboo.webResource.publishAfterSync");
 
 			if (publish) {
-				showTemporaryMessage(`Publishing Web Resource: ${name}`, 3000);
-				const [publishSuccess, publishErrorMessage] = await this.publishWebResource(webResourceId, token);
+				const [publishSuccess, publishErrorMessage] = await logMessageWithProgress(`Publishing Web Resource: ${name}`, () => {
+					return this.publishWebResource(webResourceId, token);
+				});
+				 
 				if (!publishSuccess) return [publishSuccess, publishErrorMessage];
 			}
 

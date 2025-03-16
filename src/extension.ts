@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BambooManager } from './classes/syncer/BambooManager';
 import { SolutionComponentsProvider } from './classes/treeview/SolutionComponentProvider';
-import { logErrorMessage, showTemporaryMessage, VerboseSetting } from './log/message';
+import { logErrorMessage, logMessage, logMessageWithProgress, VerboseSetting } from './log/message';
 import { CredentialType } from './classes/syncer/BambooConfig';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -111,7 +111,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	showTemporaryMessage(`Bamboo initialized successfully.`);
+	//TODO
+	logMessage(`Bamboo initialized successfully.`, VerboseSetting.Low)
 }
 
 function deactivate() { }

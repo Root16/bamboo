@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { BambooConfig, CredentialType, CustomControlMapping } from './BambooConfig';
 import path from 'path';
 import { IWebResource } from '../../dataverse/IWebResource';
-import { logErrorMessage, logMessage, showTemporaryMessage, VerboseSetting } from '../../log/message';
+import { logErrorMessage, logMessage, logMessageWithProgress, logTemporaryMessage, VerboseSetting } from '../../log/message';
 import { DataverseClient } from '../../dataverse/DataverseClient';
 
 export class BambooManager {
@@ -207,7 +207,7 @@ export class BambooManager {
 				return;
 			}
 
-			showTemporaryMessage(`${wrMapping.dataverseName} synced successfully.`);
+			logTemporaryMessage(`${wrMapping.dataverseName} synced successfully.`, VerboseSetting.Low);
 		}
 	}
 
@@ -300,7 +300,7 @@ export class BambooManager {
 			return;
 		}
 
-		showTemporaryMessage(`${matchingFile.dataverseName} synced successfully.`);
+		logTemporaryMessage(`${matchingFile.dataverseName} synced successfully.`, VerboseSetting.Low);
 	}
 	public async syncCustomControl(currentWorkspacePath: string, customControl: CustomControlMapping): Promise<void> {
 		const config = await this.getConfig();
@@ -325,7 +325,7 @@ export class BambooManager {
 			token);
 
 		if (success) {
-			showTemporaryMessage(`Synced control: ${customControl.dataverseName}.`);
+			logTemporaryMessage(`Synced control: ${customControl.dataverseName}.`, VerboseSetting.Low);
 		} else {
 			logErrorMessage(errorMessage!, VerboseSetting.Low);
 		}

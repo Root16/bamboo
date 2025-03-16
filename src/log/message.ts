@@ -1,17 +1,53 @@
 import * as vscode from 'vscode';
 
-export function showTemporaryMessage(message: string, ms: number = 1000) {
+export function logTemporaryMessage(message: string, verboseSetting: VerboseSetting, ms: number = 2000) {
     console.log(message);
-    vscode.window.withProgress(
+
+    const verbosityPreference: "low" | "high" | undefined = vscode.workspace.getConfiguration().get<"low" | "high">("bamboo.general.messageVerbosity");
+
+    if (verboseSetting === VerboseSetting.Low && (
+        verbosityPreference === "low" ||
+        verbosityPreference === "high"
+    )) {
+        vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: message,
+                cancellable: false
+            },
+            async (progress) => {
+                return new Promise<void>((resolve) => {
+                    setTimeout(() => resolve(), ms);
+                });
+            }
+        );
+    } else if (verboseSetting === VerboseSetting.High && verbosityPreference === "high") {
+        vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: message,
+                cancellable: false
+            },
+            async (progress) => {
+                return new Promise<void>((resolve) => {
+                    setTimeout(() => resolve(), ms);
+                });
+            }
+        );
+    }
+}
+
+export async function logMessageWithProgress<T>(message: string, action: () => Promise<T>): Promise<T> {
+    console.log(message);
+    return vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
             title: message,
             cancellable: false
         },
-        async (progress) => {
-            return new Promise<void>((resolve) => {
-                setTimeout(() => resolve(), ms);
-            });
+        async () => {
+            const result = await action();
+            return result;
         }
     );
 }
