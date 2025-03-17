@@ -120,3 +120,4 @@ Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information
 - This project is intended to benefit the Power Platform community as well as Root16's internal developers. 
 - Contributions are most welcome.
 - *But*, issues, fixes and feature requests are **not** guaranteed.
+- **Use at your own risk: This software is provided "as is," without warranty of any kind, express or implied. Use it at your own discretion and responsibility.**
