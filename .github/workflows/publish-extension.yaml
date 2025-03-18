@@ -10,17 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version: 20
           registry-url: https://registry.npmjs.org/
 
-      - name: Install the dependencies
-        run: npm i
+      - name: Install dependencies
+        run: npm ci
 
       - name: Install vsce
-        run: npm i -g vsce
+        run: npm install -g @vscode/vsce
 
       - name: Publish to Visual Studio Marketplace
         run: vsce publish -p ${{ secrets.VSCE_PAT_JYB2 }}
@@ -35,9 +36,8 @@ jobs:
   #         node-version: 14
   #         registry-url: https://registry.npmjs.org/
 
-        
   #     - name: Install ovsx
   #       run: npm i -g ovsx
-        
+
   #     - name: Publish to Open VSX
   #       run: ovsx publish -p ${{ secrets.OPEN_VSX_TOKEN_PL }}
