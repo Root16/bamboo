@@ -25,19 +25,19 @@ jobs:
       - name: Publish to Visual Studio Marketplace
         run: vsce publish -p ${{ secrets.VSCE_PAT_JYB2 }}
 
-  publish-to-ovsx-marketplace:
-    runs-on: ubuntu-latest
+  # publish-to-ovsx-marketplace:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14
-          registry-url: https://registry.npmjs.org/
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: 14
+  #         registry-url: https://registry.npmjs.org/
 
         
-      - name: Install ovsx
-        run: npm i -g ovsx
+  #     - name: Install ovsx
+  #       run: npm i -g ovsx
         
-      - name: Publish to Open VSX
-        run: ovsx publish -p ${{ secrets.OPEN_VSX_TOKEN_PL }}
+  #     - name: Publish to Open VSX
+  #       run: ovsx publish -p ${{ secrets.OPEN_VSX_TOKEN_PL }}
