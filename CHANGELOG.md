@@ -38,3 +38,6 @@
 - Changes to file tree view
 - Changes to credential authentication + caching
 - Initial support for custom controls 
+
+## [0.3.1]
+- Path bug

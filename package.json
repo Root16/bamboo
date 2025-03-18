@@ -6,7 +6,7 @@
 		"url": "https://github.com/Root16/bamboo"
 	},
 	"description": "Enables users to create, update, and publish Web Resources and Custom Controls for Microsoft Power Platform — directly from VS Code.",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"icon": "resources/bamboo-green.png",
 	"engines": {
 		"vscode": "^1.73.0"

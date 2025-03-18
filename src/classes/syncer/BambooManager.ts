@@ -134,7 +134,6 @@ export class BambooManager {
 
 		return tokenCacheFolder;
 	}
-
 	public static async getTokenCacheFilePath(): Promise<string | null> {
 		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
@@ -142,23 +141,17 @@ export class BambooManager {
 			return null;
 		}
 
-		const workspacePath = currentWorkspaceFolders![0].uri.path;
-
-		const tokenFileFolderPath = await BambooManager.getTokenCacheFolderPath()
-
+		const tokenFileFolderPath = await BambooManager.getTokenCacheFolderPath();
 		if (tokenFileFolderPath === null) return null;
 
-		const cacheFile = path.join(
-			(
-				tokenFileFolderPath
-			).path, "tokenCache.json");
+		const tokenFileFolderPathStr = tokenFileFolderPath instanceof vscode.Uri ? tokenFileFolderPath.fsPath : tokenFileFolderPath;
 
-		//TODO
-		const normalizedPath = path.resolve(cacheFile).replace("\\c:", "");
+		const tokenCacheFilePath = path.join(tokenFileFolderPathStr, "tokenCache.json");
+
+		const normalizedPath = path.resolve(tokenCacheFilePath);
 
 		return normalizedPath;
 	}
-
 
 	public async getToken(): Promise<string | null> {
 		const bambooConfig = await this.getConfig();
