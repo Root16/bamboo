@@ -5,67 +5,76 @@
 	"repository": {
 		"url": "https://github.com/Root16/bamboo"
 	},
-	"description": "Allows users to create, update, and publish webresources on the Microsoft Power Platform straight from vscode",
-	"version": "0.2.3",
+	"description": "Enables users to create, update, and publish Web Resources and Custom Controls for Microsoft Power Platform — directly from VS Code.",
+	"version": "0.3.0",
 	"icon": "resources/bamboo-green.png",
 	"engines": {
-		"vscode": "^1.61.0"
+		"vscode": "^1.73.0"
 	},
 	"categories": [
 		"Other"
 	],
 	"main": "./out/extension.js",
 	"activationEvents": [
-		"onStartupFinished",
-		"onCommand:extension.doThing"
+		"onStartupFinished"
 	],
 	"contributes": {
 		"configuration": {
 			"title": "Bamboo",
 			"properties": {
-				"bamboo.createWebResource.updateIfExists": {
+				"bamboo.general.messageVerbosity": {
+					"type": "string",
+					"enum": [
+						"low",
+						"high"
+					],
+					"default": "low",
+					"description": "Set the verbosity level of how many messages are diaplayed."
+				},
+				"bamboo.general.listSolutionComponentsOnStartup": {
 					"type": "boolean",
 					"default": false,
-					"description": "When creating a WebResource, override it's contents if it already exists"
+					"description": "When the extension is loaded, list all supported solution components in the currently selected solution in a tree view."
 				},
-				"bamboo.createWebResource.askForName": {
-					"type": "boolean",
-					"default": false,
-					"description": "When creating a WebResource, manually enter the full name (path included) of the WebResource"
-				},
-				"bamboo.uploadWebResource.publishIfSuccessful": {
+				"bamboo.webResource.publishAfterSync": {
 					"type": "boolean",
 					"default": true,
-					"description": "When creating or updaing a WebResource, publish it."
+					"description": "When syncing a web resource, publish after a successful upload."
 				},
-				"bamboo.general.listFilesOnStartup": {
+				"bamboo.customControl.publishAfterSync": {
 					"type": "boolean",
-					"default": false,
-					"description": "When the extension is loaded, list all files in the currently selected solution in the tree explorer"
+					"default": true,
+					"description": "When syncing a custom control soution, publish after a successful upload."
 				}
 			}
 		},
 		"views": {
 			"explorer": [
 				{
-					"id": "webresourceTree",
-					"name": "WebResouces in Current Solution"
+					"icon": "resources/bamboo-green.png",
+					"id": "componentTree",
+					"name": "Components in Solution"
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "bamboo.updateFile",
-				"title": "Update webresource in Power Apps",
+				"command": "bamboo.syncCurrentFile",
+				"title": "Sync current file.",
 				"category": "Bamboo"
 			},
 			{
-				"command": "bamboo.createAndUploadFile",
-				"title": "Create and upload webresource to Power Apps",
+				"command": "bamboo.syncAllFiles",
+				"title": "Sync all files.",
 				"category": "Bamboo"
 			},
 			{
-				"command": "bamboo.webresourceTree.refreshEntry",
+				"command": "bamboo.syncCustomControl",
+				"title": "Sync a Custom Control.",
+				"category": "Bamboo"
+			},
+			{
+				"command": "bamboo.componentTree.refreshEntry",
 				"title": "Refresh",
 				"icon": {
 					"light": "resources/light/refresh.svg",
@@ -74,20 +83,11 @@
 			}
 		],
 		"menus": {
-			"explorer/context": [
-				{
-					"command": "bamboo.updateFile",
-					"group": "navigation"
-				},
-				{
-					"command": "bamboo.createAndUploadFile",
-					"group": "navigation"
-				}
-			],
+			"explorer/context": [],
 			"view/title": [
 				{
-					"command": "bamboo.webresourceTree.refreshEntry",
-					"when": "view == webresourceTree",
+					"command": "bamboo.componentTree.refreshEntry",
+					"when": "view == componentTree",
 					"group": "navigation"
 				}
 			]
@@ -103,16 +103,22 @@
 		"package": "vsce package"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.61.0",
 		"@types/glob": "^7.1.4",
+		"@types/jsonwebtoken": "^9.0.9",
 		"@types/mocha": "^9.0.0",
 		"@types/node": "14.x",
+		"@types/vscode": "^1.73.0",
 		"@typescript-eslint/eslint-plugin": "^4.31.1",
 		"@typescript-eslint/parser": "^4.31.1",
+		"@vscode/test-electron": "^2.4.1",
 		"eslint": "^7.32.0",
 		"glob": "^7.1.7",
 		"mocha": "^9.1.1",
-		"typescript": "^4.4.3",
-		"@vscode/test-electron": "^1.6.2"
+		"typescript": "^4.4.3"
+	},
+	"dependencies": {
+		"@azure/msal-node": "^3.2.3",
+		"jsonwebtoken": "^9.0.2",
+		"open": "^10.1.0"
 	}
 }

@@ -1,102 +1,117 @@
 import * as vscode from 'vscode';
-import { WebResourcesProvider } from './classes/treeview/WebResourcesProvider';
-import { WebResource } from './models/WebResource';
-import { WebResourceSyncerConfigurationManager } from './classes/syncer/WebResourceSyncerConfigurationManager';
-import WebResourceSyncer from './classes/syncer/WebResourceSyncer';
-
-const SYNCER_EXE_PATH = "/WebResource.Syncer/WebResource.Syncer/bin/Release/net6.0/win-x64/publish/WebResource.Syncer.exe";
-const EXTENSION_NAME = "bamboo";
+import { BambooManager } from './classes/syncer/BambooManager';
+import { SolutionComponentsProvider } from './classes/treeview/SolutionComponentProvider';
+import { logErrorMessage, logMessage, logMessageWithProgress, VerboseSetting } from './log/message';
+import { CredentialType } from './classes/syncer/BambooConfig';
 
 export async function activate(context: vscode.ExtensionContext) {
-	if (! await WebResourceSyncerConfigurationManager.currentWorkspaceHasConfigFile()) {
-		vscode.window.showErrorMessage(`There is no ${WebResourceSyncerConfigurationManager.workspaceConfigFileName} in the root of the current workspace! Please add one with the properties: 'connectionString' and 'solutionName', and then refresh the extension by running the command: '>Reload Window'`);
+	const bambooManager = await BambooManager.getInstance();
+
+	if (bambooManager === null) {
 		return;
 	}
 
-	let syncer = new WebResourceSyncer(context.extensionPath + SYNCER_EXE_PATH, await WebResourceSyncerConfigurationManager.getConnectionString());
+	if (! await bambooManager.currentWorkspaceHasConfigFile()) {
+		return;
+	}
+
+	const bambooConfig = await bambooManager.getConfig();
+
+	if (!bambooConfig) {
+		return;
+	}
+
+	if (bambooConfig.credential.type !== CredentialType.ClientSecret) {
+		logErrorMessage(`Bamboo doesn't support credential type: ${bambooConfig.credential.type}`, VerboseSetting.Low);
+		return;
+	}
 
 	//Always test connection on startup
-	let successfulAuthenticate = await syncer.testConnection();
-	if (!successfulAuthenticate) {
-		vscode.window.showErrorMessage("Unable to authenticate with the CRM instance. Please check your connection string.");
+	const token = await bambooManager.getToken();
+
+	if (token === null) {
 		return;
 	}
 
-	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listFilesOnStartup")) {
-		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
+	const webResourceProvider = new SolutionComponentsProvider(bambooManager);
 
-		const webResourceProvider = new WebResourcesProvider(solutionName, syncer);
+	vscode.window.registerTreeDataProvider(
+		`componentTree`,
+		webResourceProvider,
+	);
 
-		vscode.window.registerTreeDataProvider(
-			`webresourceTree`,
-			webResourceProvider,
-		);
+	vscode.commands.registerCommand('bamboo.componentTree.refreshEntry', async () =>
+		await webResourceProvider.refresh()
+	);
 
-		vscode.commands.registerCommand('bamboo.webresourceTree.refreshEntry', () =>
-			webResourceProvider.refresh()
-		);
+	if (vscode.workspace.getConfiguration().get<boolean>("bamboo.general.listSolutionComponentsOnStartup")) {
+		await webResourceProvider.refresh();
 	}
 
-	vscode.commands.registerCommand('bamboo.createAndUploadFile', async (resource: vscode.Uri) => {
-		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+	vscode.commands.registerCommand('bamboo.syncCurrentFile', async () => {
+		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
+			logErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo.`, VerboseSetting.High);
+			return;
 		}
-		let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+		const editor = vscode.window.activeTextEditor;
 
-		let localPath = resource.path.replace(currentWorkspacePath, "");
-
-		let possibleRemotePath = await WebResourceSyncerConfigurationManager.getWRPathInPowerApps(localPath);
-		let remotePath = possibleRemotePath;
-
-		if (
-			vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.askForName") &&
-			possibleRemotePath === null
-		) {
-			remotePath = localPath;
-			let userRequestedRemotePath = await vscode.window.showInputBox({
-				prompt: `Input the full name of the webresource. Cancel this dialog to use the relative path from ${WebResourceSyncerConfigurationManager.workspaceConfigFileName} instead.`,
-				placeHolder: "/my-webresources/forms/project.js"
-			});
-
-			if (userRequestedRemotePath !== undefined && userRequestedRemotePath !== "") {
-				userRequestedRemotePath = userRequestedRemotePath[0] === "/" ? userRequestedRemotePath : "/" + userRequestedRemotePath;
-				remotePath = userRequestedRemotePath;
-			}
-
-			await WebResourceSyncerConfigurationManager.saveWebResourceFileMapping(localPath, remotePath);
-		}
-		else if (possibleRemotePath === null) {
-			remotePath = localPath;
-			await WebResourceSyncerConfigurationManager.saveWebResourceFileMapping(localPath, remotePath);
+		if (editor === undefined || editor === null) {
+			logErrorMessage(`You are not in the context of the editor.`, VerboseSetting.High);
+			return;
 		}
 
-		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
+		const filePath = editor!.document.uri.path;
 
-		const updateIfExists = vscode.workspace.getConfiguration().get<boolean>("bamboo.createWebResource.updateIfExists");
+		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
 
-		await syncer.uploadFile(solutionName, resource.fsPath, remotePath!, updateIfExists);
+		await bambooManager.syncCurrentFile(currentWorkspacePath, filePath);
 	});
 
-	vscode.commands.registerCommand('bamboo.updateFile', async (resource: vscode.Uri) => {
-		let currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+	vscode.commands.registerCommand('bamboo.syncAllFiles', async () => {
+		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
 		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
-			vscode.window.showErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`);
-		}
-		let currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
-
-		let filePathInPowerApps = resource.path.replace(currentWorkspacePath, "");
-
-		const solutionName = await WebResourceSyncerConfigurationManager.getSolution();
-
-		const webResourceFileName = await WebResourceSyncerConfigurationManager.getWRPathInPowerApps(filePathInPowerApps);
-
-		if(webResourceFileName === null) {
-			throw new Error("File mapping not found in config file! Please either manually add the mapping to the config file, or create the webresource through this tool.");
+			logErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`, VerboseSetting.High);
+			return;
 		}
 
-		await syncer.uploadFile(solutionName, resource.fsPath, webResourceFileName, true);
+		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+
+		await bambooManager.syncAllFiles(currentWorkspacePath);
 	});
+
+	vscode.commands.registerCommand('bamboo.syncCustomControl', async () => {
+		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			logErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`, VerboseSetting.High);
+			return;
+		}
+
+		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+
+		const config = await bambooManager.getConfig();
+
+		if (config === null) {
+			return;
+		}
+
+		const items: vscode.QuickPickItem[] = config.customControls.map(c => {
+			return { label: c.dataverseName, description: c.relativePathOnDiskToSolution };
+		});
+
+		const selected = await vscode.window.showQuickPick(items, {
+			placeHolder: 'Select a Custom Control...',
+			canPickMany: false
+		});
+
+		if (selected) {
+			const selectedCustomConrol = config.customControls.filter(c => c.dataverseName === selected.label)![0];
+
+			await bambooManager.syncCustomControl(currentWorkspacePath, selectedCustomConrol);
+		}
+	});
+
+	logMessage(`Bamboo initialized successfully.`, VerboseSetting.Low)
 }
 
-export function deactivate() { }
+function deactivate() { }

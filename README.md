@@ -1,67 +1,141 @@
-# Bamboo
-Simple webresource management for the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/). Providing Dynamics365 developers the ability to edit and manage their webresources on a per-solution basis - all from within VS Code.
+# Bamboo <img src="./resources/bamboo-green.png" width="75" style="vertical-align: middle;">
 
-This extension provides the following features inside VS Code:
+Bamboo is a simple, friendly, and ⚡*blazingly*⚡ fast customization manager, designed to speed up development time on the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/).
 
-- Create or update webresources in PowerApps straight from VS Code.
-  - Assign and customize the webresource name
-  - Duplicate the resource's name from it's path on disk
-- Publish webresourecs automatically
-- List all webresources in a given solution in a VS Code tree view
+Currently supporting [web resources](https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/web-resources) and [custom controls](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/create-custom-controls-using-pcf), Bamboo provides a seamless experience for developers to edit and manage these solution components - all from within VS Code.
+
+## Features
+Bamboo provides the following features inside VS Code:
+
+- Create or update web resources.
+- Publish web resources automatically.
+- Add web resources to a solution automatically.
+- Manage custom controls (PCF components) through the import + publish of solutions.
+- List all web resources and custom controls in a given solution in a VS Code tree view.
+
+
+#### Component Tree
+![Component Tree](./images/component_tree.png)
+
+#### Commands
+![Command Palette](./images/command_palette.png)
 
 ## Getting Started
-- Install the extesion [here](https://marketplace.visualstudio.com/publishers/root16)
-- Add a `bamboo.conf.json` at the root of your project with the following parameters
+
+1. Install the extension [here](https://marketplace.visualstudio.com/publishers/root16).
+2. Add a `bamboo.conf.json` at the **root** of your VS Code workspace.
+    ![Example Project Strucutre](./images/project_structure.png)
+    - **Do not check `bamboo.conf.json` into source control.**
+3. Populate the json file with the following data:
+
 ```json
 {
-    ...
-    "solutionName": "<your-solution-name>",
-    "connectionString": "AuthType=OAuth;Url=https://<org>.crm.dynamics.com;Username=<username>;ClientId={<client-id>};LoginPrompt=Auto;RedirectUri=http://localhost;TokenCacheStorePath=C:\\Temp\\oauth-cache.txt;",
-    ...
+    "baseUrl": "https://<org>.crm.dynamics.com",
+    "solutionUniqueName": "<your-solution-name>",
+    "credential": {
+        "type": "ClientSecret",
+        "clientId": "<your-client-id>",
+        "clientSecret": "<your-client-secret>",
+        "tenantId": "<your-tenant-id>"
+    },
+    "webResources": [
+        {
+            "dataverseName": "new_/forms/account.js",
+            "relativePathOnDisk": "path/to/new_/forms/account.js"
+        },
+        {
+            "dataverseName": "new_/forms/contact.js",
+            "relativePathOnDisk": "path/to/new_/forms/contact.js"
+        },
+        ...
+    ],
+    "customControls": [
+        {
+            "dataverseName": "new_NEW.ControlOne",
+            "relativePathOnDiskToSolution": "path/to/ControlOneSolution.zip",
+            "solutionName": "ControlOneSolution"
+        },
+        {
+            "dataverseName": "new_NEW.ControlTwo",
+            "relativePathOnDiskToSolution": "path/to/ControlTwoSolution.zip",
+            "solutionName": "ControlTwoSolution"
+        },
+        ...
+    ]
 }
 ```
-- Open up the folder which holds your webresources in VS Code
 
+4. Reload VS Code
+    - *Everytime a configuration change is made to `bamboo.conf.json` VS Code needs to be re reloaded*
+
+### Authentication Methods Supported
+
+| Authentication Scheme | Currently Supported |
+|----------|----------|
+| Client Id / Client Secret    | ✅   |
+|  OAuth   | ❌   |
+
+
+## **Important Notes** 
+- All paths must use the `/` seperator.
+- `baseUrl` must *not* end with a `/`.
+- The [app registration](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory#confidential-client-app-registration) specified must have:
+    - Access to the specified Dataverse environment
+    - The appropiate Security Role necessary to:
+        - Upload solutions
+        - Publish solutions
+        - Upload web resources
+        - Publish web resources
+        - Add components to solutions
+- `relativePathOnDisk` and `relativePathOnDiskToSolution` must *not* start with a `/`.
+- For web resources, `dataverseName` and `relativePathOnDisk` don't *need* to be similar (as shown in the example), this is just encouraged for ease of development
 
 ## Usage
-#### Creating a WebResource
-- Right click on a item in the file tree you would like to create and select the command `Create and upload webresource to Power Apps`
-- Optionally input the name of the WebResource  
 
-#### Updating a WebResource
-- Right click on an item in the file tree you would like to update and select the command `Update webresource in Power Apps`
-- NOTE: this requires a mapping to be saved in `bamboo.conf.json`
+| Command | Title 
+|---------|-------|
+| `bamboo.syncCurrentFile` | Sync current file. (Must be present on conf.) |  
+| `bamboo.syncAllFiles` | Sync all files. (Each file present in the conf.) | 
+| `bamboo.syncCustomControl` | Sync a Custom Control. (Opens up a choice dropdown for each control specified in the conf.) | 
 
-## Usage in an Existing Solution
-- If using bamboo against a previously existing solution, as of release `0.2.0` the developer has to manually assign the mappings in `bamboo.conf.json`
-- For example, if the web resource is stored in Power Apps as `new_/my-webresources/forms/account.js`, the developer would define a mapping such as:
-```json
-{
-    ...
-    "fileMappings": {
-        "/path/from/bamboo.conf.json/on/disk/account.js": "/path/in/powerapps/account.js",
-    }
-    ...
-}
-```
-- **Note the '/' prefix on all paths**
+- All command can be run in the command palette.
 
-## Extension Settings 
 
-| Setting Name      | Description |
-| ----------- | ----------- |
-| bamboo.createWebResource.updateIfExists      | When creating a WebResource, override it's contents if it already exists       |
-| bamboo.createWebResource.askForName   | When creating a WebResource, manually enter the full name (path included) of the WebResource. If set to false, this webresource will be created with a path equal to the relative path on disk from the 'bamboo.conf.json' in the workspace           |
-| bamboo.uploadWebResource.publishIfSuccessful   | When creating or updaing a WebResource, publish the web resource if the write is successful        |
-| bamboo.general.listFilesOnStartup   | When the extension is loaded, list all files in the currently selected solution in the tree explorer        |
+## Token Refresh + Cache
+- Bamboo can use the previously cached token to speed up initial load times.
+- Add the file: `<vscode-workspace>/bamboo_tokens/tokenCache.json` and then restart VS Code.
+
+## Extension Settings
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `bamboo.general.messageVerbosity` | `string` | `"low"` | Set the verbosity level of how many messages are displayed. |
+| `bamboo.general.listSolutionComponentsOnStartup` | `boolean` | `false` | When the extension is loaded, list all supported solution components in the currently selected solution in a tree view. |
+| `bamboo.webResource.publishAfterSync` | `boolean` | `true` | When syncing a web resource, publish after a successful upload. |
+| `bamboo.customControl.publishAfterSync` | `boolean` | `true` | When syncing a custom control solution, publish after a successful upload. |
+
+
+## Feature List
+
+- [X] Upload / create web resources
+- [X] List Web Resources in tree view 
+- [X] List Custom Controls in tree view 
+- [X] Upload Custom Controls via Solution Import 
+- [ ] Upload Custom Controls via PAC or individual import 
+- [ ] Automatically add custom controls to solution 
+- [ ] Manage upload / sync from context of tree view
+- [ ] Sync data from Power Apps to local files
+- [ ] Plugin support
 
 ## License
-
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
+
 ## Contact
+- [Open an Issue](https://github.com/Root16/bamboo/issues/new)
+- [Project Link](https://github.com/Root16/bamboo)
 
-[Open an Issue](https://github.com/Root16/bamboo/issues/new)
-
-[Contact Us](https://root16.com/resources/contact-us/)
-
-[Project Link](https://github.com/Root16/bamboo)
+## Contributing
+- This project is intended to benefit the Power Platform community as well as Root16's internal developers. 
+- Contributions are most welcome.
+- *But*, issues, fixes and feature requests are **not** guaranteed.
+- **Use at your own risk: This software is provided "as is," without warranty of any kind, express or implied. Use it at your own discretion and responsibility.**
