@@ -1,6 +1,6 @@
 # Bamboo <img src="./resources/bamboo-green.png" width="75" style="vertical-align: middle;">
 
-Bamboo is a simple, friendly, and ⚡*blazingly*⚡ fast customization manager, designed to speed up development time on the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/).
+Bamboo is a simple, friendly, and ⚡*blazingly*⚡ fast customization manager, designed to speed up development time on the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/). 🚀
 
 Currently supporting [web resources](https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/web-resources) and [custom controls](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/create-custom-controls-using-pcf), Bamboo provides a seamless experience for developers to edit and manage these solution components - all from within VS Code.
 
@@ -24,7 +24,7 @@ Bamboo provides the following features inside VS Code:
 
 1. Install the extension [here](https://marketplace.visualstudio.com/publishers/root16).
 2. Add a `bamboo.conf.json` at the **root** of your VS Code workspace.
-    ![Example Project Strucutre](./images/project_structure.png)
+    - ![Example Project Strucutre](./images/project_structure.png)
     - **Do not check `bamboo.conf.json` into source control.**
 3. Populate the json file with the following data:
 
@@ -117,15 +117,15 @@ Bamboo provides the following features inside VS Code:
 
 ## Feature List
 
-- [X] Upload / create web resources
-- [X] List Web Resources in tree view 
-- [X] List Custom Controls in tree view 
-- [X] Upload Custom Controls via Solution Import 
-- [ ] Upload Custom Controls via PAC or individual import 
-- [ ] Automatically add custom controls to solution 
-- [ ] Manage upload / sync from context of tree view
-- [ ] Sync data from Power Apps to local files
-- [ ] Plugin support
+- [✅] Upload / create web resources
+- [✅] List Web Resources in tree view 
+- [✅] List Custom Controls in tree view 
+- [✅] Upload Custom Controls via Solution Import 
+- [❌] Upload Custom Controls via PAC or individual import 
+- [❌] Automatically add custom controls to solution 
+- [❌] Manage upload / sync from context of tree view
+- [❌] Sync data from Power Apps to local files
+- [❌] Plugin support
 
 ## License
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
