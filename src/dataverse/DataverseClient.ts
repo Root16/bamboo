@@ -15,6 +15,7 @@ export class DataverseClient {
 	private solutionApi: string;
 	private addSolutionComponentApi: string;
 	private publishApi: string;
+	private publishAllApi: string;
 	private importSolutionApi: string;
 
 	constructor(private config: BambooConfig) {
@@ -22,6 +23,7 @@ export class DataverseClient {
 		this.solutionApi = `${this.config.baseUrl}/api/data/v9.2/solutions`;
 		this.addSolutionComponentApi = `${this.config.baseUrl}/api/data/v9.2/AddSolutionComponent`;
 		this.publishApi = `${this.config.baseUrl}/api/data/v9.2/PublishXml`;
+		this.publishAllApi = `${this.config.baseUrl}/api/data/v9.0/PublishAllXml`;
 		this.importSolutionApi = `${this.config.baseUrl}/api/data/v9.0/ImportSolution`;
 	}
 
@@ -39,12 +41,12 @@ export class DataverseClient {
 				"bamboo.customControl.publishAfterSync");
 
 			if (publish) {
-				const [publishSuccess, publishErrorMessage] = await logMessageWithProgress(`Publishing solution: ${path.basename(solutionPath)}`, () => {
-					return this.publishSolution(solutionName, token);
+				const [publishSuccess, publishErrorMessage] = await logMessageWithProgress(`Publishing all.`, () => {
+					return this.publishAllCustomizations(token);
 				});
 
 				if (!publishSuccess) [publishSuccess, publishErrorMessage];
-				logTemporaryMessage(`Published solution successfully: ${path.basename(solutionPath)}`, VerboseSetting.High);
+				logTemporaryMessage(`Published all successfully.`, VerboseSetting.High);
 			}
 
 			return [true, null];
@@ -213,7 +215,7 @@ export class DataverseClient {
 			const [addSuccess, addErrorMessage] = await logMessageWithProgress(`Adding Web Resource to solution: ${solutionName}`, () => {
 				return this.addToSolution(webResourceId, solutionName, token);
 			});
-			 
+
 			if (!addSuccess) return [addSuccess, addErrorMessage];
 
 			const publish = vscode.workspace.getConfiguration().get<boolean>(
@@ -223,7 +225,7 @@ export class DataverseClient {
 				const [publishSuccess, publishErrorMessage] = await logMessageWithProgress(`Publishing Web Resource: ${name}`, () => {
 					return this.publishWebResource(webResourceId, token);
 				});
-				 
+
 				if (!publishSuccess) return [publishSuccess, publishErrorMessage];
 			}
 
@@ -283,13 +285,33 @@ export class DataverseClient {
 		});
 
 		if (!response.ok) {
-			const data = response.json();
+			const data = await response.json();
 			console.log(data);
 			return [false, `Failed to publish solution: ${response.statusText}`];
 		}
 
 		return [true, null];
 	}
+	private async publishAllCustomizations(token: string): Promise<[boolean, string | null]> {
+		//@ts-expect-error cause i said so
+		const response = await fetch(this.publishAllApi, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+				Accept: "application/json",
+			},
+		});
+
+		if (!response.ok) {
+			const data = await response.json();  
+			console.log(data);
+			return [false, `Failed to publish all customizations: ${response.statusText}`];
+		}
+
+		return [true, null];
+	}
+
 
 	private async getSolution(uniqueName: string, token: string): Promise<ISolution | null> {
 		//@ts-expect-error cause i said so
