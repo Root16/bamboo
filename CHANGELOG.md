@@ -41,3 +41,6 @@
 
 ## [0.3.1]
 - Path bug
+
+## [0.3.2]
+- Publish bug
