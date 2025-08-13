@@ -111,7 +111,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	logMessage(`Bamboo initialized successfully.`, VerboseSetting.Low)
+	logMessage(`Bamboo initialized successfully.`, VerboseSetting.High)
 }
 
 function deactivate() { }
