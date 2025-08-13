@@ -105,9 +105,9 @@ export async function activate(context: vscode.ExtensionContext) {
 		});
 
 		if (selected) {
-			const selectedCustomConrol = config.customControls.filter(c => c.dataverseName === selected.label)![0];
+			const selectedCustomControl = config.customControls.filter(c => c.dataverseName === selected.label)![0];
 
-			await bambooManager.syncCustomControl(currentWorkspacePath, selectedCustomConrol);
+			await bambooManager.syncCustomControl(currentWorkspacePath, selectedCustomControl);
 		}
 	});
 
