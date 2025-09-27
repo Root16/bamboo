@@ -54,30 +54,38 @@ export async function logMessageWithProgress<T>(message: string, action: () => P
 
 export function logMessage(message: string, verboseSetting: VerboseSetting) {
     console.log(message);
+    const verbosityPreference = vscode.workspace
+        .getConfiguration()
+        .get<"low" | "high">("bamboo.general.messageVerbosity");
 
-    const verbosityPreference: "low" | "high" | undefined = vscode.workspace.getConfiguration().get<"low" | "high">("bamboo.general.messageVerbosity");
+    let shouldShow = false;
 
-    if (verboseSetting === VerboseSetting.Low && (
-        verbosityPreference === "low" ||
-        verbosityPreference === "high"
-    )) {
-        vscode.window.showInformationMessage(message);
-    } else if (verboseSetting === VerboseSetting.High && verbosityPreference === "high") {
+    if (verboseSetting === VerboseSetting.Low) {
+        shouldShow = verbosityPreference === "low" || verbosityPreference === "high";
+    } else if (verboseSetting === VerboseSetting.High) {
+        shouldShow = verbosityPreference === "high";
+    }
+
+    if (shouldShow) {
         vscode.window.showInformationMessage(message);
     }
 }
 
 export function logErrorMessage(message: string, verboseSetting: VerboseSetting) {
-    console.error(message);
+    console.log(message);
+    const verbosityPreference = vscode.workspace
+        .getConfiguration()
+        .get<"low" | "high">("bamboo.general.messageVerbosity");
 
-    const verbosityPreference: "low" | "high" | undefined = vscode.workspace.getConfiguration().get<"low" | "high">("bamboo.general.messageVerbosity");
+    let shouldShow = false;
 
-    if (verboseSetting === VerboseSetting.Low && (
-        verbosityPreference === "low" ||
-        verbosityPreference === "high"
-    )) {
-        vscode.window.showErrorMessage(message);
-    } else if (verboseSetting === VerboseSetting.High && verbosityPreference === "high") {
+    if (verboseSetting === VerboseSetting.Low) {
+        shouldShow = verbosityPreference === "low" || verbosityPreference === "high";
+    } else if (verboseSetting === VerboseSetting.High) {
+        shouldShow = verbosityPreference === "high";
+    }
+
+    if (shouldShow) {
         vscode.window.showErrorMessage(message);
     }
 }

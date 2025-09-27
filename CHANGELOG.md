@@ -44,3 +44,7 @@
 
 ## [0.3.2]
 - Publish bug
+
+## [0.3.3]
+- Load / error messages controlled via verbosity setting 
+- Update internal fspath handling
