@@ -61,11 +61,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		const filePath = editor!.document.uri.path;
+		const currentOpenFile = editor!.document;
 
-		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+		const currentWorkspace = currentWorkspaceFolders![0];
 
-		await bambooManager.syncCurrentFile(currentWorkspacePath, filePath);
+		await bambooManager.syncCurrentFile(currentWorkspace, currentOpenFile);
 	});
 
 	vscode.commands.registerCommand('bamboo.syncAllFiles', async () => {
@@ -87,7 +87,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		const currentWorkspacePath = currentWorkspaceFolders![0].uri.path;
+		const currentWorkspacePath = currentWorkspaceFolders![0];
 
 		const config = await bambooManager.getConfig();
 

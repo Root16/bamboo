@@ -250,22 +250,36 @@ export class BambooManager {
 		return ctrls;
 	}
 
-	public async syncCurrentFile(currentWorkspacePath: string, filePath: string): Promise<void> {
+	public async syncCurrentFile(
+		currentWorkspace: vscode.WorkspaceFolder,
+		currentOpenFile: vscode.TextDocument
+	): Promise<void> {
 		const config = await this.getConfig();
-
 		if (!config) {
 			return;
 		}
 
 		const token = await this.getToken();
-
 		if (token === null) {
 			return;
 		}
 
-		const relativePathOnDisk = filePath.replace(currentWorkspacePath, "").substring(1);
+		const workspaceRoot = currentWorkspace.uri.fsPath;
 
-		const matchingFiles = config.webResources.filter(w => w.relativePathOnDisk === relativePathOnDisk);
+		const openFileFsPath = currentOpenFile.uri.fsPath;
+
+		const relativePathOnDisk = path.relative(workspaceRoot, openFileFsPath).replace(/\\/g, "/");
+
+		const matchingFiles = config.webResources.filter(w => {
+			const webResourcePath = w.relativePathOnDisk.replace(/\\/g, "/");
+
+			logTemporaryMessage(
+				`Comparing target: "${relativePathOnDisk}" with web resource: "${webResourcePath}"`,
+				VerboseSetting.High
+			);
+
+			return webResourcePath === relativePathOnDisk;
+		});
 
 		if (matchingFiles.length !== 1) {
 			logErrorMessage(
@@ -277,12 +291,10 @@ export class BambooManager {
 
 		const matchingFile = matchingFiles[0];
 
-		const fullPath = currentWorkspacePath + "/" + matchingFile.relativePathOnDisk;
-		const fixedPath = fullPath.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
-		const normalizedPath = path.normalize(fixedPath);
+		const fullUri = vscode.Uri.joinPath(currentWorkspace.uri, ...matchingFile.relativePathOnDisk.split("/"));
 
 		const [success, errorMessage] = await this.client.uploadJavaScriptFile(
-			normalizedPath,
+			fullUri.fsPath,
 			matchingFile.dataverseName,
 			config.solutionUniqueName,
 			token
@@ -295,27 +307,32 @@ export class BambooManager {
 
 		logTemporaryMessage(`${matchingFile.dataverseName} synced successfully.`, VerboseSetting.Low);
 	}
-	public async syncCustomControl(currentWorkspacePath: string, customControl: CustomControlMapping): Promise<void> {
-		const config = await this.getConfig();
 
+	public async syncCustomControl(
+		currentWorkspace: vscode.WorkspaceFolder,
+		customControl: CustomControlMapping
+	): Promise<void> {
+		const config = await this.getConfig();
 		if (!config) {
 			return;
 		}
 
 		const token = await this.getToken();
-
 		if (token === null) {
 			return;
 		}
 
-		const fullPath = currentWorkspacePath + "/" + customControl.relativePathOnDiskToSolution;
-		const fixedPath = fullPath.replace(/^\/([a-zA-Z]):\//, "$1:/"); // Remove extra leading slash if present
-		const normalizedPath = path.normalize(fixedPath);
+		const workspaceRoot = currentWorkspace.uri.fsPath;
+
+		const fullPath = path.join(workspaceRoot, customControl.relativePathOnDiskToSolution);
+
+		const normalizedPath = path.normalize(fullPath).replace(/\\/g, "/");
 
 		const [success, errorMessage] = await this.client.syncSolution(
 			customControl.solutionName,
 			normalizedPath,
-			token);
+			token
+		);
 
 		if (success) {
 			logTemporaryMessage(`Synced control: ${customControl.dataverseName}.`, VerboseSetting.Low);
@@ -323,4 +340,5 @@ export class BambooManager {
 			logErrorMessage(errorMessage!, VerboseSetting.Low);
 		}
 	}
+
 }
