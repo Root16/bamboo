@@ -65,7 +65,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const currentWorkspace = currentWorkspaceFolders![0];
 
-		await bambooManager.syncCurrentFile(currentWorkspace, currentOpenFile);
+		// await bambooManager.syncCurrentFile(currentWorkspace, currentOpenFile);
+		await bambooManager.updatePluginPackage();
 	});
 
 	vscode.commands.registerCommand('bamboo.syncAllFiles', async () => {

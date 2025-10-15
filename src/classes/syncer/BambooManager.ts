@@ -341,4 +341,19 @@ export class BambooManager {
 		}
 	}
 
+	public async updatePluginPackage(
+	): Promise<void> {
+		const token = await this.getToken();
+		if (token === null) {
+			return;
+		}
+
+		const [success, error] = await this.client.registerPluginPackage(
+			"C:\\Users\\jyenterbriars\\dev\\bamboo_test\\CRM Customizations\\Plugins\\JYB.Plugins\\bin\\Debug\\JYB.Plugins.1.0.0.nupkg",
+			token,
+			"CrmCore");
+
+		const foo = 10;
+	}
+
 }
