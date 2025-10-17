@@ -462,9 +462,9 @@ export class DataverseClient {
 	 * @param solutionUniqueName (Optional) solution to add the package to
 	 */
 	public async registerPluginPackage(
+		pluginPackageName: string,
 		filePath: string,
 		token: string,
-		solutionUniqueName?: string
 	): Promise<[boolean, string | null]> {
 		try {
 			const { id, version } = await this.analyzeNupkg(filePath);
@@ -474,12 +474,17 @@ export class DataverseClient {
 			const name = id;
 			const uniquename = id;
 
-			const existing = await this.findPluginPackage('jyb_JYB.Plugins', token);
+			const existing = await this.findPluginPackage(pluginPackageName, token);
 
 			if (existing) {
-				console.log(`Updating existing plugin package: ${name}`);
-				await this.updatePluginPackage(existing.pluginpackageid, content, token);
-				await this.refreshAllPluginTypesForPackage(existing.pluginpackageid, token);
+				await logMessageWithProgress(`Updating existing plugin package: ${name}`, () => {
+					return this.updatePluginPackage(existing.pluginpackageid, content, token);
+				});
+
+				await logMessageWithProgress(`Refreshing types for plugin package: ${name}`, () => {
+					return this.refreshAllPluginTypesForPackage(existing.pluginpackageid, token);
+				});
+
 			} else {
 				return [false, `Package: ${name} is not found. Creating a plugin package is not implemented.`];
 			}

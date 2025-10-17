@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { BambooConfig, CredentialType, CustomControlMapping } from './BambooConfig';
-import path from 'path';
+import { BambooConfig, CredentialType, CustomControlMapping, PluginPackageMapping } from './BambooConfig';
+import path, { relative } from 'path';
 import { IWebResource } from '../../dataverse/IWebResource';
 import { logErrorMessage, logMessage, logMessageWithProgress, logTemporaryMessage, VerboseSetting } from '../../log/message';
 import { DataverseClient } from '../../dataverse/DataverseClient';
@@ -113,6 +113,7 @@ export class BambooManager {
 			solutionUniqueName: rawData.solutionUniqueName,
 			webResources: rawData.webResources,
 			customControls: rawData.customControls,
+			pluginPackages: rawData.pluginPackages,
 			credential: {
 				...rawData.credential,
 				type: credentialTypeMap[rawData.credential.type] ?? CredentialType.ClientSecret,
@@ -342,18 +343,36 @@ export class BambooManager {
 	}
 
 	public async updatePluginPackage(
+		currentWorkspace: vscode.WorkspaceFolder,
+		pluginPackage: PluginPackageMapping
 	): Promise<void> {
+		const config = await this.getConfig();
+		if (!config) {
+			return;
+		}
+
 		const token = await this.getToken();
 		if (token === null) {
 			return;
 		}
 
-		const [success, error] = await this.client.registerPluginPackage(
-			"C:\\Users\\jyenterbriars\\dev\\bamboo_test\\CRM Customizations\\Plugins\\JYB.Plugins\\bin\\Debug\\JYB.Plugins.1.0.0.nupkg",
-			token,
-			"CrmCore");
+		const workspaceRoot = currentWorkspace.uri.fsPath;
 
-		const foo = 10;
+		const fullPath = path.join(workspaceRoot, pluginPackage.relativePathOnDiskToNugetPackage);
+
+		const normalizedPath = path.normalize(fullPath).replace(/\\/g, "/");
+
+		const [success, errorMessage] = await this.client.registerPluginPackage(
+			pluginPackage.pluginPackageName,
+			normalizedPath,
+			token,
+		);
+
+		if (success) {
+			logTemporaryMessage(`Synced plugin package: ${pluginPackage.pluginPackageName}.`, VerboseSetting.Low);
+		} else {
+			logErrorMessage(errorMessage!, VerboseSetting.Low);
+		}
 	}
 
 }

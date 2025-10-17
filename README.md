@@ -61,6 +61,13 @@ Bamboo provides the following features inside VS Code:
             "solutionName": "ControlTwoSolution"
         },
         ...
+    ],
+    "pluginPackages": [
+        {
+            "pluginPackageName": "new_NEW.Plugins",
+            "relativePathOnDiskToNugetPackage": "path/to/NEW.Plugins.1.0.0.nupkg"
+        },
+        ...
     ]
 }
 ```
@@ -81,11 +88,12 @@ Bamboo provides the following features inside VS Code:
 - `baseUrl` must *not* end with a `/`.
 - The [app registration](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory#confidential-client-app-registration) specified must have:
     - Access to the specified Dataverse environment
-    - The appropiate Security Role necessary to:
+    - The appropriate Security Role necessary to:
         - Upload solutions
         - Publish solutions
         - Upload web resources
         - Publish web resources
+        - Upload plugin packages
         - Add components to solutions
 - `relativePathOnDisk` and `relativePathOnDiskToSolution` must *not* start with a `/`.
 - For web resources, `dataverseName` and `relativePathOnDisk` don't *need* to be similar (as shown in the example), this is just encouraged for ease of development
@@ -97,6 +105,7 @@ Bamboo provides the following features inside VS Code:
 | `bamboo.syncCurrentFile` | Sync current file. (Must be present on conf.) |  
 | `bamboo.syncAllFiles` | Sync all files. (Each file present in the conf.) | 
 | `bamboo.syncCustomControl` | Sync a Custom Control. (Opens up a choice dropdown for each control specified in the conf.) | 
+| `bamboo.syncPluginPackage` | Sync a Plugin Package. (Opens up a choice dropdown for each Plugin Package specified in the conf.) | 
 
 - All command can be run in the command palette.
 
@@ -125,7 +134,9 @@ Bamboo provides the following features inside VS Code:
 - [❌] Automatically add custom controls to solution 
 - [❌] Manage upload / sync from context of tree view
 - [❌] Sync data from Power Apps to local files
-- [❌] Plugin support
+- [❌] Create a plugin package or plugin assembly
+- [✅] Update / sync a *Plugin Package* 
+- [❌] Update / sync a *Plugin Assembly* 
 
 ## License
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.

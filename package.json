@@ -80,6 +80,11 @@
 					"light": "resources/light/refresh.svg",
 					"dark": "resources/dark/refresh.svg"
 				}
+			},
+			{
+				"command": "bamboo.syncPluginPackage",
+				"title": "Sync a Plugin Package.",
+				"category": "Bamboo"
 			}
 		],
 		"menus": {
