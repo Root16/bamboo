@@ -50,4 +50,4 @@
 - Update internal fspath handling
 
 ## [0.3.4]
-- Support for Plugin Package
+- Support for updating Plugin Packages
