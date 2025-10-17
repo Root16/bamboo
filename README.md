@@ -2,7 +2,7 @@
 
 Bamboo is a simple, friendly, and ⚡*blazingly*⚡ fast customization manager, designed to speed up development time on the [Microsoft Power Platform](https://powerplatform.microsoft.com/en-us/). 🚀
 
-Currently supporting [web resources](https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/web-resources) and [custom controls](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/create-custom-controls-using-pcf), Bamboo provides a seamless experience for developers to edit and manage these solution components - all from within VS Code.
+Currently supporting [web resources](https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/web-resources), [custom controls](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/create-custom-controls-using-pcf), and [plugin packages](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/build-and-package), Bamboo provides a seamless experience for developers to edit and manage these solution components - all from within VS Code.
 
 ## Features
 Bamboo provides the following features inside VS Code:
@@ -12,21 +12,23 @@ Bamboo provides the following features inside VS Code:
 - Add web resources to a solution automatically.
 - Manage custom controls (PCF components) through the import + publish of solutions.
 - List all web resources and custom controls in a given solution in a VS Code tree view.
+- Update plugin packages
 
 
 #### Component Tree
 ![Component Tree](./images/component_tree.png)
 
 #### Commands
-![Command Palette](./images/command_palette.png)
+![Command Palette](./images/command_palette2.png)
 
 ## Getting Started
 
 1. Install the extension [here](https://marketplace.visualstudio.com/publishers/root16).
-2. Add a `bamboo.conf.json` at the **root** of your VS Code workspace.
-    - ![Example Project Strucutre](./images/project_structure.png)
-    - **Do not check `bamboo.conf.json` into source control.**
-3. Populate the json file with the following data:
+2. Add the files: `bamboo.conf.json` and `.bamboo_tokens/tokenCache.json` at the **root** of your VS Code workspace.
+    -  A suggested structure is:
+    - ![Example Project Structure](./images/project_structure.png)
+    - **Do not check `bamboo.conf.json` or `.bamboo_tokens` into source control.**
+3. Populate `bamboo.conf.json` with the following data:
 
 ```json
 {
@@ -61,6 +63,13 @@ Bamboo provides the following features inside VS Code:
             "solutionName": "ControlTwoSolution"
         },
         ...
+    ],
+    "pluginPackages": [
+        {
+            "pluginPackageName": "new_NEW.Plugins",
+            "relativePathOnDiskToNugetPackage": "path/to/NEW.Plugins.1.0.0.nupkg"
+        },
+        ...
     ]
 }
 ```
@@ -81,13 +90,14 @@ Bamboo provides the following features inside VS Code:
 - `baseUrl` must *not* end with a `/`.
 - The [app registration](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory#confidential-client-app-registration) specified must have:
     - Access to the specified Dataverse environment
-    - The appropiate Security Role necessary to:
+    - The appropriate Security Role necessary to:
         - Upload solutions
         - Publish solutions
         - Upload web resources
         - Publish web resources
+        - Upload plugin packages
         - Add components to solutions
-- `relativePathOnDisk` and `relativePathOnDiskToSolution` must *not* start with a `/`.
+- `relativePathOnDisk`, `relativePathOnDiskToSolution` and `relativePathOnDiskToNugetPackage`  must *not* start with a `/`.
 - For web resources, `dataverseName` and `relativePathOnDisk` don't *need* to be similar (as shown in the example), this is just encouraged for ease of development
 
 ## Usage
@@ -97,13 +107,10 @@ Bamboo provides the following features inside VS Code:
 | `bamboo.syncCurrentFile` | Sync current file. (Must be present on conf.) |  
 | `bamboo.syncAllFiles` | Sync all files. (Each file present in the conf.) | 
 | `bamboo.syncCustomControl` | Sync a Custom Control. (Opens up a choice dropdown for each control specified in the conf.) | 
+| `bamboo.syncPluginPackage` | Sync a Plugin Package. (Opens up a choice dropdown for each package specified in the conf.) | 
 
 - All command can be run in the command palette.
 
-
-## Token Refresh + Cache
-- Bamboo can use the previously cached token to speed up initial load times.
-- Add the file: `<vscode-workspace>/bamboo_tokens/tokenCache.json` and then restart VS Code.
 
 ## Extension Settings
 
@@ -125,7 +132,9 @@ Bamboo provides the following features inside VS Code:
 - [❌] Automatically add custom controls to solution 
 - [❌] Manage upload / sync from context of tree view
 - [❌] Sync data from Power Apps to local files
-- [❌] Plugin support
+- [❌] Create a Plugin Package or Plugin Assembly
+- [✅] Update / sync a *Plugin Package* 
+- [❌] Update / sync a *Plugin Assembly* 
 
 ## License
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.

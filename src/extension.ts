@@ -111,6 +111,37 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
+	vscode.commands.registerCommand('bamboo.syncPluginPackage', async () => {
+		const currentWorkspaceFolders = vscode.workspace.workspaceFolders;
+		if (currentWorkspaceFolders === undefined || currentWorkspaceFolders?.length > 1) {
+			logErrorMessage(`Either no workspace is open - or too many are! Please open only one workspace in order to use Bamboo`, VerboseSetting.High);
+			return;
+		}
+
+		const currentWorkspacePath = currentWorkspaceFolders![0];
+
+		const config = await bambooManager.getConfig();
+
+		if (config === null) {
+			return;
+		}
+
+		const items: vscode.QuickPickItem[] = config.pluginPackages.map(c => {
+			return { label: c.pluginPackageName, description: c.relativePathOnDiskToNugetPackage };
+		});
+
+		const selected = await vscode.window.showQuickPick(items, {
+			placeHolder: 'Select a Plugin Package...',
+			canPickMany: false
+		});
+
+		if (selected) {
+			const selectedPluginPackages = config.pluginPackages.filter(c => c.pluginPackageName === selected.label)![0];
+
+			await bambooManager.updatePluginPackage(currentWorkspacePath, selectedPluginPackages);
+		}
+	});
+
 	logMessage(`Bamboo initialized successfully.`, VerboseSetting.High)
 }
 

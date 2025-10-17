@@ -8,6 +8,8 @@ import { ISolution } from "./ISolution";
 import { logErrorMessage, logMessage, logMessageWithProgress, logTemporaryMessage, VerboseSetting } from "../log/message";
 import { BambooConfig } from "../classes/syncer/BambooConfig";
 import { ICustomControl } from "./ICustomControl";
+import AdmZip from "adm-zip";
+import { parseStringPromise } from "xml2js";
 import * as crypto from 'crypto';
 
 export class DataverseClient {
@@ -17,6 +19,8 @@ export class DataverseClient {
 	private publishApi: string;
 	private publishAllApi: string;
 	private importSolutionApi: string;
+	private pluginPackagesApi: string;
+	private pluginPackagesExportKeyApi: string;
 
 	constructor(private config: BambooConfig) {
 		this.webResourcesApi = `${this.config.baseUrl}/api/data/v9.2/webresourceset`;
@@ -25,6 +29,8 @@ export class DataverseClient {
 		this.publishApi = `${this.config.baseUrl}/api/data/v9.2/PublishXml`;
 		this.publishAllApi = `${this.config.baseUrl}/api/data/v9.0/PublishAllXml`;
 		this.importSolutionApi = `${this.config.baseUrl}/api/data/v9.0/ImportSolution`;
+		this.pluginPackagesApi = `${this.config.baseUrl}/api/data/v9.2/pluginpackages`;
+		this.pluginPackagesExportKeyApi = `${this.config.baseUrl}/api/data/v9.2/UpdatePluginTypeExportKey`;
 	}
 
 	public async syncSolution(solutionName: string, solutionPath: string, token: string): Promise<[boolean, string | null]> {
@@ -304,7 +310,7 @@ export class DataverseClient {
 		});
 
 		if (!response.ok) {
-			const data = await response.json();  
+			const data = await response.json();
 			console.log(data);
 			return [false, `Failed to publish all customizations: ${response.statusText}`];
 		}
@@ -447,6 +453,166 @@ export class DataverseClient {
 		}
 
 		return [true, null];
+	}
+
+	/**
+	 * Registers (create or update) a plugin package in D365.
+	 * @param filePath Path to the .nupkg file
+	 * @param token OAuth access token
+	 * @param solutionUniqueName (Optional) solution to add the package to
+	 */
+	public async registerPluginPackage(
+		pluginPackageName: string,
+		filePath: string,
+		token: string,
+	): Promise<[boolean, string | null]> {
+		try {
+			const { id, version } = await this.analyzeNupkg(filePath);
+			if (!id || !version) throw new Error("Could not read .nuspec metadata");
+
+			const content = (await fs.readFile(filePath)).toString("base64");
+			const name = id;
+			const uniquename = id;
+
+			const existing = await this.findPluginPackage(pluginPackageName, token);
+
+			if (existing) {
+				await logMessageWithProgress(`Updating existing plugin package: ${name}`, () => {
+					return this.updatePluginPackage(existing.pluginpackageid, content, token);
+				});
+
+				await logMessageWithProgress(`Refreshing types for plugin package: ${name}`, () => {
+					return this.refreshAllPluginTypesForPackage(existing.pluginpackageid, token);
+				});
+
+			} else {
+				return [false, `Package: ${name} is not found. Creating a plugin package is not implemented.`];
+			}
+
+			return [true, null];
+		} catch (err: any) {
+			console.error("Error registering plugin package:", err);
+			return [false, err.message];
+		}
+	}
+
+	private async analyzeNupkg(filePath: string): Promise<{ id: string; version: string }> {
+		try {
+			await fs.access(filePath);
+		} catch {
+			throw new Error(`File not found: ${filePath}`);
+		}
+
+		const buffer = await fs.readFile(filePath);
+		const zip = new AdmZip(buffer);
+		const nuspecEntry = zip.getEntries().find(e => e.entryName.endsWith(".nuspec"));
+		if (!nuspecEntry) throw new Error("Could not find .nuspec in package");
+
+		const xmlContent = nuspecEntry.getData().toString("utf-8");
+		const parsed = await parseStringPromise(xmlContent);
+		const metadata = parsed.package?.metadata?.[0];
+		const id = metadata?.id?.[0];
+		const version = metadata?.version?.[0];
+
+		return { id, version };
+	}
+
+	private async findPluginPackage(name: string, token: string): Promise<any | null> {
+		const query = `${this.pluginPackagesApi}?$select=pluginpackageid,name&$filter=name eq '${name}'`;
+		//@ts-expect-error cause i said so
+		const res = await fetch(query, {
+			headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+		});
+		if (!res.ok) throw new Error(`Failed to query pluginpackage: ${res.statusText}`);
+		const data = await res.json();
+		return data.value?.[0] ?? null;
+	}
+
+	private async updatePluginPackage(id: string, content: string, token: string): Promise<void> {
+		//@ts-expect-error cause i said so
+		const res = await fetch(`${this.pluginPackagesApi}(${id})`, {
+			method: "PATCH",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+				Accept: "application/json",
+			},
+			body: JSON.stringify({ content }),
+		});
+
+		if (!res.ok) {
+			const err = await res.text();
+			logErrorMessage(`Failed to update pluginpackage: ${res.statusText} ${err}`, VerboseSetting.High);
+		}
+	}
+
+	private async refreshAllPluginTypesForPackage(
+		pluginPackageId: string,
+		token: string
+	): Promise<void> {
+		const apiBase = `${this.config.baseUrl}/api/data/v9.0`;
+
+		const fetchXml = `
+			<fetch mapping="logical">
+				<entity name="plugintype">
+					<attribute name="plugintypeid"/>
+					<attribute name="name"/>
+					<link-entity name="pluginassembly" from="pluginassemblyid" to="pluginassemblyid" alias="pa">
+						<filter>
+							<condition attribute="packageid" operator="eq" value="${pluginPackageId}"/>
+						</filter>
+					</link-entity>
+				</entity>
+			</fetch>
+		`;
+
+		const url = `${apiBase}/plugintypes?fetchXml=${encodeURIComponent(fetchXml)}`;
+
+		//@ts-expect-error cause i said so
+		const typeRes = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+				Accept: "application/json",
+				"OData-Version": "4.0",
+				"OData-MaxVersion": "4.0",
+			},
+		});
+
+		if (!typeRes.ok) {
+			const err = await typeRes.text();
+			logErrorMessage(`Failed to retrieve plugintypes: ${typeRes.status} ${typeRes.statusText}\n${err}`, VerboseSetting.High);
+		}
+
+		const { value: pluginTypes } = await typeRes.json();
+		if (!pluginTypes || pluginTypes.length === 0) {
+			logErrorMessage("No plugintypes found for this package.", VerboseSetting.High);
+			return;
+		}
+
+		for (const pluginType of pluginTypes) {
+			const refreshUrl = `${apiBase}/plugintypes(${pluginType.plugintypeid})/Microsoft.Dynamics.CRM.UpdatePluginTypeExportKey`;
+
+			//@ts-expect-error cause i said so
+			const res = await fetch(refreshUrl, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json; charset=utf-8",
+					Accept: "application/json",
+					"OData-Version": "4.0",
+					"OData-MaxVersion": "4.0",
+				},
+				body: JSON.stringify({}), // empty body
+			});
+
+			if (!res.ok) {
+				const errText = await res.text();
+				//Even a fail response is a success. Go figure
+				logMessage('Even though the .', VerboseSetting.High);
+			} else {
+				logMessage('Success? This should never hit.', VerboseSetting.High);
+			}
+		}
 	}
 
 	public async getOAuthToken(): Promise<string | null> {

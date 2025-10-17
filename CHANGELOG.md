@@ -48,3 +48,6 @@
 ## [0.3.3]
 - Load / error messages controlled via verbosity setting 
 - Update internal fspath handling
+
+## [0.3.4]
+- Support for updating Plugin Packages
