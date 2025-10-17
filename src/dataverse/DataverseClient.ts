@@ -484,7 +484,7 @@ export class DataverseClient {
 				return [false, `Package: ${name} is not found. Creating a plugin package is not implemented.`];
 			}
 
-			return await this.publishAllCustomizations(token);
+			return [true, null];
 		} catch (err: any) {
 			console.error("Error registering plugin package:", err);
 			return [false, err.message];
